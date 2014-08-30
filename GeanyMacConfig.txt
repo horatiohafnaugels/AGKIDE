@@ -13,6 +13,7 @@ $ ~/.local/bin/jhbuild bootstrap
 $ ~/.local/bin/jhbuild build meta-gtk-osx-bootstrap
 $ ~/.local/bin/jhbuild build meta-gtk-osx-core
 $ ~/.local/bin/jhbuild build meta-gtk-osx-themes
+$ ~/.local/bin/jhbuild build gtk-mac-integration
 
 you now have a reasonably complete GTK installation in your home directory ready for you to build the IDE
 
@@ -30,7 +31,7 @@ $ export LIBS="-lgtkmacintegration"
 
 and finally run this with the prefix path set to where you want the final IDE executable to be, for your first attempt I recommend using this path, the bundler uses it later
 
-./configure --prefix="$HOME/Projects/Geany-Compiled" —-disable-vte
+./configure --prefix="$HOME/Projects/Geany-Compiled" --disable-vte
 
 
 IDE building
@@ -38,7 +39,7 @@ IDE building
 All the above should only be done once, after that you can just browse to the IDE source in a terminal and run 
 $ make
 $ make install
-to compile the IDE to a binary, note that if you want to move the source files folder you will need to ./configure it again
+to compile the IDE to a binary. Note that if you want to move the source files folder you will need to ./configure it again
 
 
 IDE bundling
@@ -51,4 +52,4 @@ $ ~/.local/bin/jhbuild shell
 $ export PATH=$PREFIX/bin:~/.local/bin:$PATH
 $ gtk-mac-bundler AGK2.bundle
 
-If you changed any of the paths above you may need to edit Geany.bundle in a text editor to modify the paths, good luck!
+If you changed any of the paths above you may need to edit AGK2.bundle in a text editor to modify the paths, good luck!
