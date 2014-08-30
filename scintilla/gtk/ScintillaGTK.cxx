@@ -169,6 +169,7 @@ public:
 	virtual ~ScintillaGTK();
 	static void ClassInit(OBJECT_CLASS* object_class, GtkWidgetClass *widget_class, GtkContainerClass *container_class);
     
+	// added new paste callback for gtk_clipboard_request_text, via GlobalPasteReceived
     void PasteCallback(const gchar *text);
     
 private:
@@ -1384,6 +1385,7 @@ void ScintillaGTK::Copy() {
 	}
 }
 
+// new paste callback for gtk_clipboard_request_text, via GlobalPasteReceived
 void ScintillaGTK::PasteCallback(const gchar* text) {
 	try {
 		if ( text && *text )
@@ -1404,16 +1406,19 @@ void ScintillaGTK::PasteCallback(const gchar* text) {
 	}
 }
 
+// callback for gtk_clipboard_request_text
 static void GlobalPasteReceived(GtkClipboard *clipboard, const gchar* text, gpointer data)
 {
     ((ScintillaGTK*)data)->PasteCallback( text );
 }
 
 void ScintillaGTK::Paste() {
+	// gtk_selection_convert leads to a stub that is not implemented on Mac when using quartz integration
 	//atomSought = atomUTF8;
 	//gtk_selection_convert(GTK_WIDGET(PWidget(wMain)),
 	//                      atomClipboard, atomSought, GDK_CURRENT_TIME);
     
+	// However gtk_clipboard_request_text is implemented
     GtkClipboard *clipBoard =
     gtk_widget_get_clipboard(GTK_WIDGET(PWidget(wMain)), atomClipboard);
 	if (clipBoard == NULL) // Occurs if widget isn't in a toplevel
