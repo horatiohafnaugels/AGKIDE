@@ -36,7 +36,7 @@
 #include "gb.c"
 
 
-#define HEADER "<span size=\"larger\" weight=\"bold\">AGK IDE 2.0.5</span>"
+#define HEADER "<span size=\"larger\" weight=\"bold\">AGK IDE 2 Alpha 5.3</span>"
 #define INFO "<span size=\"larger\" weight=\"bold\">%s</span>"
 #define CODENAME "<span>Built on Geany 1.24.1</span>"
 #define BUILDDATE "<span size=\"smaller\">%s</span>"

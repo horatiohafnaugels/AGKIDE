@@ -1035,6 +1035,12 @@ install-data-only:
 	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/colorschemes/; \
 	  fi \
 	done
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/tags;
+	for file in $(srcdir)/data/tags/*; do \
+	  if test -f $$file; then \
+	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/tags/; \
+	  fi \
+	done
 
 dist-hook:
 	@if test -d "$(top_srcdir)/.git"; then \
