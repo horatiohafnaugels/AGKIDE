@@ -1208,18 +1208,22 @@ static gboolean sidebar_button_press_cb(GtkWidget *widget, GdkEventButton *event
 			}
 			else
 			{
-				// open file
-				gchar *filename;
-				int type;
+				if (widget == tv.tree_openfiles)
+				{
+					// open file
+					gchar *filename;
+					int type;
 
-				gtk_tree_model_get(model, &iter, DOCUMENTS_TYPE, &type, -1);
-				gtk_tree_model_get(model, &iter, DOCUMENTS_FILENAME, &filename, -1);
-				gtk_tree_model_get(model, &iter, DOCUMENTS_PROJECT, &project, -1);
+					gtk_tree_model_get(model, &iter, DOCUMENTS_TYPE, &type, -1);
+					gtk_tree_model_get(model, &iter, DOCUMENTS_FILENAME, &filename, -1);
+					gtk_tree_model_get(model, &iter, DOCUMENTS_PROJECT, &project, -1);
 
-				if ( type == 0 )
-					document_open_file( filename, FALSE, NULL, NULL );
+					if ( type == 0 )
+						document_open_file( filename, FALSE, NULL, NULL );
 
-				g_free(filename);
+					g_free(filename);
+					return TRUE;
+				}
 			}
 		}
 	}
