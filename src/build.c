@@ -1183,8 +1183,8 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 
 	if ( !g_file_test( main_path, G_FILE_TEST_EXISTS ) )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to run project locally, no exe found");
-		ui_set_statusbar(TRUE, _("Failed to run project locally, no exe found"));
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to run project locally, program not found");
+		ui_set_statusbar(TRUE, _("Failed to run project locally, program not found"));
 		return (GPid) 0;
 	}
 
@@ -1281,8 +1281,8 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 
 	if ( !g_file_test( main_path, G_FILE_TEST_EXISTS ) )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, broadcaster exe found");
-		ui_set_statusbar(TRUE, _("Failed to broadcast project, broadcaster exe found"));
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, broadcaster program found");
+		ui_set_statusbar(TRUE, _("Failed to broadcast project, broadcaster program found"));
 		return (GPid) 0;
 	}
 
