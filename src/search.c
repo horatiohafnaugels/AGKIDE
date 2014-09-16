@@ -1733,10 +1733,9 @@ search_find_in_files(const gchar *utf8_search_text, const gchar *dir, const gcha
 			TRUE, search_read_io, (gpointer) enc);
 		utils_set_up_io_channel(stderr_fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL,
 			TRUE, search_read_io_stderr, (gpointer) enc);
-		g_child_watch_add(child_pid, search_close_pid, NULL);
-
-		str = g_strdup_printf(_("%s %s -- %s (in directory: %s)"),
-			tool_prefs.grep_cmd, opts, utf8_search_text, dir);
+        g_child_watch_add(child_pid, search_close_pid, NULL);
+		
+		str = g_strdup_printf(_("%s %s -- %s (in directory: %s)"), tool_prefs.grep_cmd, opts, utf8_search_text, dir);
 		utf8_str = utils_get_utf8_from_locale(str);
 		msgwin_msg_add_string(COLOR_BLUE, -1, NULL, utf8_str);
 		utils_free_pointers(2, str, utf8_str, NULL);
@@ -1826,15 +1825,17 @@ static gchar **search_get_argv(const gchar **argv_prefix, const gchar *dir)
 
 static gboolean read_fif_io(GIOChannel *source, GIOCondition condition, gchar *enc, gint msg_color)
 {
-	if (condition & (G_IO_IN | G_IO_PRI))
+    if (condition & (G_IO_IN | G_IO_PRI))
 	{
+        GIOStatus st;
 		gchar *msg, *utf8_msg;
-
-		while (g_io_channel_read_line(source, &msg, NULL, NULL, NULL) && msg)
+        
+		while ((st = g_io_channel_read_line(source, &msg, NULL, NULL, NULL)) == G_IO_STATUS_NORMAL && msg)
 		{
 			utf8_msg = NULL;
-
+            
 			g_strstrip(msg);
+            
 			/* enc is NULL when encoding is set to UTF-8, so we can skip any conversion */
 			if (enc != NULL)
 			{
@@ -1854,10 +1855,13 @@ static gboolean read_fif_io(GIOChannel *source, GIOCondition condition, gchar *e
 				g_free(utf8_msg);
 			g_free(msg);
 		}
+        
+        if (st == G_IO_STATUS_ERROR || st == G_IO_STATUS_EOF)
+            return FALSE;
 	}
 	if (condition & (G_IO_ERR | G_IO_HUP | G_IO_NVAL))
 		return FALSE;
-
+    
 	return TRUE;
 }
 
@@ -1892,16 +1896,20 @@ static void search_close_pid(GPid child_pid, gint status, gpointer user_data)
 #else
 	gint exit_status = status;
 #endif
-
-	switch (exit_status)
+    
+    switch (exit_status)
 	{
 		case 0:
 		{
-			gint count = gtk_tree_model_iter_n_children(
-				GTK_TREE_MODEL(msgwindow.store_msg), NULL) - 1;
+			gint count = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(msgwindow.store_msg), NULL) - 1;
+#ifdef __APPLE__
+            // Mac doesn't seem to add messages to window until after this stage? only sometimes?
+            gchar *text = "Search completed";
+#else
 			gchar *text = ngettext(
 						"Search completed with %d match.",
 						"Search completed with %d matches.", count);
+#endif
 
 			msgwin_msg_add(COLOR_BLUE, -1, NULL, text, count);
 			ui_set_statusbar(FALSE, text, count);
@@ -1914,8 +1922,8 @@ static void search_close_pid(GPid child_pid, gint status, gpointer user_data)
 			ui_set_statusbar(FALSE, "%s", msg);
 			break;
 	}
-	utils_beep();
-	g_spawn_close_pid(child_pid);
+	//utils_beep();
+    g_spawn_close_pid(child_pid);
 	ui_progress_bar_stop();
 }
 

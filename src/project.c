@@ -47,6 +47,8 @@
 #include "filetypes.h"
 #include "templates.h"
 
+#include "miniz.h"
+
 GPtrArray *projects_array = NULL;
 
 ProjectPrefs project_prefs = { NULL, FALSE, FALSE };
@@ -442,9 +444,1946 @@ void project_import(void)
 	}
 }
 
+static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	static int running = 0;
+	if ( running ) return;
+
+	running = 1;
+
+	if ( response != 1 )
+	{
+		gtk_widget_hide(GTK_WIDGET(dialog));
+	}
+	else
+	{
+		int i;
+		GtkWidget *widget;
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_export1"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "button7"), FALSE );
+		
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// app details
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_name_entry");
+		gchar *app_name = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_package_name_entry");
+		gchar *package_name = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry");
+		gchar *app_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
+		gchar *ouya_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
+		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int orientation = 10;
+		if ( strcmp(app_orientation,"Landscape") == 0 ) orientation = 6;
+		else if ( strcmp(app_orientation,"Portrait") == 0 ) orientation = 7;
+		g_free(app_orientation);
+		gchar szOrientation[ 20 ];
+		sprintf( szOrientation, "%d", orientation );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
+		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int sdk = 10;
+		if ( strcmp(app_sdk,"3.2") == 0 ) sdk = 13;
+		g_free(app_sdk);
+		gchar szSDK[ 20 ];
+		sprintf( szSDK, "%d", sdk );
+
+		// permissions
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
+		int permission_external_storage = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine");
+		int permission_location_fine = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse");
+		int permission_location_coarse = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_internet");
+		int permission_internet = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_wake");
+		int permission_wake = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing");
+		int permission_billing = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
+		int permission_push = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		// signing
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
+		gchar *keystore_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_password_entry");
+		gchar *keystore_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_version_number_entry");
+		gchar *version_number = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		if ( !*version_number ) SETPTR( version_number, g_strdup("1.0.0") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_build_number_entry");
+		int build_number = atoi(gtk_entry_get_text(GTK_ENTRY(widget)));
+		if ( build_number == 0 ) build_number = 1;
+		gchar szBuildNum[ 20 ];
+		sprintf( szBuildNum, "%d", build_number );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_entry");
+		gchar *alias_name = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_password_entry");
+		gchar *alias_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		// output
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry");
+		gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
+		gchar *output_type = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int app_type = 0;
+		if ( strcmp(output_type,"Amazon") == 0 ) app_type = 1;
+		else if ( strcmp(output_type,"Ouya") == 0 ) app_type = 2;
+		g_free(output_type);
+
+		// START CHECKS
+
+		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your APK"); goto android_dialog_clean_up; }
+
+		// check app name
+		if ( !app_name || !*app_name ) { SHOW_ERR("You must enter an app name"); goto android_dialog_clean_up; }
+		if ( strlen(app_name) > 30 ) { SHOW_ERR("App name must be less than 30 characters"); goto android_dialog_clean_up; }
+		for( i = 0; i < strlen(app_name); i++ )
+		{
+			if ( (app_name[i] < 97 || app_name[i] > 122)
+			  && (app_name[i] < 65 || app_name[i] > 90) 
+			  && (app_name[i] < 48 || app_name[i] > 57) 
+			  && app_name[i] != 32 
+			  && app_name[i] != 95 ) 
+			{ 
+				SHOW_ERR("App name contains invalid characters, must be A-Z 0-9 spaces and undersore only"); 
+				goto android_dialog_clean_up; 
+			}
+		}
+		
+		// check package name
+		if ( !package_name || !*package_name ) { SHOW_ERR("You must enter a package name"); goto android_dialog_clean_up; }
+		if ( strlen(package_name) > 50 ) { SHOW_ERR("Package name must be less than 50 characters"); goto android_dialog_clean_up; }
+		if ( strchr(package_name,'.') == NULL ) { SHOW_ERR("Package name must contain at least one dot character"); goto android_dialog_clean_up; }
+		if ( package_name[0] == '.' || package_name[strlen(package_name)-1] == '.' ) { SHOW_ERR("Package name must not begin or end with a dot"); goto android_dialog_clean_up; }
+
+		for( i = 0; i < strlen(package_name); i++ )
+		{
+			if ( (package_name[i] < 97 || package_name[i] > 122)
+			  && (package_name[i] < 65 || package_name[i] > 90) 
+			  && (package_name[i] < 48 || package_name[i] > 57) 
+			  && package_name[i] != 46 
+			  && package_name[i] != 95 ) 
+			{ 
+				SHOW_ERR("Package name contains invalid characters, must be A-Z 0-9 . and undersore only"); 
+				goto android_dialog_clean_up; 
+			}
+		}
+
+		// check icon
+		if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto android_dialog_clean_up; }
+		if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto android_dialog_clean_up; }
+		if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto android_dialog_clean_up; }
+
+		if ( app_type == 2 )
+		{
+			if ( !ouya_icon || !*ouya_icon ) { SHOW_ERR("You must select an Ouya large icon"); goto android_dialog_clean_up; }
+			if ( !strrchr( ouya_icon, '.' ) || utils_str_casecmp( strrchr( ouya_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("Ouya large icon must be a PNG file"); goto android_dialog_clean_up; }
+			if ( !g_file_test( ouya_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find ouya large icon location"); goto android_dialog_clean_up; }
+		}
+				
+		// check version
+		if ( version_number && *version_number )
+		{
+			for( i = 0; i < strlen(version_number); i++ )
+			{
+				if ( (version_number[i] < 48 || version_number[i] > 57) && version_number[i] != 46 ) 
+				{ 
+					SHOW_ERR("Version number contains invalid characters, must be 0-9 and . only"); 
+					goto android_dialog_clean_up; 
+				}
+			}
+		}
+
+		// check keystore
+		if ( keystore_file && *keystore_file )
+		{
+			if ( !g_file_test( keystore_file, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find keystore file location"); goto android_dialog_clean_up; }
+		}
+
+		// check passwords
+		if ( keystore_password && strchr(keystore_password,'"') ) { SHOW_ERR("Keystore password cannot contain double quotes"); goto android_dialog_clean_up; }
+		if ( alias_password && strchr(alias_password,'"') ) { SHOW_ERR("Alias password cannot contain double quotes"); goto android_dialog_clean_up; }
+
+		if ( keystore_file && *keystore_file )
+		{
+			if ( !keystore_password || !*keystore_password ) { SHOW_ERR("You must enter your keystore password when using your own keystore"); goto android_dialog_clean_up; }
+		}
+
+		if ( alias_name && *alias_name )
+		{
+			if ( !alias_password || !*alias_password ) { SHOW_ERR("You must enter your alias password when using a custom alias"); goto android_dialog_clean_up; }
+		}
+
+		goto android_dialog_continue;
+
+android_dialog_clean_up:
+		if ( app_name ) g_free(app_name);
+		if ( package_name ) g_free(package_name);
+		if ( app_icon ) g_free(app_icon);
+
+		if ( keystore_file ) g_free(keystore_file);
+		if ( keystore_password ) g_free(keystore_password);
+		if ( version_number ) g_free(version_number);
+		if ( alias_name ) g_free(alias_name);
+		if ( alias_password ) g_free(alias_password);
+
+		if ( output_file ) g_free(output_file);
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_export1"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "button7"), TRUE );
+		running = 0;
+		return;
+
+android_dialog_continue:
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// CHECKS COMPLETE, START EXPORT
+
+#ifdef G_OS_WIN32
+		gchar* path_to_aapt = g_build_path( "/", app->datadir, "android", "aapt.exe", NULL );
+		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", "android13.jar", NULL );
+		gchar* path_to_jarsigner = g_build_path( "/", app->datadir, "android", "jre", "bin", "jarsigner.exe", NULL );
+		gchar* path_to_zipalign = g_build_path( "/", app->datadir, "android", "zipalign.exe", NULL );
+#else
+        gchar* path_to_aapt = g_build_path( "/", app->datadir, "android", "aapt", NULL );
+		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", "android13.jar", NULL );
+		//gchar* path_to_jarsigner = g_build_path( "/", "/usr", "bin", "jarsigner", NULL );
+        gchar* path_to_jarsigner = g_build_path( "/", app->datadir, "android", "jre", "bin", "jarsigner", NULL );
+		gchar* path_to_zipalign = g_build_path( "/", app->datadir, "android", "zipalign", NULL );
+#endif
+
+		// make temporary folder
+		gchar* android_folder = g_build_filename( app->datadir, "android", NULL );
+		gchar* tmp_folder = g_build_filename( app->project->base_path, "build_tmp", NULL );
+
+		utils_str_replace_char( android_folder, '\\', '/' );
+		utils_str_replace_char( tmp_folder, '\\', '/' );
+		
+		gchar* src_folder;
+		if ( app_type == 2 ) src_folder = g_build_path( "/", app->datadir, "android", "sourceOuya", NULL );
+		else if ( app_type == 1 ) src_folder = g_build_path( "/", app->datadir, "android", "sourceAmazon", NULL );
+		else src_folder = g_build_path( "/", app->datadir, "android", "sourceGoogle", NULL );
+		utils_str_replace_char( src_folder, '\\', '/' );
+
+		gchar *output_file_zip = g_strdup( output_file );
+		gchar *ext = strrchr( output_file_zip, '.' );
+		if ( ext ) *ext = 0;
+		SETPTR( output_file_zip, g_strconcat( output_file_zip, ".zip", NULL ) );
+
+		if ( !keystore_file || !*keystore_file )
+		{
+			if ( keystore_file ) g_free(keystore_file);
+			if ( keystore_password ) g_free(keystore_password);
+
+			keystore_file = g_build_path( "/", app->datadir, "android", "debug.keystore", NULL );
+			keystore_password = g_strdup("android");
+
+			if ( alias_name ) g_free(alias_name);
+			if ( alias_password ) g_free(alias_password);
+
+			alias_name = g_strdup("androiddebugkey");
+			alias_password = g_strdup("android");
+		}
+		else
+		{
+			if ( !alias_name || !*alias_name )
+			{
+				if ( alias_name ) g_free(alias_name);
+				if ( alias_password ) g_free(alias_password);
+
+				alias_name = g_strdup("mykeystore");
+				alias_password = g_strdup(keystore_password);
+			}
+		}
+
+		// decalrations
+		gchar newcontents[ 32000 ];
+		gchar* manifest_file = NULL;
+		gchar *contents = NULL;
+		gchar *contents2 = NULL;
+		gsize length = 0;
+		gchar* resources_file = NULL;
+		GError *error = NULL;
+		GdkPixbuf *icon_image = NULL;
+		gchar *image_filename = NULL;
+		GdkPixbuf *icon_scaled_image = NULL;
+		gchar **argv = NULL;
+		gchar **argv2 = NULL;
+		gchar **argv3 = NULL;
+		gint status = 0;
+		mz_zip_archive zip_archive;
+		memset(&zip_archive, 0, sizeof(zip_archive));
+		gchar *zip_add_file = 0;
+		gchar *str_out = NULL;
+
+		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE ) )
+		{
+			SHOW_ERR( "Failed to copy source folder" );
+			goto android_dialog_cleanup2;
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+		
+		// edit AndroidManifest.xml
+		manifest_file = g_build_path( "/", tmp_folder, "AndroidManifest.xml", NULL );
+
+		if ( !g_file_get_contents( manifest_file, &contents, &length, NULL ) )
+		{
+			SHOW_ERR( "Failed to read AndroidManifest.xml file" );
+			goto android_dialog_cleanup2;
+		}
+
+		contents2 = strstr( contents, "screenOrientation=\"fullSensor\"" );
+		*contents2 = 0;
+		contents2 += strlen("screenOrientation=\"fullSensor");
+		
+		strcpy( newcontents, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
+<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n\
+      android:versionCode=\"" );
+		strcat( newcontents, szBuildNum );
+		strcat( newcontents, "\"\n      android:versionName=\"" );
+		strcat( newcontents, version_number );
+		strcat( newcontents, "\" package=\"" );
+		strcat( newcontents, package_name );
+		strcat( newcontents, "\" android:installLocation=\"auto\">\n\
+    <uses-feature android:glEsVersion=\"0x00020000\"></uses-feature>\n\
+    <uses-sdk android:minSdkVersion=\"" );
+		strcat( newcontents, szSDK );
+		strcat( newcontents, "\" android:targetSdkVersion=\"" );
+		strcat( newcontents, szSDK );
+		strcat( newcontents, "\" />\n\n" );
+
+		if ( permission_external_storage ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"></uses-permission>\n" );
+		if ( permission_internet ) 
+		{
+			strcat( newcontents, "    <uses-permission android:name=\"android.permission.INTERNET\"></uses-permission>\n" );
+			strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"></uses-permission>\n" );
+			strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"></uses-permission>\n" );
+		}
+		if ( permission_wake ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WAKE_LOCK\"></uses-permission>\n" );
+		if ( permission_location_coarse && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_LOCATION_COARSE\"></uses-permission>\n" );
+		if ( permission_location_fine && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_LOCATION_FINE\"></uses-permission>\n" );
+		if ( permission_billing && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.BILLING\"></uses-permission>\n" );
+		if ( permission_push && app_type == 0 ) 
+		{
+			strcat( newcontents, "    <uses-permission android:name=\"com.google.android.c2dm.permission.RECEIVE\" />\n" );
+			strcat( newcontents, "    <permission android:name=\"" );
+			strcat( newcontents, package_name );
+			strcat( newcontents, ".permission.C2D_MESSAGE\" android:protectionLevel=\"signature\" />\n" );
+			strcat( newcontents, "    <uses-permission android:name=\"" );
+			strcat( newcontents, package_name );
+			strcat( newcontents, ".permission.C2D_MESSAGE\" />\n" );
+		}
+
+		strcat( newcontents, contents );
+
+		switch( orientation )
+		{
+			case 6: strcat( newcontents, "screenOrientation=\"sensorLandscape" ); break;
+			case 7: strcat( newcontents, "screenOrientation=\"sensorPortait" ); break;
+			default: strcat( newcontents, "screenOrientation=\"fullSensor" ); break;
+		}
+
+		strcat( newcontents, contents2 );
+	
+		// write new Android Manifest.xml file
+		if ( !g_file_set_contents( manifest_file, newcontents, strlen(newcontents), &error ) )
+		{
+			SHOW_ERR1( "Failed to write AndroidManifest.xml file: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+				
+		// write resources file
+		strcpy( newcontents, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <string name=\"app_name\">" );
+		strcat( newcontents, app_name );
+		strcat( newcontents, "</string>\n    <string name=\"backtext\">Press back to return to the app</string>\n    <string name=\"waittext\">Please Wait...</string>\n</resources>\n" );
+
+		resources_file = g_build_path( "/", tmp_folder, "res", "values", "strings.xml", NULL );
+
+		if ( !g_file_set_contents( resources_file, newcontents, strlen(newcontents), &error ) )
+		{
+			SHOW_ERR1( "Failed to write resource strings.xml file: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+
+		// load icon file
+		icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
+		if ( !icon_image || error )
+		{
+			SHOW_ERR1( "Failed to load image icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+
+		// scale it and save it
+		// 96x96
+		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "icon.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 72x72
+		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-hdpi", "icon.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save hdpi icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 48x48
+		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-mdpi", "icon.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save mdpi icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 36x36
+		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-ldpi", "icon.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save ldpi icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+				
+		gdk_pixbuf_unref( icon_scaled_image );
+		icon_scaled_image = NULL;
+
+		g_free( image_filename );
+		image_filename = NULL;
+
+		// load ouya icon and check size
+		if ( app_type == 2 )
+		{
+			icon_image = gdk_pixbuf_new_from_file( ouya_icon, &error );
+			if ( !icon_image || error )
+			{
+				SHOW_ERR1( "Failed to load Ouya large icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+
+			if ( gdk_pixbuf_get_width( icon_image ) != 732 || gdk_pixbuf_get_height( icon_image ) != 412 )
+			{
+				SHOW_ERR( "Ouya large icon must be 732x412 pixels" );
+				goto android_dialog_cleanup2;
+			}
+
+			// copy it to the res folder
+			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "ouya_icon.png", NULL );
+			utils_copy_file( ouya_icon, image_filename, TRUE );
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+							
+		// package manifest and resources
+		argv = g_new0( gchar*, 17 );
+		argv[0] = g_strdup( path_to_aapt );
+		argv[1] = g_strdup("package");
+		argv[2] = g_strdup("-f");
+		argv[3] = g_strdup("-M");
+		argv[4] = g_build_path( "/", tmp_folder, "AndroidManifest.xml", NULL );
+		argv[5] = g_strdup("-I");
+		argv[6] = g_strdup( path_to_android_jar );
+		argv[7] = g_strdup("-S");
+		argv[8] = g_build_path( "/", tmp_folder, "res", NULL );
+		if ( app_type == 2 )
+		{
+			argv[9] = g_strdup("-F");
+			argv[10] = g_strdup( output_file );
+			argv[11] = g_strdup("--auto-add-overlay");
+			argv[12] = NULL;
+		}
+		else
+		{
+			argv[9] = g_strdup("-S");
+			argv[10] = g_build_path( "/", tmp_folder, "resfacebook", NULL );
+			argv[11] = g_strdup("-S");
+			argv[12] = g_build_path( "/", tmp_folder, "resgoogle", NULL );
+			argv[13] = g_strdup("-F");
+			argv[14] = g_strdup( output_file );
+			argv[15] = g_strdup("--auto-add-overlay");
+			argv[16] = NULL;
+		}
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, NULL, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run packaging tool: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+		
+		if ( status != 0 )
+		{
+			SHOW_ERR1( "Package tool returned error code: %d", status );
+			goto android_dialog_cleanup2;
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		g_rename( output_file, output_file_zip );
+
+		// open APK as a zip file
+		if ( !mz_zip_reader_init_file( &zip_archive, output_file_zip, 0 ) )
+		{
+			SHOW_ERR( "Failed to initialise zip file for reading" );
+			goto android_dialog_cleanup2;
+		}
+		if ( !mz_zip_writer_init_from_reader( &zip_archive, output_file_zip ) )
+		{
+			SHOW_ERR( "Failed to open zip file for writing" );
+			goto android_dialog_cleanup2;
+		}
+
+		// copy in extra files
+		zip_add_file = g_build_path( "/", src_folder, "classes.dex", NULL );
+		mz_zip_writer_add_file( &zip_archive, "classes.dex", zip_add_file, NULL, 0, 9 );
+		g_free( zip_add_file );
+
+		zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi", "libandroid_player.so", NULL );
+		mz_zip_writer_add_file( &zip_archive, "lib/armeabi/libandroid_player.so", zip_add_file, NULL, 0, 9 );
+		g_free( zip_add_file );
+
+		zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libandroid_player.so", NULL );
+		mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libandroid_player.so", zip_add_file, NULL, 0, 9 );
+		g_free( zip_add_file );
+
+		zip_add_file = g_build_path( "/", android_folder, "lib", "x86", "libandroid_player.so", NULL );
+		mz_zip_writer_add_file( &zip_archive, "lib/x86/libandroid_player.so", zip_add_file, NULL, 0, 9 );
+		g_free( zip_add_file );
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// copy in media files
+		zip_add_file = g_build_path( "/", app->project->base_path, "media", NULL );
+		if ( !utils_add_folder_to_zip( &zip_archive, zip_add_file, "assets/media", TRUE, TRUE ) )
+		{
+			SHOW_ERR( "Failed to add media files to APK" );
+			goto android_dialog_cleanup2;
+		}
+
+		if ( !mz_zip_writer_finalize_archive( &zip_archive ) )
+		{
+			SHOW_ERR( "Failed to add finalize zip file" );
+			goto android_dialog_cleanup2;
+		}
+		if ( !mz_zip_writer_end( &zip_archive ) )
+		{
+			SHOW_ERR( "Failed to end zip file" );
+			goto android_dialog_cleanup2;
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// sign apk
+		argv2 = g_new0( gchar*, 14 );
+		argv2[0] = g_strdup( path_to_jarsigner );
+		argv2[1] = g_strdup("-sigalg");
+		argv2[2] = g_strdup("MD5withRSA");
+		argv2[3] = g_strdup("-digestalg");
+		argv2[4] = g_strdup("SHA1");
+		argv2[5] = g_strdup("-storepass");
+		argv2[6] = g_strdup(keystore_password);
+		argv2[7] = g_strdup("-keystore");
+		argv2[8] = g_strdup(keystore_file);
+		argv2[9] = g_strdup(output_file_zip);
+		argv2[10] = g_strdup(alias_name);
+		argv2[11] = g_strdup("-keypass");
+		argv2[12] = g_strdup(alias_password);
+		argv2[13] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv2, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run signing tool: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+		
+		if ( status != 0 )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %d)", status );
+			goto android_dialog_cleanup2;
+		}
+
+		if ( str_out ) g_free(str_out);
+		str_out = 0;
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// align apk
+		argv3 = g_new0( gchar*, 5 );
+		argv3[0] = g_strdup( path_to_zipalign );
+		argv3[1] = g_strdup("4");
+		argv3[2] = g_strdup(output_file_zip);
+		argv3[3] = g_strdup(output_file);
+		argv3[4] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv3, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run zipalign tool: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+		
+		if ( status != 0 )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Zip align tool returned error: %s", str_out );
+			else SHOW_ERR1( "Zip align tool returned error code: %d", status );
+			goto android_dialog_cleanup2;
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		gtk_widget_hide(GTK_WIDGET(dialog));
+
+android_dialog_cleanup2:
+        
+        gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_export1"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "button7"), TRUE );
+
+		g_unlink( output_file_zip );
+		utils_remove_folder_recursive( tmp_folder );
+
+		if ( path_to_aapt ) g_free(path_to_aapt);
+		if ( path_to_android_jar ) g_free(path_to_android_jar);
+		if ( path_to_jarsigner ) g_free(path_to_jarsigner);
+
+		if ( zip_add_file ) g_free(zip_add_file);
+		if ( manifest_file ) g_free(manifest_file);
+		if ( contents ) g_free(contents);
+		if ( resources_file ) g_free(resources_file);
+		if ( error ) g_error_free(error);
+		if ( icon_image ) gdk_pixbuf_unref(icon_image);
+		if ( image_filename ) g_free(image_filename);
+		if ( icon_scaled_image ) gdk_pixbuf_unref(icon_scaled_image);
+		if ( argv ) g_strfreev(argv);
+		if ( argv2 ) g_strfreev(argv2);
+		if ( argv3 ) g_strfreev(argv3);
+		
+		if ( output_file_zip ) g_free(output_file_zip);
+		if ( tmp_folder ) g_free(tmp_folder);
+		if ( android_folder ) g_free(android_folder);
+		if ( src_folder ) g_free(src_folder);
+
+		if ( output_file ) g_free(output_file);
+		if ( app_name ) g_free(app_name);
+		if ( package_name ) g_free(package_name);
+		if ( app_icon ) g_free(app_icon);
+		if ( ouya_icon ) g_free(ouya_icon);
+
+		if ( keystore_file ) g_free(keystore_file);
+		if ( keystore_password ) g_free(keystore_password);
+		if ( version_number ) g_free(version_number);
+		if ( alias_name ) g_free(alias_name);
+		if ( alias_password ) g_free(alias_password);
+	}
+
+	running = 0;
+}
+
 void project_export_apk()
 {
+	static GeanyProject *last_proj = 0;
+
+	if ( !app->project ) 
+	{
+		SHOW_ERR( "You must have a project open to export it" );
+		return;
+	}
+
+	if (ui_widgets.android_dialog == NULL)
+	{
+		ui_widgets.android_dialog = create_android_dialog();
+		gtk_widget_set_name(ui_widgets.android_dialog, "Export APK");
+		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.android_dialog), GTK_WINDOW(main_widgets.window));
+
+		g_signal_connect(ui_widgets.android_dialog, "response", G_CALLBACK(on_android_dialog_response), NULL);
+        g_signal_connect(ui_widgets.android_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry")));
+
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")));
+
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo")), 0 );
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo")), 0 );
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 0 ); 
+	}
+
+	if ( app->project != last_proj )
+	{
+		last_proj = app->project;
+		gchar *filename = g_strconcat( app->project->name, ".apk", NULL );
+		gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
+		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")), apk_path );
+		g_free(apk_path);
+		g_free(filename);
+	}
+
+	gtk_window_present(GTK_WINDOW(ui_widgets.android_dialog));
+}
+
+static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	static int running = 0;
+	if ( running ) return;
+
+	running = 1;
+
+	if ( response != 1 )
+	{
+		gtk_widget_hide(GTK_WIDGET(dialog));
+	}
+	else
+	{
+		int i;
+		GtkWidget *widget;
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.keystore_dialog, "button9"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.keystore_dialog, "button8"), FALSE );
+		
+		// keystore details
+		widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_full_name_entry");
+		gchar *full_name = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_company_name_entry");
+		gchar *company_name = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_city_entry");
+		gchar *city = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_country_entry");
+		gchar *country = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_password1_entry");
+		gchar *password1 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_password2_entry");
+		gchar *password2 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		// output
+		widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_output_file_entry");
+		gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		// START CHECKS
+
+		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your keystore file"); goto keystore_dialog_clean_up; }
+
+		if ( g_file_test( output_file, G_FILE_TEST_EXISTS ) )
+		{
+			if ( !dialogs_show_question(_("\"%s\" already exists. Do you want to overwrite it?"), output_file) )
+			{
+				goto keystore_dialog_clean_up;
+			}
+		}
+
+		// check full name
+		if ( strlen(full_name) > 30 ) { SHOW_ERR("Full name must be less than 30 characters"); goto keystore_dialog_clean_up; }
+		for( i = 0; i < strlen(full_name); i++ )
+		{
+			if ( (full_name[i] < 97 || full_name[i] > 122)
+			  && (full_name[i] < 65 || full_name[i] > 90) 
+			  && full_name[i] != 32 ) 
+			{ 
+				SHOW_ERR("Full name contains invalid characters, must be A-Z and spaces only"); 
+				goto keystore_dialog_clean_up; 
+			}
+		}
+		if ( !*full_name )
+		{
+			g_free(full_name);
+			full_name = g_strdup("Unknown");
+		}
+
+		// check company name
+		if ( strlen(company_name) > 30 ) { SHOW_ERR("Company name must be less than 30 characters"); goto keystore_dialog_clean_up; }
+		for( i = 0; i < strlen(company_name); i++ )
+		{
+			if ( (company_name[i] < 97 || company_name[i] > 122)
+			  && (company_name[i] < 65 || company_name[i] > 90) 
+			  && company_name[i] != 32 ) 
+			{ 
+				SHOW_ERR("Company name contains invalid characters, must be A-Z and spaces only"); 
+				goto keystore_dialog_clean_up; 
+			}
+		}
+		if ( !*company_name )
+		{
+			g_free(company_name);
+			company_name = g_strdup("Unknown");
+		}
+
+		// city
+		if ( strlen(city) > 30 ) { SHOW_ERR("City must be less than 30 characters"); goto keystore_dialog_clean_up; }
+		for( i = 0; i < strlen(city); i++ )
+		{
+			if ( (city[i] < 97 || city[i] > 122)
+			  && (city[i] < 65 || city[i] > 90) 
+			  && city[i] != 32 ) 
+			{ 
+				SHOW_ERR("City contains invalid characters, must be A-Z and spaces only"); 
+				goto keystore_dialog_clean_up; 
+			}
+		}
+		if ( !*city )
+		{
+			g_free(city);
+			city = g_strdup("Unknown");
+		}
+
+		// country
+		if ( strlen(country) > 0 && strlen(country) != 2 ) { SHOW_ERR("Country code must be 2 characters"); goto keystore_dialog_clean_up; }
+		for( i = 0; i < strlen(city); i++ )
+		{
+			if ( (city[i] < 97 || city[i] > 122)
+			  && (city[i] < 65 || city[i] > 90) ) 
+			{ 
+				SHOW_ERR("Country code contains invalid characters, must be A-Z only"); 
+				goto keystore_dialog_clean_up; 
+			}
+		}
+		if ( !*country )
+		{
+			g_free(country);
+			country = g_strdup("Unknown");
+		}
+		
+		// check passwords
+		if ( !password1 || !*password1 ) { SHOW_ERR("Password cannot be blank"); goto keystore_dialog_clean_up; }
+		if ( strlen(password1) < 6 ) { SHOW_ERR("Password must be at least 6 characters long"); goto keystore_dialog_clean_up; }
+		if ( strchr(password1,'"') ) { SHOW_ERR("Password cannot contain double quotes"); goto keystore_dialog_clean_up; }
+		if ( strcmp(password1,password2) != 0 ) { SHOW_ERR("Passwords do not match"); goto keystore_dialog_clean_up; }
+
+		goto keystore_dialog_continue;
+
+keystore_dialog_clean_up:
+		if ( full_name ) g_free(full_name);
+		if ( company_name ) g_free(company_name);
+		if ( city ) g_free(city);
+		if ( country ) g_free(country);
+		if ( password1 ) g_free(password1);
+		if ( password2 ) g_free(password2);
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.keystore_dialog, "button8"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.keystore_dialog, "button9"), TRUE );
+		running = 0;
+		return;
+
+keystore_dialog_continue:
+
+		;
+
+		// CHECKS COMPLETE, START KEY GENERATION
+
+#ifdef G_OS_WIN32
+		gchar* path_to_keytool = g_build_path( "/", app->datadir, "android", "jre", "bin", "keytool.exe", NULL );
+#else
+        //gchar* path_to_jarsigner = g_build_path( "/", "/usr", "bin", "keytool", NULL );
+        gchar* path_to_keytool = g_build_path( "/", app->datadir, "android", "jre", "bin", "keytool", NULL );
+#endif
+
+		// decalrations
+		gchar **argv = NULL;
+		gchar *dname = NULL;
+		int status = 0;
+		GError *error = 0;
+		gchar *keystore_name = NULL;
+		gchar* str_out = 0;
+
+		utils_str_replace_char( output_file, '\\', '/' );
+		gchar* slash = strrchr( output_file, '/' );
+		if ( slash )
+		{
+			keystore_name = g_strdup( slash+1 );
+			*slash = 0;
+		}
+		else
+		{
+			keystore_name = g_strdup( output_file );
+			g_free(output_file);
+			output_file = local_prefs.project_file_path;
+		}
+
+		if ( !g_file_test( path_to_keytool, G_FILE_TEST_EXISTS ) )
+		{
+			SHOW_ERR1( "Could not find keytool program, the path \"%s\" is incorrect", path_to_keytool );
+			goto keystore_dialog_cleanup2;
+		}
+
+		dname = g_strdup_printf( "CN=%s, O=%s, L=%s, C=%s", full_name, company_name, city, country );
+		
+		// package manifest and resources
+		argv = g_new0( gchar*, 19 );
+		argv[0] = g_strdup( path_to_keytool );
+		argv[1] = g_strdup("-genkey");
+		argv[2] = g_strdup("-keystore");
+		argv[3] = g_strdup(keystore_name);
+		argv[4] = g_strdup("-alias");
+		argv[5] = g_strdup("mykeystore");
+		argv[6] = g_strdup("-keyalg");
+		argv[7] = g_strdup("RSA");
+		argv[8] = g_strdup("-keysize");
+		argv[9] = g_strdup("2048");
+		argv[10] = g_strdup("-validity");
+		argv[11] = g_strdup("10000");
+		argv[12] = g_strdup("-storepass");
+		argv[13] = g_strdup(password1);
+		argv[14] = g_strdup("-keypass");
+		argv[15] = g_strdup(password1);
+		argv[16] = g_strdup("-dname");
+		argv[17] = g_strdup(dname);
+		argv[18] = NULL;
+
+		if ( !utils_spawn_sync( output_file, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run keytool program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto keystore_dialog_cleanup2;
+		}
+		
+		if ( status != 0 )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "keytool program returned error: %s", str_out );
+			else SHOW_ERR1( "keytool program returned error code: %d", status );
+			goto keystore_dialog_cleanup2;
+		}
+
+		gtk_widget_hide(GTK_WIDGET(dialog));
+
+keystore_dialog_cleanup2:
+        
+        gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.keystore_dialog, "button8"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.keystore_dialog, "button9"), TRUE );
+
+		if ( error ) g_error_free(error);
+
+		if ( path_to_keytool ) g_free(path_to_keytool);
+		if ( argv ) g_strfreev(argv);
+		if ( dname ) g_free(dname);
+		if ( keystore_name ) g_free(keystore_name);
+		if ( str_out ) g_free(str_out);
+		
+		if ( full_name ) g_free(full_name);
+		if ( company_name ) g_free(company_name);
+		if ( city ) g_free(city);
+		if ( country ) g_free(country);
+		if ( password1 ) g_free(password1);
+		if ( password2 ) g_free(password2);
+	}
+
+	running = 0;
+}
+
+void project_generate_keystore()
+{
+
+	if (ui_widgets.keystore_dialog == NULL)
+	{
+		ui_widgets.keystore_dialog = create_keystore_dialog();
+		gtk_widget_set_name(ui_widgets.keystore_dialog, "Generate Keystore");
+		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.keystore_dialog), GTK_WINDOW(main_widgets.window));
+
+		g_signal_connect(ui_widgets.keystore_dialog, "response", G_CALLBACK(on_keystore_dialog_response), NULL);
+        g_signal_connect(ui_widgets.keystore_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+		ui_setup_open_button_callback_keystore(ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_output_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_ENTRY(ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_output_file_entry"))); 
+	}
+
+	GtkWidget *widget = ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_output_file_entry");
+	const gchar *output_file = gtk_entry_get_text(GTK_ENTRY(widget));
+	if ( !output_file || !*output_file )
+	{
+		gchar* out_path = g_build_filename( local_prefs.project_file_path, "release.keystore", NULL );
+		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_output_file_entry")), out_path );
+		g_free(out_path);
+	}
+
+	gtk_window_present(GTK_WINDOW(ui_widgets.keystore_dialog));
+}
+
+static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	static int running = 0;
+	if ( running ) return;
+
+	running = 1;
+
+	if ( response != 1 )
+	{
+		gtk_widget_hide(GTK_WIDGET(dialog));
+	}
+	else
+	{
+		int i;
+		GtkWidget *widget;
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.ios_dialog, "ios_export1"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.ios_dialog, "button6"), FALSE );
+		
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// app details
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_name_entry");
+		gchar *app_name = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry");
+		gchar *profile = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
+		gchar *app_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
+		gchar *facebook_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
+		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int orientation = 0;
+		if ( strcmp(app_orientation,"Landscape Left") == 0 ) orientation = 0;
+		else if ( strcmp(app_orientation,"Landscape Right") == 0 ) orientation = 1;
+		else if ( strcmp(app_orientation,"Portrait") == 0 ) orientation = 2;
+		else if ( strcmp(app_orientation,"Portrait Upside Down") == 0 ) orientation = 3;
+		g_free(app_orientation);
+		
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
+		gchar *version_number = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		if ( !*version_number ) SETPTR( version_number, g_strdup("1.0.0") );
+
+		// output
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry");
+		gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+
+		// START CHECKS
+
+		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your IPA"); goto ios_dialog_clean_up; }
+
+		// check app name
+		if ( !app_name || !*app_name ) { SHOW_ERR("You must enter an app name"); goto ios_dialog_clean_up; }
+		if ( strlen(app_name) > 30 ) { SHOW_ERR("App name must be less than 30 characters"); goto ios_dialog_clean_up; }
+		for( i = 0; i < strlen(app_name); i++ )
+		{
+			if ( (app_name[i] < 97 || app_name[i] > 122)
+			  && (app_name[i] < 65 || app_name[i] > 90) 
+			  && (app_name[i] < 48 || app_name[i] > 57) 
+			  && app_name[i] != 32 
+			  && app_name[i] != 95 ) 
+			{ 
+				SHOW_ERR("App name contains invalid characters, must be A-Z 0-9 spaces and undersore only"); 
+				goto ios_dialog_clean_up; 
+			}
+		}
+		
+		// check icon
+		if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto ios_dialog_clean_up; }
+		if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto ios_dialog_clean_up; }
+		if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto ios_dialog_clean_up; }
+
+		// check profile
+		if ( !profile || !*profile ) { SHOW_ERR("You must select a provisioning profile"); goto ios_dialog_clean_up; }
+		if ( !strrchr( profile, '.' ) || utils_str_casecmp( strrchr( profile, '.' ), ".mobileprovision" ) != 0 ) { SHOW_ERR("Provisioning profile must have .mobileprovision extension"); goto ios_dialog_clean_up; }
+		if ( !g_file_test( profile, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find provisioning profile location"); goto ios_dialog_clean_up; }
+
+		// check version
+		if ( !version_number || !*version_number ) { SHOW_ERR("You must enter a version number, e.g. 1.0.0"); goto ios_dialog_clean_up; }
+		for( i = 0; i < strlen(version_number); i++ )
+		{
+			if ( (version_number[i] < 48 || version_number[i] > 57) && version_number[i] != 46 ) 
+			{ 
+				SHOW_ERR("Version number contains invalid characters, must be 0-9 and . only"); 
+				goto ios_dialog_clean_up; 
+			}
+		}
+
+		// check facebook id
+		if ( facebook_id && *facebook_id )
+		{
+			for( i = 0; i < strlen(facebook_id); i++ )
+			{
+				if ( (facebook_id[i] < 48 || facebook_id[i] > 57) ) 
+				{ 
+					SHOW_ERR("Facebook App ID must be numbers only"); 
+					goto ios_dialog_clean_up; 
+				}
+			}
+		}
 	
+		goto ios_dialog_continue;
+
+ios_dialog_clean_up:
+		if ( app_name ) g_free(app_name);
+		if ( profile ) g_free(profile);
+		if ( app_icon ) g_free(app_icon);
+		if ( facebook_id ) g_free(facebook_id);
+		if ( version_number ) g_free(version_number);
+		if ( output_file ) g_free(output_file);
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.ios_dialog, "ios_export1"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.ios_dialog, "button6"), TRUE );
+		running = 0;
+		return;
+
+ios_dialog_continue:
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// CHECKS COMPLETE, START EXPORT
+
+		gchar* path_to_codesign = g_strdup("/usr/bin/codesign");
+		gchar* path_to_security = g_strdup("/usr/bin/security");
+
+		// make temporary folder
+		gchar* ios_folder = g_build_filename( app->datadir, "ios", NULL );
+		gchar* tmp_folder;
+        if ( app->project )
+            tmp_folder = g_build_filename( app->project->base_path, "build_tmp", NULL );
+        else
+            tmp_folder = g_build_filename( local_prefs.project_file_path, "build_tmp", NULL );
+		
+        gchar* app_folder = g_build_filename( tmp_folder, app_name, NULL );
+		SETPTR(app_folder, g_strconcat( app_folder, ".app", NULL ));
+
+		utils_str_replace_char( ios_folder, '\\', '/' );
+		utils_str_replace_char( tmp_folder, '\\', '/' );
+		
+		gchar* src_folder = g_build_path( "/", app->datadir, "ios", "source", "AGK 2 Player.app", NULL );
+		utils_str_replace_char( src_folder, '\\', '/' );
+
+		gchar *output_file_zip = g_strdup( output_file );
+		gchar *ext = strrchr( output_file_zip, '.' );
+		if ( ext ) *ext = 0;
+		SETPTR( output_file_zip, g_strconcat( output_file_zip, ".zip", NULL ) );
+
+		// decalrations
+		gchar newcontents[ 32000 ];
+		gchar *contents = NULL;
+		gsize length = 0;
+		gchar *certificate_data = NULL;
+		gchar *bundle_id = NULL;
+		gchar *team_id = NULL;
+		gchar *cert_hash = NULL;
+		gchar *cert_temp = NULL;
+		gchar **argv = NULL;
+		gchar *str_out = NULL;
+		gint status = 0;
+		GError *error = NULL;
+		gchar *entitlements_file = NULL;
+		gchar *temp_filename1 = NULL;
+		gchar *temp_filename2 = NULL;
+		gchar *version_string = NULL;
+		gchar *bundle_id2 = NULL; // don't free, pointer to sub string
+		gchar *image_filename = NULL;
+		GdkPixbuf *icon_scaled_image = NULL;
+		GdkPixbuf *icon_image = NULL;
+		gchar *user_name = NULL;
+		gchar *group_name = NULL;
+		mz_zip_archive zip_archive;
+		memset(&zip_archive, 0, sizeof(zip_archive));
+		
+		if ( !utils_copy_folder( src_folder, app_folder, TRUE ) )
+		{
+			SHOW_ERR( "Failed to copy source folder" );
+			goto ios_dialog_cleanup2;
+		}
+
+		// rename executable
+		g_chdir( app_folder );
+		g_rename( "AGK 2 Player", app_name );
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// open provisioning profile and extract certificate
+		if ( !g_file_get_contents( profile, &contents, &length, NULL ) )
+		{
+			SHOW_ERR( "Failed to read provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+        // provisioning profile starts as binary, so skip 100 bytes to get to text
+		gchar* certificate = strstr( contents+100, "<key>DeveloperCertificates</key>" );
+		if ( !certificate )
+		{
+			SHOW_ERR( "Failed to read certificate from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+		certificate = strstr( certificate, "<data>" );
+		if ( !certificate )
+		{
+			SHOW_ERR( "Failed to read certificate data from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+		certificate += strlen("<data>");
+		gchar* certificate_end = strstr( certificate, "</data>" );
+		if ( !certificate_end )
+		{
+			SHOW_ERR( "Failed to read certificate end data from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+        // copy certificate into local storage
+		gint cert_length = (gint) (certificate_end - certificate);
+		certificate_data = g_new0( gchar, cert_length+1 );
+		strncpy( certificate_data, certificate, cert_length );
+		certificate_data[ cert_length ] = 0;
+
+		utils_str_remove_chars( certificate_data, "\n\r" );
+        
+		// extract bundle ID, reuse variables
+		certificate = strstr( contents+100, "<key>application-identifier</key>" );
+		if ( !certificate )
+		{
+			SHOW_ERR( "Failed to read bundle ID from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+		certificate = strstr( certificate, "<string>" );
+		if ( !certificate )
+		{
+			SHOW_ERR( "Failed to read bundle ID data from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+		certificate += strlen("<string>");
+		certificate_end = strstr( certificate, "</string>" );
+		if ( !certificate_end )
+		{
+			SHOW_ERR( "Failed to read bundle ID end data from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+		
+        // copy bundle ID to local storage
+		cert_length = (gint) (certificate_end - certificate);
+		bundle_id = g_new0( gchar, cert_length+1 );
+		strncpy( bundle_id, certificate, cert_length );
+		bundle_id[ cert_length ] = 0;
+		
+		// extract team ID, reuse variables
+		certificate = strstr( contents+100, "<key>com.apple.developer.team-identifier</key>" );
+		if ( !certificate )
+		{
+			SHOW_ERR( "Failed to read team ID from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+		certificate = strstr( certificate, "<string>" );
+		if ( !certificate )
+		{
+			SHOW_ERR( "Failed to read team ID data from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+
+		certificate += strlen("<string>");
+		certificate_end = strstr( certificate, "</string>" );
+		if ( !certificate_end )
+		{
+			SHOW_ERR( "Failed to read team ID end data from provisioning profile" );
+			goto ios_dialog_cleanup2;
+		}
+		
+        // copy team ID to local storage
+		cert_length = (gint) (certificate_end - certificate);
+		team_id = g_new0( gchar, cert_length+1 );
+		strncpy( team_id, certificate, cert_length );
+		team_id[ cert_length ] = 0;
+		
+		if ( strncmp( team_id, bundle_id, strlen(team_id) ) == 0 )
+		{
+			// remove team ID
+			bundle_id2 = strchr( bundle_id, '.' );
+			if ( bundle_id2 ) bundle_id2++;
+			else bundle_id2 = bundle_id;
+		}
+		else
+		{
+			bundle_id2 = bundle_id;
+		}
+
+		// find all certificates, the identity is just the hash of the certificate
+		argv = g_new0( gchar*, 8 );
+		argv[0] = g_strdup( path_to_security );
+		argv[1] = g_strdup("find-certificate");
+		argv[2] = g_strdup("-a");
+		argv[3] = g_strdup("-c");
+		argv[4] = g_strdup("iPhone");
+		argv[5] = g_strdup("-p"); // use PEM format, same as provisioning profile
+		argv[6] = g_strdup("-Z"); // display hash
+		argv[7] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run \"security\" program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 || !str_out )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get code signing identities (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+        // cycle through each certificate looking for one that matches provisioning profile
+		gchar *sha = strstr( str_out, "SHA-1 hash: " );
+		while ( sha )
+		{
+			sha += strlen( "SHA-1 hash: " );
+			gchar *sha_end = strchr( sha, '\n' );
+			if ( !sha_end )
+			{
+				SHOW_ERR( "Failed to read code signing identity from certificate list" );
+				goto ios_dialog_cleanup2;
+			}
+
+			gint length = (gint) (sha_end - sha);
+
+            // save hash for later, if this is the correct certificate then this will be the codesigning identity
+			if ( cert_hash ) g_free(cert_hash);
+			cert_hash = g_new0( gchar, length+1 );
+			strncpy( cert_hash, sha, length );
+			cert_hash[ length ] = 0;
+
+			sha = sha_end + 1;
+			sha = strstr( sha, "-----BEGIN CERTIFICATE-----" );
+			if ( !sha )
+			{
+				SHOW_ERR( "Failed to read certificate data from certificate list" );
+				goto ios_dialog_cleanup2;
+			}
+
+			sha += strlen( "-----BEGIN CERTIFICATE-----" ) + 1;
+			sha_end = strstr( sha, "-----END CERTIFICATE-----" );
+			if ( !sha_end )
+			{
+				SHOW_ERR( "Failed to read certificate end data from certificate list" );
+				goto ios_dialog_cleanup2;
+			}
+
+			length = (gint) (sha_end - sha);
+
+            // copy certificate to temp variable and check it
+			if ( cert_temp ) g_free(cert_temp);
+			cert_temp = g_new0( gchar, length+1 );
+			strncpy( cert_temp, sha, length );
+			cert_temp[ length ] = 0;
+
+            // remove new line characters
+			utils_str_remove_chars( cert_temp, "\n\r" );
+            
+			if ( strcmp( cert_temp, certificate_data ) == 0 ) break; // we found the certificate
+
+			if ( cert_hash ) g_free(cert_hash);
+			cert_hash = 0;
+
+            // look for next certificate
+			sha = sha_end+1;
+			sha = strstr( sha, "SHA-1 hash: " );
+		}
+
+		if ( !cert_hash )
+		{
+			SHOW_ERR( "Could not find the certificate used to create the provisioning profile, have you added the certificate to your keychain?" );
+			goto ios_dialog_cleanup2;
+		}
+
+		g_free(str_out);
+		str_out = 0;
+
+		g_strfreev(argv);
+
+		// find all valid identities
+		argv = g_new0( gchar*, 6 );
+		argv[0] = g_strdup( path_to_security );
+		argv[1] = g_strdup("find-identity");
+		argv[2] = g_strdup("-p");
+		argv[3] = g_strdup("codesigning");
+		argv[4] = g_strdup("-v");
+		argv[5] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run \"security\" program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 || !str_out )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get code signing identities (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+		// parse identities, look for the identity we found earlier
+		if ( strstr( str_out, cert_hash ) == 0 )
+		{
+			SHOW_ERR( "Signing certificate is not valid, either the private key is missing from your keychain, or the certificate has expired" );
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( str_out ) g_free(str_out);
+		str_out = 0;
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// write entitlements file
+		strcpy( newcontents, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n\
+<plist version=\"1.0\">\n<dict>\n	<key>application-identifier</key>\n	<string>" );
+		strcat( newcontents, bundle_id );
+		strcat( newcontents, "</string>\n	<key>com.apple.developer.team-identifier</key>\n	<string>" );
+		strcat( newcontents, team_id );
+		strcat( newcontents, "</string>\n	<key>keychain-access-groups</key>\n	<array>\n		<string>" );
+		strcat( newcontents, bundle_id );
+		strcat( newcontents, "</string>\n	</array>\n</dict>\n</plist>" );
+
+		entitlements_file = g_build_filename( tmp_folder, "entitlements.xcent", NULL );
+
+		if ( !g_file_set_contents( entitlements_file, newcontents, strlen(newcontents), &error ) )
+		{
+			SHOW_ERR1( "Failed to write entitlements file: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+
+		// copy provisioning profile
+		temp_filename1 = g_build_filename( app_folder, "embedded.mobileprovision", NULL );
+		utils_copy_file( profile, temp_filename1, TRUE );
+
+		// edit Info.plist
+		g_free(temp_filename1);
+		temp_filename1 = g_build_filename( app_folder, "Info.plist", NULL );
+
+		if ( contents ) g_free(contents);
+		contents = 0;
+		if ( !g_file_get_contents( temp_filename1, &contents, &length, NULL ) )
+		{
+			SHOW_ERR( "Failed to read Info.plist file" );
+			goto ios_dialog_cleanup2;
+		}
+
+		utils_str_replace_all( &contents, "${PRODUCT_NAME}", app_name );
+		utils_str_replace_all( &contents, "${EXECUTABLE_NAME}", app_name );
+		utils_str_replace_all( &contents, "com.thegamecreators.agk2player", bundle_id2 );
+		if ( facebook_id && *facebook_id ) utils_str_replace_all( &contents, "358083327620324", facebook_id );
+		switch( orientation )
+		{
+			case 0: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft" ); break;
+			case 1: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeRight" ); break;
+			case 2: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationPortrait" ); break;
+			case 3: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationPortraitUpsideDown" ); break;
+		}
+		version_string = g_strconcat( "<string>", version_number, "</string>", NULL );
+        utils_str_replace_all( &contents, "<string>1.0.0</string>", version_string );
+		utils_str_replace_all( &contents, "<string>1.0</string>", version_string );
+
+		if ( !g_file_set_contents( temp_filename1, contents, strlen(contents), NULL ) )
+		{
+			SHOW_ERR( "Failed to write Info.plist file" );
+			goto ios_dialog_cleanup2;
+		}
+
+		g_free(str_out);
+		str_out = 0;
+		g_strfreev(argv);
+
+		// convert plist to binary
+		argv = g_new0( gchar*, 6 );
+		argv[0] = g_strdup( "/usr/bin/plutil" );
+		argv[1] = g_strdup("-convert");
+		argv[2] = g_strdup("binary1");
+		argv[3] = g_strdup(temp_filename1);
+		argv[4] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run userid program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 || !str_out )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get user name (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to get user name (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+		// load icon file
+		icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
+		if ( !icon_image || error )
+		{
+			SHOW_ERR1( "Failed to load image icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+
+		// scale it and save it
+		// 152x152
+		image_filename = g_build_path( "/", app_folder, "icon-152.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 152, 152, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 152x152 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 144x144
+		image_filename = g_build_path( "/", app_folder, "icon-144.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 144x144 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 120x120
+		image_filename = g_build_path( "/", app_folder, "icon-120.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 120, 120, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 120x120 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 114x114
+		image_filename = g_build_path( "/", app_folder, "icon-114.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 114, 114, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 114x114 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 76x76
+		image_filename = g_build_path( "/", app_folder, "icon-76.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 76, 76, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 76x76 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 72x72
+		image_filename = g_build_path( "/", app_folder, "icon-72.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 72x72 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 60x60
+		image_filename = g_build_path( "/", app_folder, "icon-60.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 60, 60, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 60x60 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		gdk_pixbuf_unref( icon_scaled_image );
+		g_free( image_filename );
+
+		// 57x57
+		image_filename = g_build_path( "/", app_folder, "icon-57.png", NULL );
+		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 57, 57, GDK_INTERP_HYPER );
+		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+		{
+			SHOW_ERR1( "Failed to save 57x57 icon: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+						
+		gdk_pixbuf_unref( icon_scaled_image );
+		icon_scaled_image = NULL;
+
+		g_free( image_filename );
+		image_filename = NULL;
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// copy media folder
+        if ( app->project )
+        {
+            if ( temp_filename1 ) g_free(temp_filename1);
+            temp_filename1 = g_build_filename( app->project->base_path, "media", NULL );
+            temp_filename2 = g_build_filename( app_folder, "media", NULL );
+            utils_copy_folder( temp_filename1, temp_filename2, TRUE );
+        }
+
+		g_free(str_out);
+		str_out = 0;
+		g_strfreev(argv);
+
+		// find user name
+		argv = g_new0( gchar*, 6 );
+		argv[0] = g_strdup( "/usr/bin/id" );
+		argv[1] = g_strdup("-u");
+		argv[2] = g_strdup("-n");
+		argv[3] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run userid program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 || !str_out )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get user name (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to get user name (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+		user_name = g_strdup( str_out );
+        user_name[ strlen(user_name)-1 ] = 0;
+
+		g_free(str_out);
+		str_out = 0;
+		g_strfreev(argv);
+
+		// find group name
+		argv = g_new0( gchar*, 6 );
+		argv[0] = g_strdup( "/usr/bin/id" );
+		argv[1] = g_strdup("-g");
+		argv[2] = g_strdup("-n");
+		argv[3] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run groupid program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 || !str_out )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get group name (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to get group name (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+		group_name = g_strdup( str_out );
+        group_name[ strlen(group_name)-1 ] = 0;
+
+		g_free(str_out);
+		str_out = 0;
+		g_strfreev(argv);
+
+		// prepare bundle
+		argv = g_new0( gchar*, 6 );
+		argv[0] = g_strdup( "/usr/sbin/chown" );
+		argv[1] = g_strdup("-RH");
+		argv[2] = g_strconcat( user_name, ":", group_name, NULL );
+		argv[3] = g_strdup(app_folder);
+		argv[4] = NULL;
+        
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run chown program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file ownership (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to set file ownership (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+		g_free(str_out);
+		str_out = 0;
+		g_strfreev(argv);
+
+		// prepare bundle 2
+		argv = g_new0( gchar*, 6 );
+		argv[0] = g_strdup( "/bin/chmod" );
+		argv[1] = g_strdup("-RH");
+		argv[2] = g_strdup("u+w,go-w,a+rX");
+		argv[3] = g_strdup(app_folder);
+		argv[4] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run chmod program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file permissions (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to set file permissions (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+		g_free(str_out);
+		str_out = 0;
+		g_strfreev(argv);
+
+		// sign bundle
+		argv = g_new0( gchar*, 10 );
+		argv[0] = g_strdup( path_to_codesign );
+		argv[1] = g_strdup("--force");
+		argv[2] = g_strdup("--sign");
+		argv[3] = g_strdup(cert_hash);
+		argv[4] = g_strdup("--resource-rules");
+		argv[5] = g_strconcat( app_folder, "/ResourceRules.plist", NULL );
+		argv[6] = g_strdup("--entitlements");
+		argv[7] = g_strdup(entitlements_file);
+		argv[8] = g_strdup(app_folder);
+		argv[9] = NULL;
+        
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( "Failed to run codesign program: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( status != 0 )
+		{
+			if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign app (error: %s)", str_out );
+			else SHOW_ERR1( "Failed to sign app (error: %d)", status );
+			goto ios_dialog_cleanup2;
+		}
+
+		// create IPA zip file
+		if ( !mz_zip_writer_init_file( &zip_archive, output_file_zip, 0 ) )
+		{
+			SHOW_ERR( "Failed to initialise zip file for writing" );
+			goto ios_dialog_cleanup2;
+		}
+		
+		if ( temp_filename1 ) g_free(temp_filename1);
+		temp_filename1 = g_strconcat( "Payload/", app_name, ".app", NULL );
+		if ( !utils_add_folder_to_zip( &zip_archive, app_folder, temp_filename1, TRUE, FALSE ) )
+		{
+			SHOW_ERR( "Failed to add files to IPA" );
+			goto ios_dialog_cleanup2;
+		}
+
+		if ( !mz_zip_writer_finalize_archive( &zip_archive ) )
+		{
+			SHOW_ERR( "Failed to finalize IPA file" );
+			goto ios_dialog_cleanup2;
+		}
+		if ( !mz_zip_writer_end( &zip_archive ) )
+		{
+			SHOW_ERR( "Failed to end IPA file" );
+			goto ios_dialog_cleanup2;
+		}
+
+		g_rename( output_file_zip, output_file );
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		gtk_widget_hide(GTK_WIDGET(dialog));
+
+ios_dialog_cleanup2:
+        
+        gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.ios_dialog, "ios_export1"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.ios_dialog, "button6"), TRUE );
+
+		utils_remove_folder_recursive( tmp_folder );
+
+		if ( path_to_codesign ) g_free(path_to_codesign);
+		if ( path_to_security ) g_free(path_to_security);
+
+		if ( output_file_zip ) g_free(output_file_zip);
+		if ( ios_folder ) g_free(ios_folder);
+		if ( tmp_folder ) g_free(tmp_folder);
+		if ( src_folder ) g_free(src_folder);
+
+		if ( error ) g_error_free(error);
+		if ( str_out ) g_free(str_out);
+		if ( argv ) g_strfreev(argv);
+		if ( contents ) g_free(contents);
+		if ( certificate_data ) g_free(certificate_data);
+		if ( team_id ) g_free(team_id);
+		if ( bundle_id ) g_free(bundle_id);
+		if ( cert_hash ) g_free(cert_hash);
+		if ( cert_temp ) g_free(cert_temp);
+
+		if ( entitlements_file ) g_free(entitlements_file);
+		if ( temp_filename1 ) g_free(temp_filename1);
+		if ( temp_filename2 ) g_free(temp_filename2);
+		if ( version_string ) g_free(version_string);
+		if ( image_filename ) g_free(image_filename);
+		if ( user_name ) g_free(user_name);
+		if ( group_name ) g_free(group_name);
+		if ( icon_scaled_image ) gdk_pixbuf_unref(icon_scaled_image);
+		if ( icon_image ) gdk_pixbuf_unref(icon_image);
+		
+		if ( app_name ) g_free(app_name);
+		if ( profile ) g_free(profile);
+		if ( app_icon ) g_free(app_icon);
+		if ( facebook_id ) g_free(facebook_id);
+		if ( version_number ) g_free(version_number);
+		if ( output_file ) g_free(output_file);
+	}
+
+	running = 0;
+}
+
+void project_export_ipa()
+{
+	static GeanyProject *last_proj = 0;
+
+	if (ui_widgets.ios_dialog == NULL)
+	{
+		ui_widgets.ios_dialog = create_ios_dialog();
+		gtk_widget_set_name(ui_widgets.ios_dialog, "Export IPA");
+		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.ios_dialog), GTK_WINDOW(main_widgets.window));
+
+		g_signal_connect(ui_widgets.ios_dialog, "response", G_CALLBACK(on_ios_dialog_response), NULL);
+        g_signal_connect(ui_widgets.ios_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry")));
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry")));
+		
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")));
+
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo")), 0 );
+	}
+
+	if ( app->project != last_proj || app->project == 0 )
+	{
+		last_proj = app->project;
+        if ( app->project )
+        {
+            gchar *filename = g_strconcat( app->project->name, ".ipa", NULL );
+            gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
+            gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
+            g_free(apk_path);
+            g_free(filename);
+        }
+        else
+        {
+            gchar* apk_path = g_build_filename( local_prefs.project_file_path, "AGK Player.ipa", NULL );
+            gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
+            g_free(apk_path);
+        }
+	}
+
+	gtk_window_present(GTK_WINDOW(ui_widgets.ios_dialog));
 }
 
 /* Called when creating, opening, closing and updating projects. */

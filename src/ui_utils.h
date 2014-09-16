@@ -138,6 +138,9 @@ typedef struct UIWidgets
 	GtkWidget	*open_colorsel;
 	GtkWidget	*open_fontsel;
 	GtkWidget	*prefs_dialog;
+	GtkWidget	*android_dialog;
+	GtkWidget	*ios_dialog;
+	GtkWidget	*keystore_dialog;
 
 	/* other widgets not needed in GeanyMainWidgets */
 	GtkWidget	*statusbar;			/* use ui_set_statusbar() to set */
@@ -218,6 +221,9 @@ gpointer ui_builder_get_object (const gchar *name);
 /* Compatibility functions */
 GtkWidget *create_edit_menu1(void);
 GtkWidget *create_prefs_dialog(void);
+GtkWidget *create_android_dialog(void);
+GtkWidget *create_ios_dialog(void);
+GtkWidget *create_keystore_dialog(void);
 GtkWidget *create_project_dialog(void);
 GtkWidget *create_toolbar_popup_menu1(void);
 GtkWidget *create_window1(void);

@@ -71,8 +71,8 @@ ifdef MSYS
 	cp -r bin "$(DESTDIR)"
 	cp -r share "$(DESTDIR)"
 else
-	xcopy /s /y data "$(DESTDIR)/data"
-	xcopy /s /y lib "$(DESTDIR)/lib"
-	xcopy /s /y bin "$(DESTDIR)/bin"
-	xcopy /s /y share "$(DESTDIR)/share"
+	xcopy /s /y /e data "$(DESTDIR)/data"
+	xcopy /s /y /e lib "$(DESTDIR)/lib"
+	xcopy /s /y /e bin "$(DESTDIR)/bin"
+	xcopy /s /y /e share "$(DESTDIR)/share"
 endif

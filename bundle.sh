@@ -1,9 +1,12 @@
 #! /bin/sh
 
+cd /Users/paulj/Documents/SVN/AGKTrunk/apps/interpreter_ios
+./export.sh
 cd /Users/paulj/Documents/SVN/AGKTrunk/IDE/Geany-1.24.1
 /usr/bin/make install
 cp ../../CompilerNew/build/Release/AGKCompiler /Users/paulj/Projects/Geany-Compiled/share/applications/AGKCompiler
-cp ../../CompilerNew/build/Release/CommandList.dat /Users/paulj/Projects/Geany-Compiled/share/applications/CommandList.dat
+cp ../../CompilerNew/CommandList.dat /Users/paulj/Projects/Geany-Compiled/share/applications/CommandList.dat
+cp ../../Broadcaster/AGKBroadcaster/build/Release/AGKBroadcaster /Users/paulj/Projects/Geany-Compiled/share/applications/AGKBroadcaster
 mkdir /Users/paulj/Projects/Geany-Compiled/share/applications/interpreters
 cp -R ../../apps/interpreter_mac/build/Release/AGK\ Player.app /Users/paulj/Projects/Geany-Compiled/share/applications/interpreters/Mac.app
 cp -R /Volumes/Shared/Help /Users/paulj/Projects/Geany-Compiled/share/Help

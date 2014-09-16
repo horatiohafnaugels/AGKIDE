@@ -169,11 +169,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\scintilla\src\Editor.h"
+				RelativePath=".\src\editor.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\editor.h"
+				RelativePath=".\scintilla\src\Editor.h"
 				>
 			</File>
 			<File
@@ -309,11 +309,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tagmanager\ctags\main.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\main.h"
 				>
 			</File>
 			<File
-				RelativePath=".\tagmanager\ctags\main.h"
+				RelativePath=".\src\miniz.h"
 				>
 			</File>
 			<File
@@ -917,11 +921,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\filetypes.c"
+				RelativePath=".\src\filetypes.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\filetypes.c"
+				RelativePath=".\data\filetypes.c"
 				>
 			</File>
 			<File
@@ -1197,11 +1201,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data\templates\files\main.c"
+				RelativePath=".\src\main.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\main.c"
+				RelativePath=".\data\templates\files\main.c"
 				>
 			</File>
 			<File
@@ -1222,6 +1226,10 @@
 			</File>
 			<File
 				RelativePath=".\tagmanager\ctags\matlab.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\miniz.c"
 				>
 			</File>
 			<File

@@ -36,7 +36,7 @@
 #include "gb.c"
 
 
-#define HEADER "<span size=\"larger\" weight=\"bold\">AGK IDE 2 Alpha 5.3</span>"
+#define HEADER "<span size=\"larger\" weight=\"bold\">AGK IDE 2 Alpha 6</span>"
 #define INFO "<span size=\"larger\" weight=\"bold\">%s</span>"
 #define CODENAME "<span>Built on Geany 1.24.1</span>"
 #define BUILDDATE "<span size=\"smaller\">%s</span>"
@@ -220,25 +220,13 @@ static GtkWidget *create_dialog(void)
 	g_snprintf(buffer, sizeof(buffer), "Richard Vanner - %s", _("Producer"));
 	ROW(buffer, row, 0, 0, 0, 1);
 	row++;
-	ROW("&lt;rick@thegamecreators.com&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
-	row++;
 
 	g_snprintf(buffer, sizeof(buffer), "Paul Johnston - %s", _("Developer"));
 	ROW(buffer, row, 0, 0, 0, 1);
 	row++;
-	ROW("&lt;paul@thegamecreators.com&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
-	row++;
 
 	g_snprintf(buffer, sizeof(buffer), "Lee Bamber - %s", _("Developer"));
 	ROW(buffer, row, 0, 0, 0, 1);
-	row++;
-	ROW("&lt;lee@thegamecreators.com&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
 	row++;
 
 	g_snprintf(buffer, sizeof(buffer), "Mike Johnson - %s", _("Examples, Demos, and Help"));
@@ -270,43 +258,23 @@ static GtkWidget *create_dialog(void)
 	g_snprintf(buffer, sizeof(buffer), "Colomban Wendling - %s", _("maintainer"));
 	ROW(buffer, row, 0, 0, 0, 1);
 	row++;
-	ROW("&lt;lists.ban@herbesfolles.org&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
-	row++;
-
+	
 	g_snprintf(buffer, sizeof(buffer), "Nick Treleaven - %s", _("developer"));
 	ROW(buffer, row, 0, 0, 0, 1);
 	row++;
-	ROW("&lt;nick.treleaven@btinternet.com&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
-	row++;
-
+	
 	g_snprintf(buffer, sizeof(buffer), "Enrico Tröger - %s", _("developer"));
 	ROW(buffer, row, 0, 0, 0, 1);
 	row++;
-	ROW("&lt;enrico.troeger@uvena.de&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
-	row++;
-
+	
 	g_snprintf(buffer, sizeof(buffer), "Matthew Brush - %s", _("developer"));
 	ROW(buffer, row, 0, 0, 0, 1);
 	row++;
-	ROW("&lt;mbrush@codebrainz.ca&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
-	row++;
-
+	
 	g_snprintf(buffer, sizeof(buffer), "Frank Lanitz - %s", _("translation maintainer"));
 	ROW(buffer, row, 0, 0, 0, 1);
 	row++;
-	ROW("&lt;frank@frank.uvena.de&gt;", row, 0, 0, 0, 1);
-	row++;
-	ROW("", row, 0, 0, 0, 0);
-	row++;
-
+	
 	ROW("", row, 0, 0, 0, 0);
 	row++;
 

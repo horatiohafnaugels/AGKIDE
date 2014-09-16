@@ -711,7 +711,7 @@ GeanyDocument *document_new_file(const gchar *utf8_filename, GeanyFiletype *ft, 
 		}
 		else 
 		{
-			if ( dialogs_show_question(_("Do you want to add the new file to the current project '%s'?"), app->project->name) )
+			//if ( dialogs_show_question(_("Do you want to add the new file to the current project '%s'?"), app->project->name) )
 			{
 				project = app->project;
 			}

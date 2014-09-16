@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.16"/>
+  <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
   <object class="GtkAdjustment" id="adjustment1">
@@ -81,6 +81,1153 @@
     <property name="value">30</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkDialog" id="android_dialog">
+    <property name="width_request">530</property>
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="title" translatable="yes">Export Android APK</property>
+    <property name="modal">True</property>
+    <property name="icon_name">agk</property>
+    <property name="type_hint">dialog</property>
+    <property name="skip_pager_hint">True</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox5">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area6">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="button7">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="android_export1">
+                <property name="label" translatable="yes">Export</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVBox" id="vbox40">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="spacing">4</property>
+            <child>
+              <object class="GtkFrame" id="frame12">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment15">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="top_padding">2</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox47">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="spacing">9</property>
+                        <child>
+                          <object class="GtkLabel" id="label32">
+                            <property name="width_request">500</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">This will build an APK from your media and bytecode that will run on any 2.3+ Android device. It can also be used to produce an APK suitable for the Google Play or Amazon store if you also provide a keystore file for signing. If you don't yet have a keystore file you can generate one from the Tools menu or in Eclispe.</property>
+                            <property name="wrap">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkTable" id="table22">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="n_rows">7</property>
+                            <property name="n_columns">2</property>
+                            <property name="column_spacing">5</property>
+                            <property name="row_spacing">3</property>
+                            <child>
+                              <object class="GtkLabel" id="android_app_name_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">App Name:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_package_name_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Package Name:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_app_icon_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">App Icon:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_orientation_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Orientation:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_sdk_version_label">
+                                <property name="width_request">120</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Android SDK Version:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="android_package_name_entry">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">A-Z . and underscore only, should be in the format com.mycompany.my_app</property>
+                                <property name="invisible_char">●</property>
+                                <property name="invisible_char_set">True</property>
+                                <property name="primary_icon_activatable">False</property>
+                                <property name="secondary_icon_activatable">False</property>
+                                <property name="primary_icon_sensitive">True</property>
+                                <property name="secondary_icon_sensitive">True</property>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox6">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="android_app_icon_entry">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">should be at least 96x96 pixels, PNG only, can contain transparency</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="android_app_icon_path">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <child>
+                                      <object class="GtkImage" id="image_project_dialog_base_path2">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="stock">gtk-open</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox13">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="android_sdk_combo">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">For maximum compatibility choose 2.3.1, to support "Designed For Tablets" use 3.2</property>
+                                    <property name="active">0</property>
+                                    <items>
+                                      <item translatable="yes">2.3.1</item>
+                                      <item translatable="yes">3.2</item>
+                                    </items>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox14">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="android_orientation_combo">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="active">0</property>
+                                    <items>
+                                      <item translatable="yes">Landscape</item>
+                                      <item translatable="yes">Portrait</item>
+                                      <item translatable="yes">All</item>
+                                    </items>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox20">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="android_app_name_entry">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">A-Z, 0-9, spaces or underscore allowed</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_output_type_label">
+                                <property name="width_request">120</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">APK Type:</property>
+                              </object>
+                              <packing>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox27">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="android_output_type_combo">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">Select whether this APK will be used on a Google, Amazon, or Ouya device</property>
+                                    <property name="active">0</property>
+                                    <items>
+                                      <item translatable="yes">Google</item>
+                                      <item translatable="yes">Amazon</item>
+                                      <item translatable="yes">Ouya</item>
+                                    </items>
+                                    <signal name="changed" handler="on_android_output_type_combo_changed" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_ouya_icon_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Ouya Large Icon:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">4</property>
+                                <property name="bottom_attach">5</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox28">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="android_ouya_icon_entry">
+                                    <property name="visible">True</property>
+                                    <property name="sensitive">False</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">must be 732x412 pixels, PNG only</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="android_ouya_icon_path">
+                                    <property name="visible">True</property>
+                                    <property name="sensitive">False</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <child>
+                                      <object class="GtkImage" id="image_project_dialog_base_path5">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="stock">gtk-open</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">4</property>
+                                <property name="bottom_attach">5</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label30">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;APK Settings&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame" id="frame16">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment33">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkTable" id="table26">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="n_rows">3</property>
+                        <property name="n_columns">3</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_external_storage">
+                            <property name="label" translatable="yes">Write External Storage</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Used for the data directory on Android 2.3.1 and for camera capture images</property>
+                            <property name="active">True</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_location_fine">
+                            <property name="label" translatable="yes">Precise Location</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Used by the GPS commands for exact location</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_internet">
+                            <property name="label" translatable="yes">Internet/Network</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Used for network or internet access</property>
+                            <property name="active">True</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_wake">
+                            <property name="label" translatable="yes">Wake Lock</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Used to prevent the device from sleeping</property>
+                            <property name="active">True</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_location_coarse">
+                            <property name="label" translatable="yes">Coarse Location</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Used by the GPS commands for rough location</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">2</property>
+                            <property name="right_attach">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_billing">
+                            <property name="label" translatable="yes">In App Purchase</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Used by the In App Purchase commands</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_push_notifications">
+                            <property name="label" translatable="yes">Push Notifications</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Used by the Push Notification command</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">2</property>
+                            <property name="right_attach">3</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label36">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Permissions&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame" id="frame13">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment18">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="top_padding">2</property>
+                    <property name="left_padding">14</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox55">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="spacing">1</property>
+                        <child>
+                          <object class="GtkLabel" id="label33">
+                            <property name="width_request">500</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">The following must be filled out if you want an APK suitable for submitting to the Google Play or Amazon store.</property>
+                            <property name="wrap">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="padding">4</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkTable" id="table23">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="n_rows">4</property>
+                            <property name="n_columns">2</property>
+                            <child>
+                              <object class="GtkLabel" id="android_keystore_file_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Keystore File:</property>
+                              </object>
+                              <packing>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox19">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="android_keystore_file_entry">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">If you don't have this you can generate one from the Tools menu</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="android_keystore_file_path">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <child>
+                                      <object class="GtkImage" id="image_project_dialog_base_path3">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="stock">gtk-open</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_keystore_password_label">
+                                <property name="width_request">120</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Keystore Password:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox21">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="android_keystore_password_entry">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">The password used to create the keystore</property>
+                                    <property name="visibility">False</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_version_number_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Version Number:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox22">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="android_version_number_entry">
+                                    <property name="width_request">65</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">e.g. 1.0.1</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="android_build_number_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Build Number:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox23">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="android_build_number_entry">
+                                    <property name="width_request">65</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Must be an integer, must be higher than any value already submitted to the store</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkAlignment" id="alignment27">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="top_padding">5</property>
+                            <child>
+                              <object class="GtkVBox" id="vbox57">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="spacing">8</property>
+                                <child>
+                                  <object class="GtkLabel" id="label35">
+                                    <property name="width_request">500</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="xalign">0</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;Advanced&lt;/b&gt;:  If you are providing a keystore generated by Eclipse please enter the alias name and password used to access it.</property>
+                                    <property name="use_markup">True</property>
+                                    <property name="wrap">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkTable" id="table24">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="n_columns">4</property>
+                                    <child>
+                                      <object class="GtkLabel" id="android_alias_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">Alias:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="x_options">GTK_FILL</property>
+                                        <property name="y_options"/>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="android_alias_password_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">Alias Password:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="left_attach">2</property>
+                                        <property name="right_attach">3</property>
+                                        <property name="x_options">GTK_FILL</property>
+                                        <property name="y_options"/>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkHBox" id="hbox24">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <child>
+                                          <object class="GtkEntry" id="android_alias_entry">
+                                            <property name="width_request">150</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="tooltip_text" translatable="yes">must be at least 96x96 pixels, PNG only, can contain transparency</property>
+                                            <property name="invisible_char">●</property>
+                                            <property name="invisible_char_set">True</property>
+                                            <property name="primary_icon_activatable">False</property>
+                                            <property name="secondary_icon_activatable">False</property>
+                                            <property name="primary_icon_sensitive">True</property>
+                                            <property name="secondary_icon_sensitive">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="left_attach">1</property>
+                                        <property name="right_attach">2</property>
+                                        <property name="y_options"/>
+                                        <property name="x_padding">7</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkHBox" id="hbox25">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <child>
+                                          <object class="GtkEntry" id="android_alias_password_entry">
+                                            <property name="width_request">150</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="tooltip_text" translatable="yes">A-Z . and underscore only, should be in the format com.mycompany.my_app</property>
+                                            <property name="visibility">False</property>
+                                            <property name="invisible_char">●</property>
+                                            <property name="invisible_char_set">True</property>
+                                            <property name="primary_icon_activatable">False</property>
+                                            <property name="secondary_icon_activatable">False</property>
+                                            <property name="primary_icon_sensitive">True</property>
+                                            <property name="secondary_icon_sensitive">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="left_attach">3</property>
+                                        <property name="right_attach">4</property>
+                                        <property name="y_options"/>
+                                        <property name="x_padding">6</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label31">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Signing&lt;/b&gt; (optional)</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="padding">7</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame" id="frame15">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment19">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkTable" id="table25">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="n_columns">2</property>
+                        <child>
+                          <object class="GtkLabel" id="android_output_file_label">
+                            <property name="width_request">120</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">Output File Location:</property>
+                          </object>
+                          <packing>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options"/>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkHBox" id="hbox26">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkEntry" id="android_output_file_entry">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">The location to save the final APK file</property>
+                                <property name="invisible_char">●</property>
+                                <property name="invisible_char_set">True</property>
+                                <property name="primary_icon_activatable">False</property>
+                                <property name="secondary_icon_activatable">False</property>
+                                <property name="primary_icon_sensitive">True</property>
+                                <property name="secondary_icon_sensitive">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="android_output_file_path">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <child>
+                                  <object class="GtkImage" id="image_project_dialog_base_path4">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="stock">gtk-open</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="y_options"/>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label34">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Output&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="padding">2</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-6">button7</action-widget>
+      <action-widget response="1">android_export1</action-widget>
+    </action-widgets>
   </object>
   <object class="GtkListStore" id="encoding_list">
     <columns>
@@ -216,20 +1363,47 @@
     <property name="stock">gtk-jump-to</property>
     <property name="icon-size">1</property>
   </object>
-  <object class="GtkImage" id="image4">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-save-as</property>
-    <property name="icon-size">1</property>
-  </object>
-  <object class="GtkImage" id="image4055">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-    <property name="icon-size">1</property>
-  </object>
   <object class="GtkMenu" id="edit_menu1">
     <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="goto_tag_definition2">
+        <property name="label" translatable="yes">Go to _Tag Definition</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="image">image3767</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="on_goto_tag_definition1" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="find_usage2">
+        <property name="label" translatable="yes">Find _Usage</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="image">image3765</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="on_find_usage1_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menu_open_selected_file2">
+        <property name="label" translatable="yes">Open Selected F_ile</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="image">image3764</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="on_menu_open_selected_file1_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
     <child>
       <object class="GtkImageMenuItem" id="undo1">
         <property name="label">gtk-undo</property>
@@ -335,155 +1509,6 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem" id="insert1">
-        <property name="label" translatable="yes">I_nsert</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="image">image4055</property>
-        <property name="use_stock">False</property>
-        <child type="submenu">
-          <object class="GtkMenu" id="insert1_menu">
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkMenuItem" id="add_changelog_entry2">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Insert _ChangeLog Entry</property>
-                <property name="use_underline">True</property>
-                <signal name="activate" handler="on_comments_changelog_activate" swapped="no"/>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="insert_function_description1">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Insert _Function Description</property>
-                <property name="use_underline">True</property>
-                <signal name="activate" handler="on_comments_function_activate" swapped="no"/>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="insert_multiline_comment1">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Insert _Multiline Comment</property>
-                <property name="use_underline">True</property>
-                <signal name="activate" handler="on_comments_multiline_activate" swapped="no"/>
-              </object>
-            </child>
-            <child>
-              <object class="GtkImageMenuItem" id="comments">
-                <property name="label" translatable="yes">_More</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="use_underline">True</property>
-                <property name="image">image3761</property>
-                <property name="use_stock">False</property>
-                <child type="submenu">
-                  <object class="GtkMenu" id="comments_menu">
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkMenuItem" id="insert_file_header2">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Insert File _Header</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_comments_fileheader_activate" swapped="no"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="insert_gpl_notice1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Insert _GPL Notice</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_comments_gpl_activate" swapped="no"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="insert_bsd_license_notice1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Insert _BSD License Notice</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_comments_bsd_activate" swapped="no"/>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSeparatorMenuItem" id="separator57">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkImageMenuItem" id="insert_date2">
-                <property name="label" translatable="yes">Insert Dat_e</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="use_underline">True</property>
-                <property name="image">image3762</property>
-                <property name="use_stock">False</property>
-                <child type="submenu">
-                  <object class="GtkMenu" id="insert_date2_menu">
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkMenuItem" id="invisible10">
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">invisible</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkImageMenuItem" id="insert_include1">
-                <property name="label" translatable="yes">_Insert "include &lt;...&gt;"</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="use_underline">True</property>
-                <property name="image">image3763</property>
-                <property name="use_stock">False</property>
-                <child type="submenu">
-                  <object class="GtkMenu" id="insert_include1_menu">
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkMenuItem" id="invisible3">
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">invisible</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSeparatorMenuItem" id="separator50">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="insert_alternative_white_space2">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">_Insert Alternative White Space</property>
-                <property name="use_underline">True</property>
-                <signal name="activate" handler="on_insert_alternative_white_space1_activate" swapped="no"/>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
       <object class="GtkMenuItem" id="search2">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -498,58 +1523,27 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem" id="menu_open_selected_file2">
-        <property name="label" translatable="yes">Open Selected F_ile</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="image">image3764</property>
-        <property name="use_stock">False</property>
-        <signal name="activate" handler="on_menu_open_selected_file1_activate" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="find_usage2">
-        <property name="label" translatable="yes">Find _Usage</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="image">image3765</property>
-        <property name="use_stock">False</property>
-        <signal name="activate" handler="on_find_usage1_activate" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="find_document_usage2">
-        <property name="label" translatable="yes">Find _Document Usage</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="image">image3766</property>
-        <property name="use_stock">False</property>
-        <signal name="activate" handler="on_find_document_usage1_activate" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="goto_tag_definition2">
-        <property name="label" translatable="yes">Go to _Tag Definition</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="image">image3767</property>
-        <property name="use_stock">False</property>
-        <signal name="activate" handler="on_goto_tag_definition1" swapped="no"/>
-      </object>
-    </child>
-    <child>
       <object class="GtkMenuItem" id="context_action1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Passes the selected word to the command set in Preferences-&gt;Tools</property>
         <property name="label" translatable="yes">Conte_xt Action</property>
         <property name="use_underline">True</property>
         <signal name="activate" handler="on_context_action1_activate" swapped="no"/>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image4">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-save-as</property>
+    <property name="icon-size">1</property>
+  </object>
+  <object class="GtkImage" id="image4055">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+    <property name="icon-size">1</property>
   </object>
   <object class="GtkImage" id="image4056">
     <property name="visible">True</property>
@@ -769,6 +1763,1096 @@
         <col id="0" translatable="yes">Match braces</col>
       </row>
     </data>
+  </object>
+  <object class="GtkDialog" id="ios_dialog">
+    <property name="width_request">530</property>
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="type_hint">dialog</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox7">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area7">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="button6">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="ios_export1">
+                <property name="label" translatable="yes">Export</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVBox" id="vbox59">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkFrame" id="frame30">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment38">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox60">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="spacing">5</property>
+                        <child>
+                          <object class="GtkLabel" id="label38">
+                            <property name="width_request">500</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">This will build an IPA from your media and bytecode that will run on any iOS device running iOS 5.1.1 or greater. You must have the correct developer or distribution certificate and corresponding private key in your keychain for the provisioning profile you are using. It can also be used to produce an IPA suitable for the uploading if you use an AppStore provisioning profile, you will need to install Application Loader, or install XCode and use its Application Loader, to submit the actual IPA to iTunes Connect.</property>
+                            <property name="wrap">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkTable" id="table27">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="n_rows">6</property>
+                            <property name="n_columns">2</property>
+                            <property name="column_spacing">5</property>
+                            <property name="row_spacing">3</property>
+                            <child>
+                              <object class="GtkLabel" id="ios_app_name_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">App Name:</property>
+                              </object>
+                              <packing>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="ios_facebook_id_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Facebook App ID:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox32">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="ios_app_name_entry">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">A-Z, 0-9, spaces or underscore allowed</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="ios_provisioning_label">
+                                <property name="width_request">120</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Provisioning Profile:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox29">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="ios_provisioning_entry">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Provisioning profile downloaded from your Apple developer account containing the list of devices this build will work on (or the App Store)</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="ios_provisioning_path">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <child>
+                                      <object class="GtkImage" id="image_project_dialog_base_path6">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="stock">gtk-open</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="ios_orientation_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Initial Orientation:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox31">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="ios_orientation_combo">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">Sets the initial orientation when your app starts. To limit the device orientation you must use SetOrientationAllowed() in your code</property>
+                                    <property name="active">0</property>
+                                    <items>
+                                      <item translatable="yes">Landscape Left</item>
+                                      <item translatable="yes">Landscape Right</item>
+                                      <item translatable="yes">Portrait</item>
+                                      <item translatable="yes">Portrait Upside Down</item>
+                                    </items>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="ios_app_icon_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">App Icon:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox34">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="ios_app_icon_entry">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">should be at least 152x152 pixels, PNG only, can contain transparency</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="ios_app_icon_path">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <child>
+                                      <object class="GtkImage" id="image_project_dialog_base_path7">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="stock">gtk-open</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="ios_version_number_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Version Number:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">4</property>
+                                <property name="bottom_attach">5</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox33">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="ios_version_number_entry">
+                                    <property name="width_request">60</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">0-9 and . only, this must match the version number you use in iTunes Connect</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">4</property>
+                                <property name="bottom_attach">5</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox42">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="ios_facebook_id_entry">
+                                    <property name="width_request">200</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">(optional) if you use the Facebook commands you must put the Facebook App ID here</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label37">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;App Settings&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame" id="frame35">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment41">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkTable" id="table28">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="n_columns">2</property>
+                        <property name="column_spacing">5</property>
+                        <property name="row_spacing">3</property>
+                        <child>
+                          <object class="GtkLabel" id="ios_output_file_label">
+                            <property name="width_request">120</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">Output File Location:</property>
+                          </object>
+                          <packing>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options"/>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkHBox" id="hbox30">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkEntry" id="ios_output_file_entry">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">The location to save the final APK file</property>
+                                <property name="invisible_char">●</property>
+                                <property name="invisible_char_set">True</property>
+                                <property name="primary_icon_activatable">False</property>
+                                <property name="secondary_icon_activatable">False</property>
+                                <property name="primary_icon_sensitive">True</property>
+                                <property name="secondary_icon_sensitive">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="ios_output_file_path">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <child>
+                                  <object class="GtkImage" id="image_project_dialog_base_path8">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="stock">gtk-open</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="y_options"/>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label39">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Output&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="padding">2</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-6">button6</action-widget>
+      <action-widget response="1">ios_export1</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="keystore_dialog">
+    <property name="width_request">530</property>
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="type_hint">dialog</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox8">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area8">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="button8">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button9">
+                <property name="label" translatable="yes">Generate</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVBox" id="vbox58">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkFrame" id="frame42">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment43">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox61">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="spacing">11</property>
+                        <child>
+                          <object class="GtkLabel" id="label40">
+                            <property name="width_request">500</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">A keystore is a container file for a private key that is used to sign your app so that it can be submitted to the Google Play or Amazon store. If you are distributing outside either of these app stores, or you just want to test on your device, then you do not need this.
+
+Once you have submitted your signed app, all updates to it must be signed with the same keystore. Keystores are protected with a password, if you lose your keystore file or forget its password then &lt;b&gt;you will not be able to submit updates to any apps that were signed with it&lt;/b&gt;.
+
+Each of your apps could use a separate keystore, but for simplicity it is easier to have a single keystore for all your apps. For those of you that want to use this keystore with other programs the alias name will be "mykeystore" and the alias password will be the same as the one you type below.
+
+To generate a keystore file you need to submit some information about you or your company that will tell people who signed it. You may leave these blank (except the password) but anyone inspecting the key used to sign an app may be less likely to trust it if all the fields are blank.</property>
+                            <property name="use_markup">True</property>
+                            <property name="wrap">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkTable" id="table29">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="n_rows">6</property>
+                            <property name="n_columns">2</property>
+                            <property name="column_spacing">5</property>
+                            <property name="row_spacing">3</property>
+                            <child>
+                              <object class="GtkLabel" id="keystore_full_name_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Your Full Name:</property>
+                              </object>
+                              <packing>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="keystore_password2_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Re-enter Password:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox35">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="keystore_full_name_entry">
+                                    <property name="width_request">200</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">A-Z and spaces only</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="keystore_city_label">
+                                <property name="width_request">150</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">City:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="keystore_country_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Two Letter Country Code:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="keystore_company_name_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Company Name:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="keystore_password1_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Create a Password:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">4</property>
+                                <property name="bottom_attach">5</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox36">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="keystore_company_name_entry">
+                                    <property name="width_request">200</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">A-Z and spaces only</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox37">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="keystore_city_entry">
+                                    <property name="width_request">200</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">A-Z and spaces only</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox38">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="keystore_country_entry">
+                                    <property name="width_request">50</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">A-Z only</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox39">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="keystore_password1_entry">
+                                    <property name="width_request">200</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="visibility">False</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">4</property>
+                                <property name="bottom_attach">5</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox41">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="keystore_password2_entry">
+                                    <property name="width_request">200</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="visibility">False</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label41">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Keystore Details&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame" id="frame43">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment44">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkTable" id="table30">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="n_columns">2</property>
+                        <property name="column_spacing">5</property>
+                        <property name="row_spacing">3</property>
+                        <child>
+                          <object class="GtkLabel" id="keystore_output_file_label">
+                            <property name="width_request">150</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">Output File Location:</property>
+                          </object>
+                          <packing>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options"/>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkHBox" id="hbox40">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkEntry" id="keystore_output_file_entry">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">The location to save the keystore file</property>
+                                <property name="invisible_char">●</property>
+                                <property name="invisible_char_set">True</property>
+                                <property name="primary_icon_activatable">False</property>
+                                <property name="secondary_icon_activatable">False</property>
+                                <property name="primary_icon_sensitive">True</property>
+                                <property name="secondary_icon_sensitive">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="keystore_output_file_path">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <child>
+                                  <object class="GtkImage" id="image_project_dialog_base_path11">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="stock">gtk-open</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="y_options"/>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label42">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Output&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="padding">2</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">button8</action-widget>
+      <action-widget response="1">button9</action-widget>
+    </action-widgets>
   </object>
   <object class="GtkListStore" id="liststore1"/>
   <object class="GtkListStore" id="tab_pos_list">
@@ -5003,6 +7087,24 @@
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -5023,6 +7125,24 @@
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -6723,6 +8843,15 @@
                                     <signal name="activate" handler="on_project_export_apk_activate" swapped="no"/>
                                   </object>
                                 </child>
+                                <child>
+                                  <object class="GtkMenuItem" id="project_export_ipa">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">As iOS IPA</property>
+                                    <property name="use_underline">True</property>
+                                    <signal name="activate" handler="on_project_export_ipa_activate" swapped="no"/>
+                                  </object>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -8132,6 +10261,58 @@
                             <property name="label" translatable="yes">Load Ta_gs...</property>
                             <property name="use_underline">True</property>
                             <signal name="activate" handler="on_load_tags1_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkSeparatorMenuItem" id="menuitem4">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu_tools_android">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Android</property>
+                            <property name="use_underline">True</property>
+                            <child type="submenu">
+                              <object class="GtkMenu" id="menu3">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkMenuItem" id="menu_tools_android_keystore">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Generate Keystore File</property>
+                                    <property name="use_underline">True</property>
+                                    <signal name="activate" handler="on_menu_tools_android_keystore_activate" swapped="no"/>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menuitem5">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">iOS</property>
+                            <property name="use_underline">True</property>
+                            <child type="submenu">
+                              <object class="GtkMenu" id="menu4">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkMenuItem" id="menu_tools_ios_export_player">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Export AGK Player</property>
+                                    <property name="use_underline">True</property>
+                                    <signal name="activate" handler="on_menu_tools_ios_export_player_activate" swapped="no"/>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
                           </object>
                         </child>
                       </object>

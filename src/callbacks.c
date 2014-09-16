@@ -242,29 +242,45 @@ G_MODULE_EXPORT void on_file1_activate(GtkMenuItem *menuitem, gpointer user_data
 
 	// project options
 	static GtkWidget *item_close = NULL;
+	static GtkWidget *item_export = NULL;
 	//static GtkWidget *item_properties = NULL;
 
 	if (item_close == NULL)
 	{
 		item_close = ui_lookup_widget(main_widgets.window, "project_close1");
 		//item_properties = ui_lookup_widget(main_widgets.window, "project_properties1");
+		item_export = ui_lookup_widget(main_widgets.window, "project_export1");
 	}
 
-	gchar close_text[40];
+	gchar close_text[50];
+	gchar export_text[50];
 	strcpy( close_text, "_Close Project" );
+	strcpy( export_text, "E_xport Project" );
 	if ( app->project && app->project->name )
 	{
 		strcat( close_text, " '" );
+		strcat( export_text, " '" );
 		if ( strlen( app->project->name ) > 30 )
+		{
 			strncat( close_text, app->project->name, 30 );
+			strncat( export_text, app->project->name, 30 );
+		}
 		else
+		{
 			strcat( close_text, app->project->name );
+			strcat( export_text, app->project->name );
+		}
 
 		strcat( close_text, "'" );
+		strcat( export_text, "'" );
 	}
 
 	gtk_widget_set_sensitive(item_close, (app->project != NULL));
 	gtk_menu_item_set_label(GTK_MENU_ITEM(item_close), close_text );
+
+	gtk_widget_set_sensitive(item_export, (app->project != NULL));
+	gtk_menu_item_set_label(GTK_MENU_ITEM(item_export), export_text );
+
 	//gtk_widget_set_sensitive(item_properties, (app->project != NULL));
 	gtk_widget_set_sensitive(ui_widgets.recent_projects_menuitem,
 						g_queue_get_length(ui_prefs.recent_projects_queue) > 0);
@@ -713,6 +729,41 @@ G_MODULE_EXPORT void on_combobox1_changed( GtkComboBox *combo, gpointer data )
 	}
 }
 
+G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, gpointer data )
+{
+	gchar *text = gtk_combo_box_text_get_active_text( GTK_COMBO_BOX_TEXT(combo) );
+	if ( !text ) return;
+	if ( strcmp( text, "Google" ) == 0 )
+	{
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), TRUE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
+	}
+	else if ( strcmp( text, "Amazon" ) == 0 )
+	{
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), FALSE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
+	}
+	else if ( strcmp( text, "Ouya" ) == 0 )
+	{
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), FALSE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), TRUE );
+	}
+}
 
 G_MODULE_EXPORT void on_crlf_activate(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
@@ -1769,6 +1820,38 @@ G_MODULE_EXPORT void on_project_import1_activate(GtkMenuItem *menuitem, gpointer
 G_MODULE_EXPORT void on_project_export_apk_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 	project_export_apk();
+}
+
+G_MODULE_EXPORT void on_menu_tools_android_keystore_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	project_generate_keystore();
+}
+
+G_MODULE_EXPORT void on_project_export_ipa_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+#ifndef __APPLE__
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting to IPA is only possible on Mac");
+#else
+	if ( !app->project )
+	{
+		dialogs_show_msgbox(GTK_MESSAGE_ERROR, "You must have a project open to export it");
+		return;
+	}
+
+	project_export_ipa();
+#endif
+}
+
+G_MODULE_EXPORT void on_menu_tools_ios_export_player_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+#ifndef __APPLE__
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting to IPA is only possible on Mac");
+#else
+	GeanyProject *curr_project = app->project;
+	app->project = NULL;
+	project_export_ipa();
+	app->project = curr_project;
+#endif
 }
 
 G_MODULE_EXPORT void on_project_close1_activate(GtkMenuItem *menuitem, gpointer user_data)

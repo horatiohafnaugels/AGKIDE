@@ -664,6 +664,65 @@ gchar *win32_show_file_dialog(GtkWindow *parent, const gchar *title, const gchar
 }
 
 
+gchar *win32_show_file_save_dialog(GtkWindow *parent, const gchar *title, const gchar *initial_file)
+{
+	OPENFILENAMEW of;
+	gint retval;
+	gchar tmp[MAX_PATH];
+	wchar_t w_file[MAX_PATH];
+	wchar_t w_title[512];
+
+	w_file[0] = '\0';
+
+	if (initial_file != NULL)
+		MultiByteToWideChar(CP_UTF8, 0, initial_file, -1, w_file, G_N_ELEMENTS(w_file));
+
+	MultiByteToWideChar(CP_UTF8, 0, title, -1, w_title, G_N_ELEMENTS(w_title));
+
+	memset(&of, 0, sizeof of);
+#ifdef OPENFILENAME_SIZE_VERSION_400
+	of.lStructSize = OPENFILENAME_SIZE_VERSION_400;
+#else
+	of.lStructSize = sizeof of;
+#endif
+	of.hwndOwner = GDK_WINDOW_HWND(gtk_widget_get_window(GTK_WIDGET(parent)));
+
+	of.lpstrFilter = get_file_filter_all_files();
+	of.lpstrCustomFilter = NULL;
+	of.nFilterIndex = 0;
+
+	of.lpstrFile = w_file;
+	of.nMaxFile = 2048;
+	of.lpstrFileTitle = NULL;
+	of.lpstrTitle = w_title;
+	of.lpstrDefExt = L"";
+	int dwm = 0;
+	if ( DwmIsActive ) DwmIsActive( &dwm );
+	if ( dwm ) of.Flags = OFN_OVERWRITEPROMPT | OFN_EXPLORER;
+	else
+	{
+		of.Flags = OFN_OVERWRITEPROMPT | OFN_EXPLORER | OFN_ENABLEHOOK | OFN_ENABLESIZING;
+		of.lpfnHook = win32_dialog_explorer_hook_proc;
+	}
+	retval = GetSaveFileNameW(&of);
+
+	if (! retval)
+	{
+		if (CommDlgExtendedError())
+		{
+			gchar *error = g_strdup_printf(
+				"File dialog box error (%x)", (gint) CommDlgExtendedError());
+			win32_message_dialog(NULL, GTK_MESSAGE_ERROR, error);
+			g_free(error);
+		}
+		return NULL;
+	}
+
+	WideCharToMultiByte(CP_UTF8, 0, w_file, -1, tmp, sizeof(tmp), NULL, NULL);
+
+	return g_strdup(tmp);
+}
+
 void win32_show_font_dialog(void)
 {
 	gint retval;
@@ -1064,12 +1123,24 @@ gboolean _broken_win32_spawn(const gchar *dir, gchar **argv, gchar **env, GSpawn
 			g_strlcpy(cmdline, argv[0], sizeof(cmdline));
 		cmdpos = 1;
 	}
+	else
+	{
+		if ( strchr( argv[0], ' ' ) )
+			g_snprintf(cmdline, sizeof(cmdline), "\"%s\"", argv[0]);
+		else
+			strcpy( cmdline, argv[0] );
+		cmdpos = 1;
+	}
 
 	for (i = cmdpos; i < argc; i++)
 	{
-		g_snprintf(cmdline, sizeof(cmdline), "%s %s", cmdline, argv[i]);
-		/*MessageBox(NULL, cmdline, cmdline, MB_OK);*/
+		if ( strchr( argv[i], ' ' ) )
+			g_snprintf(cmdline, sizeof(cmdline), "%s \"%s\"", cmdline, argv[i]);
+		else
+			g_snprintf(cmdline, sizeof(cmdline), "%s %s", cmdline, argv[i]);
 	}
+
+	//MessageBox(NULL, cmdline, cmdline, MB_OK);
 
 	if (std_err != NULL)
 	{
@@ -1193,6 +1264,9 @@ gboolean _broken_win32_spawn(const gchar *dir, gchar **argv, gchar **env, GSpawn
 gboolean win32_spawn(const gchar *dir, gchar **argv, gchar **env, GSpawnFlags flags,
 					 gchar **std_out, gchar **std_err, gint *exit_status, GError **error)
 {
+	return _broken_win32_spawn(dir, argv, env, flags, std_out, std_err, exit_status, error);
+
+	/*
 	gint ret;
 	gboolean fail;
 	gchar *tmp_file = create_temp_file();
@@ -1200,7 +1274,7 @@ gboolean win32_spawn(const gchar *dir, gchar **argv, gchar **env, GSpawnFlags fl
 	gchar *command;
 	gchar *locale_command;
 
-	//if (env != NULL)
+	if (env != NULL)
 	{
 		return _broken_win32_spawn(dir, argv, env, flags, std_out, std_err,
 			exit_status, error);
@@ -1221,7 +1295,7 @@ gboolean win32_spawn(const gchar *dir, gchar **argv, gchar **env, GSpawnFlags fl
 	g_chdir(dir);
 	errno = 0;
 	ret = system(locale_command);
-	/* the command can return -1 as an exit code, so check errno also */
+	// the command can return -1 as an exit code, so check errno also 
 	fail = ret == -1 && errno;
 	if (!fail)
 	{
@@ -1243,6 +1317,7 @@ gboolean win32_spawn(const gchar *dir, gchar **argv, gchar **env, GSpawnFlags fl
 		*exit_status = ret;
 
 	return !fail;
+	*/
 }
 
 
@@ -1391,9 +1466,7 @@ gboolean CreateChildProcessASync(gchar *szCmdline)
 	STARTUPINFO siStartInfo;
 	BOOL bFuncRetn = FALSE;
 	//gchar *expandedCmdline;
-	wchar_t w_commandline[CMDSIZE];
-	wchar_t w_dir[MAX_PATH];
-
+	
 	/* Set up members of the PROCESS_INFORMATION structure. */
 	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 
@@ -1403,8 +1476,8 @@ gboolean CreateChildProcessASync(gchar *szCmdline)
 	siStartInfo.cb         = sizeof(STARTUPINFO);
 	
 	/* Create the child process. */
-	bFuncRetn = CreateProcess(szCmdline,
-		"",             /* command line */
+	bFuncRetn = CreateProcess(NULL,
+		szCmdline,             /* command line */
 		NULL,          /* process security attributes */
 		NULL,          /* primary thread security attributes */
 		FALSE,          /* handles are inherited */

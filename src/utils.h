@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 
 #include <time.h>
 
+#include "miniz.h"
 
 /** Returns @c TRUE if @a ptr is @c NULL or @c *ptr is @c FALSE. */
 #define EMPTY(ptr) \
@@ -199,6 +200,8 @@ guint utils_string_regex_replace_all(GString *haystack, GRegex *regex,
 
 void utils_str_replace_all(gchar **haystack, const gchar *needle, const gchar *replacement);
 
+void utils_str_replace_char(gchar *haystack, gchar needle, gchar replacement);
+
 gint utils_strpos(const gchar* haystack, const gchar *needle);
 
 gchar *utils_get_date_time(const gchar *format, time_t *time_to_use);
@@ -293,6 +296,14 @@ gchar **utils_copy_environment(const gchar **exclude_vars, const gchar *first_va
 GDate *utils_parse_date(const gchar *input);
 
 gchar *utils_parse_and_format_build_date(const gchar *input);
+
+gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite);
+
+gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recursive );
+
+gboolean utils_remove_folder_recursive ( const gchar* src );
+
+gboolean utils_add_folder_to_zip ( mz_zip_archive *pZip, const gchar* src, const gchar* dst, gboolean recursive, gboolean selective_compress );
 
 G_END_DECLS
 

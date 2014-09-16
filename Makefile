@@ -428,7 +428,9 @@ SYS_DATA_FILES = \
 	$(srcdir)/data/templates/* \
 	$(srcdir)/data/templates/files/* \
 	$(srcdir)/data/colorschemes/* \
-        $(srcdir)/data/tags/* \
+	$(srcdir)/data/android/* \
+	$(srcdir)/data/ios/* \
+	$(srcdir)/data/tags/* \
 	$(top_srcdir)/data/geany.glade \
 	data/geany.css \
 	data/geany.gtkrc
@@ -1041,7 +1043,11 @@ install-data-only:
 	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/tags/; \
 	  fi \
 	done
-
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/android;
+	rsync -r --exclude=.svn $(srcdir)/data/android/ $(pkgdatadir)/android
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/ios;
+	rsync -r --exclude=.svn $(srcdir)/data/ios/ $(pkgdatadir)/ios
+	
 dist-hook:
 	@if test -d "$(top_srcdir)/.git"; then \
 		echo '  GEN    ChangeLog'; \

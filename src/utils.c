@@ -809,6 +809,14 @@ void utils_str_replace_all(gchar **haystack, const gchar *needle, const gchar *r
 	*haystack = g_string_free(str, FALSE);
 }
 
+void utils_str_replace_char(gchar *haystack, gchar needle, gchar replacement)
+{
+	while( *haystack )
+	{
+		if ( *haystack == needle ) *haystack = replacement;
+		haystack++;
+	}
+}
 
 gint utils_strpos(const gchar *haystack, const gchar *needle)
 {
@@ -2203,4 +2211,262 @@ gchar *utils_parse_and_format_build_date(const gchar *input)
 	}
 
 	return g_strdup(input);
+}
+
+gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite)
+{
+    g_return_val_if_fail (src != NULL, FALSE);
+    g_return_val_if_fail (dst != NULL, FALSE);
+
+    /* check source file */
+    if (!g_file_test (src, G_FILE_TEST_EXISTS)) {
+        g_critical (G_STRLOC ": File '%s' not found.", src);
+        return FALSE;
+    }
+    else if (!g_file_test (src, G_FILE_TEST_IS_REGULAR)) {
+        g_critical (G_STRLOC ": '%s' not a regular file.", src);
+        return FALSE;
+    }
+
+    /* check the destination */
+    if (g_file_test (dst, G_FILE_TEST_EXISTS)) {
+
+        if (!overwrite) {
+            g_critical (G_STRLOC ": Destination file '%s' exists and overwrite is disabled.", dst);
+            return FALSE;
+        }
+
+        /* remove dest fileif overwrite is enabled */
+        if (g_unlink (dst) != 0) {
+            g_critical (G_STRLOC ": %s.", g_strerror (errno));
+            return FALSE;
+        }
+    }
+
+	gchar *contents = 0;
+	gsize length = 0;
+
+	if ( !g_file_get_contents( src, &contents, &length, NULL ) )
+	{
+		g_critical (G_STRLOC ": Unable to open '%s' for reading. %s.", src, g_strerror (errno));
+        return FALSE;
+	}
+
+	if ( !g_file_set_contents( dst, contents, length, NULL ) )
+	{
+		g_free(contents);
+		g_critical (G_STRLOC ": Unable to open '%s' for writing. %s.", dst, g_strerror (errno));
+        return FALSE;
+	}
+
+	g_free(contents);
+    
+    return TRUE;
+}
+
+gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recursive )
+{
+	g_return_val_if_fail (src != NULL, FALSE);
+    g_return_val_if_fail (dst != NULL, FALSE);
+
+	if (!g_file_test (src, G_FILE_TEST_EXISTS)) {
+        g_critical (G_STRLOC ": Location '%s' not found.", src);
+        return FALSE;
+    }
+
+	if (!g_file_test (src, G_FILE_TEST_IS_DIR)) {
+        g_critical (G_STRLOC ": Location '%s' is not a directory.", src);
+        return FALSE;
+    }
+
+	if (!g_file_test (dst, G_FILE_TEST_EXISTS)) {
+        if ( g_mkdir_with_parents( dst, 0755 ) < 0 )
+		{
+			g_critical (G_STRLOC ": Failed to make destination directory '%s'", dst);
+			return FALSE;
+		}
+    }
+
+	// scan the directory
+	const gchar *filename;
+	GDir *dir = g_dir_open(src, 0, NULL);
+	if (dir == NULL)
+	{
+		g_critical (G_STRLOC ": Failed to open directory '%s'", src);
+		return FALSE;
+	}
+
+	foreach_dir(filename, dir)
+	{
+		gchar* fullsrcpath = g_build_filename( src, filename, NULL );
+		gchar* fulldstpath = g_build_filename( dst, filename, NULL );
+
+		if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_DIR ) )
+		{
+			if ( recursive )
+			{
+				if ( !utils_copy_folder( fullsrcpath, fulldstpath, recursive ) ) 
+				{
+					g_dir_close(dir);
+					g_free(fullsrcpath);
+					g_free(fulldstpath);
+					return FALSE;
+				}
+			}
+		}
+		else if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_REGULAR ) )
+		{
+			if ( !utils_copy_file( fullsrcpath, fulldstpath, TRUE ) ) 
+			{
+				g_dir_close(dir);
+				g_free(fullsrcpath);
+				g_free(fulldstpath);
+				return FALSE;
+			}
+		}
+
+		g_free(fullsrcpath);
+		g_free(fulldstpath);
+	}
+
+	g_dir_close(dir);
+	
+	return TRUE;
+}
+
+gboolean utils_remove_folder_recursive ( const gchar* src )
+{
+	g_return_val_if_fail (src != NULL, FALSE);
+
+	if (!g_file_test (src, G_FILE_TEST_EXISTS)) {
+        return TRUE;
+    }
+
+	if (!g_file_test (src, G_FILE_TEST_IS_DIR)) {
+        g_critical (G_STRLOC ": Location '%s' is not a directory.", src);
+        return FALSE;
+    }
+
+	// scan the directory
+	const gchar *filename;
+	GDir *dir = g_dir_open(src, 0, NULL);
+	if (dir == NULL)
+	{
+		g_critical (G_STRLOC ": Failed to open directory '%s'", src);
+		return FALSE;
+	}
+
+	foreach_dir(filename, dir)
+	{
+		gchar* fullsrcpath = g_build_filename( src, filename, NULL );
+
+		if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_DIR ) )
+		{
+			if ( !utils_remove_folder_recursive( fullsrcpath ) ) 
+			{
+				g_dir_close(dir);
+				g_free(fullsrcpath);
+				return FALSE;
+			}
+		}
+		else if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_REGULAR ) )
+		{
+			if ( g_unlink( fullsrcpath ) != 0 ) 
+			{
+				g_dir_close(dir);
+				g_free(fullsrcpath);
+				return FALSE;
+			}
+		}
+
+		g_free(fullsrcpath);
+	}
+
+	g_dir_close(dir);
+
+	g_rmdir( src );
+	
+	return TRUE;
+}
+
+gboolean utils_add_folder_to_zip ( mz_zip_archive *pZip, const gchar* src, const gchar* dst, gboolean recursive, gboolean selective_compress )
+{
+	g_return_val_if_fail (pZip != NULL, FALSE);
+	g_return_val_if_fail (src != NULL, FALSE);
+    g_return_val_if_fail (dst != NULL, FALSE);
+
+	if (!g_file_test (src, G_FILE_TEST_EXISTS)) {
+        g_critical (G_STRLOC ": Location '%s' not found.", src);
+        return FALSE;
+    }
+
+	if (!g_file_test (src, G_FILE_TEST_IS_DIR)) {
+        g_critical (G_STRLOC ": Location '%s' is not a directory.", src);
+        return FALSE;
+    }
+
+	// scan the directory
+	const gchar *filename;
+	GDir *dir = g_dir_open(src, 0, NULL);
+	if (dir == NULL)
+	{
+		g_critical (G_STRLOC ": Failed to open directory '%s'", src);
+		return FALSE;
+	}
+
+	foreach_dir(filename, dir)
+	{
+		gchar* fullsrcpath = g_build_path( "/", src, filename, NULL );
+		gchar* fulldstpath = g_build_path( "/", dst, filename, NULL );
+
+		if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_DIR ) )
+		{
+			if ( recursive )
+			{
+				if ( !utils_add_folder_to_zip( pZip, fullsrcpath, fulldstpath, recursive, selective_compress ) ) 
+				{
+					g_dir_close(dir);
+					g_free(fullsrcpath);
+					g_free(fulldstpath);
+					return FALSE;
+				}
+			}
+		}
+		else if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_REGULAR ) )
+		{
+			int level = 9;
+			gchar *ext = strrchr( filename, '.' );
+			if ( ext && selective_compress )
+			{
+				if ( utils_str_casecmp( ext, ".mp3" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".m4a" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".jpg" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".png" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".gif" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".wav" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".ogg" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".mpg" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".mpeg" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".mp4" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".m4v" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".dat" ) == 0 ) level = 0;
+				if ( utils_str_casecmp( ext, ".zip" ) == 0 ) level = 0;
+			}
+
+			if ( !mz_zip_writer_add_file( pZip, fulldstpath, fullsrcpath, NULL, 0, level ) )
+			{
+				g_dir_close(dir);
+				g_free(fullsrcpath);
+				g_free(fulldstpath);
+				return FALSE;
+			}
+		}
+
+		g_free(fullsrcpath);
+		g_free(fulldstpath);
+	}
+
+	g_dir_close(dir);
+	
+	return TRUE;
 }

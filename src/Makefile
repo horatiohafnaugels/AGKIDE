@@ -113,7 +113,7 @@ am__geany_SOURCES_DIST = about.c about.h build.c build.h callbacks.c \
 	geanywraplabel.c geanywraplabel.h gtkcompat.h highlighting.c \
 	highlighting.h highlightingmappings.h keybindings.c \
 	keybindings.h keyfile.c keyfile.h log.c log.h main.c main.h \
-	geany.h msgwindow.c msgwindow.h navqueue.c navqueue.h \
+	geany.h miniz.c miniz.h msgwindow.c msgwindow.h navqueue.c navqueue.h \
 	notebook.c notebook.h plugins.c plugins.h pluginutils.c \
 	pluginutils.h prefix.c prefix.h prefs.c prefs.h printing.c \
 	printing.h project.c project.h sciwrappers.c sciwrappers.h \
@@ -127,7 +127,7 @@ am__objects_1 = about.$(OBJEXT) build.$(OBJEXT) callbacks.$(OBJEXT) \
 	geanyentryaction.$(OBJEXT) geanymenubuttonaction.$(OBJEXT) \
 	geanyobject.$(OBJEXT) geanywraplabel.$(OBJEXT) \
 	highlighting.$(OBJEXT) keybindings.$(OBJEXT) keyfile.$(OBJEXT) \
-	log.$(OBJEXT) main.$(OBJEXT) msgwindow.$(OBJEXT) \
+	log.$(OBJEXT) main.$(OBJEXT) miniz.$(OBJEXT) msgwindow.$(OBJEXT) \
 	navqueue.$(OBJEXT) notebook.$(OBJEXT) plugins.$(OBJEXT) \
 	pluginutils.$(OBJEXT) prefix.$(OBJEXT) prefs.$(OBJEXT) \
 	printing.$(OBJEXT) project.$(OBJEXT) sciwrappers.$(OBJEXT) \
@@ -457,6 +457,7 @@ SRCS = \
 	keyfile.c keyfile.h \
 	log.c log.h \
 	main.c main.h geany.h \
+	miniz.c miniz.h \
 	msgwindow.c msgwindow.h \
 	navqueue.c navqueue.h \
 	notebook.c notebook.h \
@@ -671,6 +672,7 @@ include ./$(DEPDIR)/keybindings.Po
 include ./$(DEPDIR)/keyfile.Po
 include ./$(DEPDIR)/log.Po
 include ./$(DEPDIR)/main.Po
+#include ./$(DEPDIR)/miniz.Po
 include ./$(DEPDIR)/msgwindow.Po
 include ./$(DEPDIR)/navqueue.Po
 include ./$(DEPDIR)/notebook.Po

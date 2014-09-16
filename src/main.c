@@ -270,6 +270,7 @@ static void main_init(void)
 	ui_widgets.open_fontsel		= NULL;
 	ui_widgets.open_colorsel	= NULL;
 	ui_widgets.prefs_dialog		= NULL;
+	ui_widgets.android_dialog		= NULL;
 	main_status.main_window_realized = FALSE;
 	file_prefs.tab_order_ltr		= FALSE;
 	file_prefs.tab_order_beside		= FALSE;
@@ -1367,6 +1368,7 @@ void main_quit(void)
 	queue_free(ui_prefs.recent_projects_queue);
 
 	if (ui_widgets.prefs_dialog && GTK_IS_WIDGET(ui_widgets.prefs_dialog)) gtk_widget_destroy(ui_widgets.prefs_dialog);
+	if (ui_widgets.android_dialog && GTK_IS_WIDGET(ui_widgets.android_dialog)) gtk_widget_destroy(ui_widgets.android_dialog);
 	if (ui_widgets.open_fontsel && GTK_IS_WIDGET(ui_widgets.open_fontsel)) gtk_widget_destroy(ui_widgets.open_fontsel);
 	if (ui_widgets.open_colorsel && GTK_IS_WIDGET(ui_widgets.open_colorsel)) gtk_widget_destroy(ui_widgets.open_colorsel);
 #ifdef HAVE_VTE

@@ -55,6 +55,8 @@ GetRunTime|Float|()|
 GetSeconds|Integer|()|
 GetFrameTime|Float|()|
 GetMilliseconds|Integer|()|
+GetDeviceID|String|()|
+GetNumProcessors|Integer|()|
 Sha1|String|(String str)|
 HTTPEncode|String|(String str)|
 HTTPDecode|String|(String str)|
@@ -649,9 +651,9 @@ ReadInteger|Integer|(Integer iFileID)|
 ReadFloat|Float|(Integer iFileID)|
 ReadString|String|(Integer iFileID)|
 ReadLine|String|(Integer iFileID)|
-Str|String|(Integer value)|
-Str|String|(Float value)|
-Str|String|(Float value, Integer decimals)|
+Str|String|(Integer valueInt)|
+Str|String|(Float valueFloat)|
+Str|String|(Float valueFloat, Integer decimals)|
 Bin|String|(Integer i)|
 Hex|String|(Integer i)|
 Val|Integer|(String str)|
@@ -673,8 +675,10 @@ GetFolder|String|()|
 SetFolder|Integer|(String str)|
 GetFirstFolder|String|()|
 GetNextFolder|String|()|
+GetFolderCount|Integer|()|
 GetFirstFile|String|()|
 GetNextFile|String|()|
+GetFileCount|Integer|()|
 CreateBroadcastListener|Integer|(Integer port)|
 GetBroadcastMessage|Integer|(Integer iID)|
 DeleteBroadcastListener||(Integer iID)|
@@ -683,6 +687,7 @@ SetNetworkNoMoreClients||(Integer iNetID)|
 JoinNetwork|Integer|(String szNetworkName, String szMyName)|
 JoinNetwork|Integer|(String szIP, Integer port, String szMyName)|
 IsNetworkActive|Integer|(Integer iNetID)|
+GetDeviceIP|String|()|
 CloseNetwork||(Integer iNetID)|
 SetNetworkLatency||(Integer iNetID, Integer latency)|
 GetNetworkMyClientID|Integer|(Integer iNetID)|
@@ -749,9 +754,29 @@ GetRawMouseRightReleased|Integer|()|
 GetRawMouseMiddlePressed|Integer|()|
 GetRawMouseMiddleState|Integer|()|
 GetRawMouseMiddleReleased|Integer|()|
+GetAccelerometerExists|Integer|()|
+GetGyroSensorExists|Integer|()|
+GetProximitySensorExists|Integer|()|
+GetLightSensorExists|Integer|()|
+GetMagneticSensorExists|Integer|()|
+GetRotationVectorSensorExists|Integer|()|
 GetRawAccelX|Float|()|
 GetRawAccelY|Float|()|
 GetRawAccelZ|Float|()|
+GetRawGyroVelocityX|Float|()|
+GetRawGyroVelocityY|Float|()|
+GetRawGyroVelocityZ|Float|()|
+GetRawProximityDistance|Float|()|
+GetRawLightLevel|Float|()|
+GetRawMagneticX|Float|()|
+GetRawMagneticY|Float|()|
+GetRawMagneticZ|Float|()|
+GetRawRotationVectorX|Float|()|
+GetRawRotationVectorY|Float|()|
+GetRawRotationVectorZ|Float|()|
+GetRawRotationVectorW|Float|()|
+GetRawGPSLatitude|Float|()|
+GetRawGPSLongitude|Float|()|
 CompleteRawJoystickDetection||()|
 GetRawJoystickExists|Integer|(Integer index)|
 GetRawJoystickX|Float|(Integer index)|
@@ -951,6 +976,7 @@ CreateMemblock|Integer|(Integer size)|
 CreateMemblock||(Integer memID, Integer size)|
 GetMemblockExists|Integer|(Integer memID)|
 DeleteMemblock||(Integer memID)|
+CopyMemblock||(Integer memSrcID, Integer memDstID, Integer srcOffset, Integer dstOffset, Integer size)|
 GetMemblockSize|Integer|(Integer memID)|
 GetMemblockByte|Integer|(Integer memID, Integer offset)|
 GetMemblockByteSigned|Integer|(Integer memID, Integer offset)|
@@ -1110,6 +1136,8 @@ SetLightDirectionalDirection||(Integer lightID, Float vx, Float vy, Float vz)|
 SetLightDirectionalColor||(Integer lightID, Integer red, Integer green, Integer blue)|
 SetScreenResolution||(Integer width, Integer height, Integer fullscreen)|
 GetDeviceName|String|()|
+GetDeviceBaseName|String|()|
+GetDeviceType|String|()|
 GetAppName|String|()|
 GetDeviceLanguage|String|()|
 SetSleepMode||(Integer mode)|
@@ -1163,11 +1191,11 @@ GetReadPath|String|()|
 SetCurrentDir|Integer|(String szPath)|
 MakeFolder|Integer|(String szName)|
 DeleteFolder||(String szName)|
-GetAccelerometerExists|Integer|()|
 GetMultiTouchExists|Integer|()|
 GetMouseExists|Integer|()|
 GetKeyboardExists|Integer|()|
 GetCameraExists|Integer|()|
+GetGPSSensorExists|Integer|()|
 SetRawMouseVisible||(Integer visible)|
 SetRawMousePosition||(Float x, Float y)|
 GetDayOfWeek|Integer|()|
@@ -1181,12 +1209,6 @@ GetNotificationType|Integer|()|
 SetNotificationImage||(Integer iImageIndex)|
 SetNotificationText||(String pText)|
 GetNFCExists|Integer|()|
-GetGeolocationExists|Integer|()|
-GetCompassExists|Integer|()|
-GetGyrometerExists|Integer|()|
-GetInclinometerExists|Integer|()|
-GetLightSensorExists|Integer|()|
-GetOrientationSensorExists|Integer|()|
 GetRawNFCCount|Integer|()|
 GetRawFirstNFCDevice|Integer|()|
 GetRawNextNFCDevice|Integer|()|
@@ -1194,24 +1216,8 @@ GetRawNFCName|String|(Integer iIndex)|
 SendRawNFCData|Integer|(Integer iIndex, String pMessageText)|
 GetRawNFCDataState|Integer|(Integer iIndex)|
 GetRawNFCData|String|(Integer iIndex)|
-GetRawGeoLatitude|Float|()|
-GetRawGeoLongitude|Float|()|
-GetRawGeoCity|String|()|
-GetRawGeoCountry|String|()|
-GetRawGeoPostalCode|String|()|
-GetRawGeoState|String|()|
-GetRawCompassNorth|Float|(Integer iMagneticTrue)|
-GetRawGyroVelocityX|Float|()|
-GetRawGyroVelocityY|Float|()|
-GetRawGyroVelocityZ|Float|()|
-GetRawInclinoPitch|Float|()|
-GetRawInclinoRoll|Float|()|
-GetRawInclinoYaw|Float|()|
-GetRawLightLevel|Float|()|
-GetRawOrientationX|Float|()|
-GetRawOrientationY|Float|()|
-GetRawOrientationZ|Float|()|
-GetRawOrientationW|Float|()|
+StartGPSTracking||()|
+StopGPSTracking||()|
 GetGameCenterExists|Integer|()|
 GameCenterSetup||()|
 GameCenterLogin||()|
@@ -1221,4 +1227,8 @@ GameCenterShowLeaderBoard||(String szBoardID)|
 GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplete)|
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
-GetDeviceIP|String|()|
+SetPushNotificationKeys||(String data1, String reserved)|
+GetRawRotationVectorX2|Float|()|
+GetRawRotationVectorY2|Float|()|
+GetRawRotationVectorZ2|Float|()|
+GetRawRotationVectorW2|Float|()|

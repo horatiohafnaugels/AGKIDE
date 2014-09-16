@@ -753,7 +753,7 @@
 /* Begin PBXLegacyTarget section */
 		4A103A0E19AF8161007E16F7 /* AGKIDE */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTIONS)";
+			buildArgumentsString = "";
 			buildConfigurationList = 4A103A1119AF8161007E16F7 /* Build configuration list for PBXLegacyTarget "AGKIDE" */;
 			buildPhases = (
 			);

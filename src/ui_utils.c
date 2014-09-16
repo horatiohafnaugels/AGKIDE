@@ -79,6 +79,9 @@ static GtkWidget* window1 = NULL;
 static GtkWidget* toolbar_popup_menu1 = NULL;
 static GtkWidget* edit_menu1 = NULL;
 static GtkWidget* prefs_dialog = NULL;
+static GtkWidget* android_dialog = NULL;
+static GtkWidget* ios_dialog = NULL;
+static GtkWidget* keystore_dialog = NULL;
 static GtkWidget* project_dialog = NULL;
 
 static struct
@@ -87,7 +90,7 @@ static struct
 	 * also be GtkAction objects, so check each pointer before using it */
 	GPtrArray	*document_buttons;
 	//GtkWidget	*menu_insert_include_items[2];
-	GtkWidget	*popup_goto_items[4];
+	GtkWidget	*popup_goto_items[3];
 	GtkWidget	*popup_copy_items[3];
 	GtkWidget	*menu_copy_items[3];
 	GtkWidget	*redo_items[3];
@@ -651,22 +654,29 @@ static void insert_date_items(GtkMenu *me, GtkMenu *mp, gchar *label)
 {
 	GtkWidget *item;
 
-	item = gtk_menu_item_new_with_mnemonic(label);
-	gtk_container_add(GTK_CONTAINER(me), item);
-	gtk_widget_show(item);
-	g_signal_connect(item, "activate", G_CALLBACK(on_menu_insert_date_activate), label);
+	if ( me )
+	{
+		item = gtk_menu_item_new_with_mnemonic(label);
+		gtk_container_add(GTK_CONTAINER(me), item);
+		gtk_widget_show(item);
+		g_signal_connect(item, "activate", G_CALLBACK(on_menu_insert_date_activate), label);
+	}
 
-	item = gtk_menu_item_new_with_mnemonic(label);
-	gtk_container_add(GTK_CONTAINER(mp), item);
-	gtk_widget_show(item);
-	g_signal_connect(item, "activate", G_CALLBACK(on_insert_date_activate), label);
+	if ( mp )
+	{
+		item = gtk_menu_item_new_with_mnemonic(label);
+		gtk_container_add(GTK_CONTAINER(mp), item);
+		gtk_widget_show(item);
+		g_signal_connect(item, "activate", G_CALLBACK(on_insert_date_activate), label);
+	}
 }
 
 
 void ui_create_insert_date_menu_items(void)
 {
 	GtkMenu *menu_edit = GTK_MENU(ui_lookup_widget(main_widgets.window, "insert_date1_menu"));
-	GtkMenu *menu_popup = GTK_MENU(ui_lookup_widget(main_widgets.editor_menu, "insert_date2_menu"));
+	//GtkMenu *menu_popup = GTK_MENU(ui_lookup_widget(main_widgets.editor_menu, "insert_date2_menu"));
+	GtkMenu *menu_popup = NULL;
 	GtkWidget *item;
 	gchar *str;
 
@@ -677,9 +687,12 @@ void ui_create_insert_date_menu_items(void)
 	item = gtk_separator_menu_item_new();
 	gtk_container_add(GTK_CONTAINER(menu_edit), item);
 	gtk_widget_show(item);
-	item = gtk_separator_menu_item_new();
-	gtk_container_add(GTK_CONTAINER(menu_popup), item);
-	gtk_widget_show(item);
+	if ( menu_popup )
+	{
+		item = gtk_separator_menu_item_new();
+		gtk_container_add(GTK_CONTAINER(menu_popup), item);
+		gtk_widget_show(item);
+	}
 
 	insert_date_items(menu_edit, menu_popup, _("dd.mm.yyyy hh:mm:ss"));
 	insert_date_items(menu_edit, menu_popup, _("mm.dd.yyyy hh:mm:ss"));
@@ -688,9 +701,12 @@ void ui_create_insert_date_menu_items(void)
 	item = gtk_separator_menu_item_new();
 	gtk_container_add(GTK_CONTAINER(menu_edit), item);
 	gtk_widget_show(item);
-	item = gtk_separator_menu_item_new();
-	gtk_container_add(GTK_CONTAINER(menu_popup), item);
-	gtk_widget_show(item);
+	if ( menu_popup )
+	{
+		item = gtk_separator_menu_item_new();
+		gtk_container_add(GTK_CONTAINER(menu_popup), item);
+		gtk_widget_show(item);
+	}
 
 	str = _("_Use Custom Date Format");
 	item = gtk_menu_item_new_with_mnemonic(str);
@@ -699,11 +715,14 @@ void ui_create_insert_date_menu_items(void)
 	g_signal_connect(item, "activate", G_CALLBACK(on_menu_insert_date_activate), str);
 	ui_hookup_widget(main_widgets.window, item, "insert_date_custom1");
 
-	item = gtk_menu_item_new_with_mnemonic(str);
-	gtk_container_add(GTK_CONTAINER(menu_popup), item);
-	gtk_widget_show(item);
-	g_signal_connect(item, "activate", G_CALLBACK(on_insert_date_activate), str);
-	ui_hookup_widget(main_widgets.editor_menu, item, "insert_date_custom2");
+	if ( menu_popup )
+	{
+		item = gtk_menu_item_new_with_mnemonic(str);
+		gtk_container_add(GTK_CONTAINER(menu_popup), item);
+		gtk_widget_show(item);
+		g_signal_connect(item, "activate", G_CALLBACK(on_insert_date_activate), str);
+		ui_hookup_widget(main_widgets.editor_menu, item, "insert_date_custom2");
+	}
 
 	insert_date_items(menu_edit, menu_popup, _("_Set Custom Date Format"));
 }
@@ -1758,7 +1777,9 @@ GtkWidget *ui_path_box_new(const gchar *title, GtkFileChooserAction action, GtkE
 
 
 static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data);
-
+static void ui_path_box_open_clicked_android(GtkButton *button, gpointer user_data);
+static void ui_path_box_open_clicked_ios(GtkButton *button, gpointer user_data);
+static void ui_path_box_open_clicked_keystore(GtkButton *button, gpointer user_data);
 
 /* Setup a GtkButton to run a GtkFileChooser, setting entry text if successful.
  * title can be NULL.
@@ -1775,8 +1796,45 @@ void ui_setup_open_button_callback(GtkWidget *open_btn, const gchar *title,
 	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked), path_entry);
 }
 
+void ui_setup_open_button_callback_android(GtkWidget *open_btn, const gchar *title,
+		GtkFileChooserAction action, GtkEntry *entry)
+{
+	GtkWidget *path_entry = GTK_WIDGET(entry);
 
-#ifndef G_OS_WIN32
+	if (title)
+		g_object_set_data_full(G_OBJECT(open_btn), "title", g_strdup(title),
+				(GDestroyNotify) g_free);
+	g_object_set_data(G_OBJECT(open_btn), "action", GINT_TO_POINTER(action));
+	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked_android), path_entry);
+}
+
+void ui_setup_open_button_callback_ios(GtkWidget *open_btn, const gchar *title,
+		GtkFileChooserAction action, GtkEntry *entry)
+{
+	GtkWidget *path_entry = GTK_WIDGET(entry);
+
+	if (title)
+		g_object_set_data_full(G_OBJECT(open_btn), "title", g_strdup(title),
+				(GDestroyNotify) g_free);
+	g_object_set_data(G_OBJECT(open_btn), "action", GINT_TO_POINTER(action));
+	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked_ios), path_entry);
+}
+
+void ui_setup_open_button_callback_keystore(GtkWidget *open_btn, const gchar *title,
+		GtkFileChooserAction action, GtkEntry *entry)
+{
+	GtkWidget *path_entry = GTK_WIDGET(entry);
+
+	if (title)
+		g_object_set_data_full(G_OBJECT(open_btn), "title", g_strdup(title),
+				(GDestroyNotify) g_free);
+	g_object_set_data(G_OBJECT(open_btn), "action", GINT_TO_POINTER(action));
+	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked_keystore), path_entry);
+}
+
+
+
+//#ifndef G_OS_WIN32
 static gchar *run_file_chooser(const gchar *title, GtkFileChooserAction action,
 		const gchar *utf8_path)
 {
@@ -1812,7 +1870,7 @@ static gchar *run_file_chooser(const gchar *title, GtkFileChooserAction action,
 	gtk_widget_destroy(dialog);
 	return ret_path;
 }
-#endif
+//#endif
 
 
 static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data)
@@ -1824,7 +1882,8 @@ static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data)
 
 	/* TODO: extend for other actions */
 	g_return_if_fail(action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER ||
-					 action == GTK_FILE_CHOOSER_ACTION_OPEN);
+					 action == GTK_FILE_CHOOSER_ACTION_OPEN ||
+					 action == GTK_FILE_CHOOSER_ACTION_SAVE);
 
 	if (title == NULL)
 		title = (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ?
@@ -1833,22 +1892,47 @@ static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data)
 	if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
 	{
 #ifdef G_OS_WIN32
-		utf8_path = win32_show_file_dialog(GTK_WINDOW(ui_widgets.prefs_dialog), title,
-						gtk_entry_get_text(GTK_ENTRY(entry)));
-#else
-		utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_dialog(GTK_WINDOW(ui_widgets.prefs_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
 #endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
 	}
 	else if (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)
 	{
 		gchar *path = g_path_get_dirname(gtk_entry_get_text(GTK_ENTRY(entry)));
 #ifdef G_OS_WIN32
-		utf8_path = win32_show_folder_dialog(ui_widgets.prefs_dialog, title,
-						gtk_entry_get_text(GTK_ENTRY(entry)));
-#else
-		utf8_path = run_file_chooser(title, action, path);
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_folder_dialog(ui_widgets.prefs_dialog, title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
 #endif
+		{
+			utf8_path = run_file_chooser(title, action, path);
+		}
+
 		g_free(path);
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SAVE)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_save_dialog(GTK_WINDOW(ui_widgets.prefs_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
 	}
 
 	if (utf8_path != NULL)
@@ -1858,6 +1942,212 @@ static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data)
 	}
 }
 
+static void ui_path_box_open_clicked_android(GtkButton *button, gpointer user_data)
+{
+	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
+	GtkEntry *entry = user_data;
+	const gchar *title = g_object_get_data(G_OBJECT(button), "title");
+	gchar *utf8_path = NULL;
+
+	/* TODO: extend for other actions */
+	g_return_if_fail(action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER ||
+					 action == GTK_FILE_CHOOSER_ACTION_OPEN ||
+					 action == GTK_FILE_CHOOSER_ACTION_SAVE);
+
+	if (title == NULL)
+		title = (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ?
+			_("Select Folder") : _("Select File");
+
+	if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_dialog(GTK_WINDOW(ui_widgets.android_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)
+	{
+		gchar *path = g_path_get_dirname(gtk_entry_get_text(GTK_ENTRY(entry)));
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_folder_dialog(ui_widgets.android_dialog, title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, path);
+		}
+
+		g_free(path);
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SAVE)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_save_dialog(GTK_WINDOW(ui_widgets.android_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+
+	if (utf8_path != NULL)
+	{
+		gtk_entry_set_text(GTK_ENTRY(entry), utf8_path);
+		g_free(utf8_path);
+	}
+}
+
+static void ui_path_box_open_clicked_ios(GtkButton *button, gpointer user_data)
+{
+	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
+	GtkEntry *entry = user_data;
+	const gchar *title = g_object_get_data(G_OBJECT(button), "title");
+	gchar *utf8_path = NULL;
+
+	/* TODO: extend for other actions */
+	g_return_if_fail(action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER ||
+					 action == GTK_FILE_CHOOSER_ACTION_OPEN ||
+					 action == GTK_FILE_CHOOSER_ACTION_SAVE);
+
+	if (title == NULL)
+		title = (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ?
+			_("Select Folder") : _("Select File");
+
+	if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_dialog(GTK_WINDOW(ui_widgets.ios_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)
+	{
+		gchar *path = g_path_get_dirname(gtk_entry_get_text(GTK_ENTRY(entry)));
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_folder_dialog(ui_widgets.ios_dialog, title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, path);
+		}
+
+		g_free(path);
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SAVE)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_save_dialog(GTK_WINDOW(ui_widgets.ios_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+
+	if (utf8_path != NULL)
+	{
+		gtk_entry_set_text(GTK_ENTRY(entry), utf8_path);
+		g_free(utf8_path);
+	}
+}
+
+static void ui_path_box_open_clicked_keystore(GtkButton *button, gpointer user_data)
+{
+	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
+	GtkEntry *entry = user_data;
+	const gchar *title = g_object_get_data(G_OBJECT(button), "title");
+	gchar *utf8_path = NULL;
+
+	/* TODO: extend for other actions */
+	g_return_if_fail(action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER ||
+					 action == GTK_FILE_CHOOSER_ACTION_OPEN ||
+					 action == GTK_FILE_CHOOSER_ACTION_SAVE);
+
+	if (title == NULL)
+		title = (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ?
+			_("Select Folder") : _("Select File");
+
+	if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_dialog(GTK_WINDOW(ui_widgets.keystore_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)
+	{
+		gchar *path = g_path_get_dirname(gtk_entry_get_text(GTK_ENTRY(entry)));
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_folder_dialog(ui_widgets.keystore_dialog, title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, path);
+		}
+
+		g_free(path);
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SAVE)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_save_dialog(GTK_WINDOW(ui_widgets.keystore_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+
+	if (utf8_path != NULL)
+	{
+		gtk_entry_set_text(GTK_ENTRY(entry), utf8_path);
+		g_free(utf8_path);
+	}
+}
 
 void ui_statusbar_showhide(gboolean state)
 {
@@ -2176,6 +2466,20 @@ GtkWidget *create_prefs_dialog(void)
 	return prefs_dialog;
 }
 
+GtkWidget *create_android_dialog(void)
+{
+	return android_dialog;
+}
+
+GtkWidget *create_ios_dialog(void)
+{
+	return ios_dialog;
+}
+
+GtkWidget *create_keystore_dialog(void)
+{
+	return keystore_dialog;
+}
 
 GtkWidget *create_project_dialog(void)
 {
@@ -2253,12 +2557,18 @@ void ui_init_builder(void)
 
 	edit_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "edit_menu1"));
 	prefs_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_dialog"));
+	android_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "android_dialog"));
+	ios_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "ios_dialog"));
+	keystore_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "keystore_dialog"));
 	project_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "project_dialog"));
 	toolbar_popup_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "toolbar_popup_menu1"));
 	window1 = GTK_WIDGET(gtk_builder_get_object(builder, "window1"));
 
 	g_object_set_data(G_OBJECT(edit_menu1), "edit_menu1", edit_menu1);
 	g_object_set_data(G_OBJECT(prefs_dialog), "prefs_dialog", prefs_dialog);
+	g_object_set_data(G_OBJECT(android_dialog), "android_dialog", android_dialog);
+	g_object_set_data(G_OBJECT(ios_dialog), "ios_dialog", ios_dialog);
+	g_object_set_data(G_OBJECT(keystore_dialog), "keystore_dialog", keystore_dialog);
 	g_object_set_data(G_OBJECT(project_dialog), "project_dialog", project_dialog);
 	g_object_set_data(G_OBJECT(toolbar_popup_menu1), "toolbar_popup_menu1", toolbar_popup_menu1);
 	g_object_set_data(G_OBJECT(window1), "window1", window1);
@@ -2327,7 +2637,7 @@ void ui_init(void)
 	widgets.popup_goto_items[0] = ui_lookup_widget(main_widgets.editor_menu, "goto_tag_definition2");
 	widgets.popup_goto_items[1] = ui_lookup_widget(main_widgets.editor_menu, "context_action1");
 	widgets.popup_goto_items[2] = ui_lookup_widget(main_widgets.editor_menu, "find_usage2");
-	widgets.popup_goto_items[3] = ui_lookup_widget(main_widgets.editor_menu, "find_document_usage2");
+	//widgets.popup_goto_items[3] = ui_lookup_widget(main_widgets.editor_menu, "find_document_usage2");
 
 	widgets.popup_copy_items[0] = ui_lookup_widget(main_widgets.editor_menu, "cut1");
 	widgets.popup_copy_items[1] = ui_lookup_widget(main_widgets.editor_menu, "copy1");
@@ -2375,6 +2685,12 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(edit_menu1);
 	if (GTK_IS_WIDGET(prefs_dialog))
 		gtk_widget_destroy(prefs_dialog);
+	if (GTK_IS_WIDGET(android_dialog))
+		gtk_widget_destroy(android_dialog);
+	if (GTK_IS_WIDGET(ios_dialog))
+		gtk_widget_destroy(ios_dialog);
+	if (GTK_IS_WIDGET(keystore_dialog))
+		gtk_widget_destroy(keystore_dialog);
 	if (GTK_IS_WIDGET(project_dialog))
 		gtk_widget_destroy(project_dialog);
 	if (GTK_IS_WIDGET(toolbar_popup_menu1))
