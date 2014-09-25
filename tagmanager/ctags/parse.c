@@ -94,6 +94,24 @@ extern void makeBasicTag (const vString* const name,
     }
 }
 
+extern void makeBasicFunctionTag (const vString* const name,
+				 kindOption* const kinds, const int kind,
+				 const char *arglist)
+{
+    if (name != NULL  &&  vStringLength (name) > 0)
+    {
+        tagEntryInfo e;
+        initTagEntry (&e, vStringValue (name));
+
+        e.kindName = kinds [kind].name;
+        e.kind     = kinds [kind].letter;
+		e.extensionFields.access = "public";
+		e.extensionFields.arglist = arglist;
+
+        makeTagEntry (&e);
+    }
+}
+
 /*
 *   parserDescription mapping management
 */

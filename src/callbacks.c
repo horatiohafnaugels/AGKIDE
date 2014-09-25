@@ -242,12 +242,14 @@ G_MODULE_EXPORT void on_file1_activate(GtkMenuItem *menuitem, gpointer user_data
 
 	// project options
 	static GtkWidget *item_close = NULL;
+	static GtkWidget *item_close_all = NULL;
 	static GtkWidget *item_export = NULL;
 	//static GtkWidget *item_properties = NULL;
 
 	if (item_close == NULL)
 	{
 		item_close = ui_lookup_widget(main_widgets.window, "project_close1");
+		item_close_all = ui_lookup_widget(main_widgets.window, "project_close_all");
 		//item_properties = ui_lookup_widget(main_widgets.window, "project_properties1");
 		item_export = ui_lookup_widget(main_widgets.window, "project_export1");
 	}
@@ -277,6 +279,8 @@ G_MODULE_EXPORT void on_file1_activate(GtkMenuItem *menuitem, gpointer user_data
 
 	gtk_widget_set_sensitive(item_close, (app->project != NULL));
 	gtk_menu_item_set_label(GTK_MENU_ITEM(item_close), close_text );
+
+	gtk_widget_set_sensitive(item_close_all, (app->project != NULL));
 
 	gtk_widget_set_sensitive(item_export, (app->project != NULL));
 	gtk_menu_item_set_label(GTK_MENU_ITEM(item_export), export_text );
@@ -1859,6 +1863,12 @@ G_MODULE_EXPORT void on_project_close1_activate(GtkMenuItem *menuitem, gpointer 
 	project_close(app->project,FALSE);
 }
 
+G_MODULE_EXPORT void on_project_close_all_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	project_close_all();
+}
+
+
 
 G_MODULE_EXPORT void on_menu_project1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
@@ -2568,6 +2578,7 @@ G_MODULE_EXPORT void on_build_broadcast_enable_toggled()
 
 // auto hide message bar functions
 gint old_message_pos = 200;
+gboolean ignore_position_callback = FALSE;
 
 void update_message_height()
 {
@@ -2588,7 +2599,9 @@ void set_full_message_height( gint height )
 void restore_message_height()
 {
 	gint height = gtk_widget_get_allocated_height (ui_lookup_widget(main_widgets.window, "vpaned2"));
+	ignore_position_callback = TRUE;
 	gtk_paned_set_position(GTK_PANED(ui_lookup_widget(main_widgets.window, "vpaned2")), height-old_message_pos);
+	ignore_position_callback = FALSE;
 }
 
 void hide_message_bar()
@@ -2597,7 +2610,9 @@ void hide_message_bar()
 	gint new_pos = height - gtk_paned_get_position(GTK_PANED(ui_lookup_widget(main_widgets.window, "vpaned2")));
 	if ( new_pos > 42 ) old_message_pos = new_pos;
 	
+	ignore_position_callback = TRUE;
 	gtk_paned_set_position(GTK_PANED(ui_lookup_widget(main_widgets.window, "vpaned2")), height-40);
+	ignore_position_callback = FALSE;
 }
 
 G_MODULE_EXPORT gboolean on_scrolledwindow1_focus_in_event(GtkContainer *container, GtkWidget *widget, gpointer user_data)
@@ -2614,4 +2629,14 @@ G_MODULE_EXPORT gboolean on_scrolledwindow1_focus_in_event(GtkContainer *contain
 	}
 
 	return FALSE;
+}
+
+G_MODULE_EXPORT void on_vpaned2_position_changed(GObject *object, GParamSpec *pspec, gpointer user_data)
+{
+	if ( ignore_position_callback ) return;
+    
+	gint height = gtk_widget_get_allocated_height (ui_lookup_widget(main_widgets.window, "vpaned2"));
+	gint new_pos = height - gtk_paned_get_position(GTK_PANED(ui_lookup_widget(main_widgets.window, "vpaned2")));
+	if ( new_pos < 42 ) return;
+	old_message_pos = new_pos;
 }

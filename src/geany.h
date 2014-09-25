@@ -53,7 +53,7 @@ G_BEGIN_DECLS
 #define GEANY_WINDOW_DEFAULT_WIDTH		1000
 #define GEANY_WINDOW_DEFAULT_HEIGHT		700
 
-
+#define AGK_VERSION		"2 Alpha 7"
 
 /* Common forward declarations */
 typedef struct GeanyDocument GeanyDocument;

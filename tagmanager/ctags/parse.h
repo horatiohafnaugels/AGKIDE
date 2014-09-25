@@ -92,6 +92,7 @@ extern void processLegacyKindOption (const char *const parameter);
 extern void makeSimpleTag (const vString* const name, kindOption* const kinds, const int kind);
 extern void makeSimpleScopedTag (const vString* const name, kindOption* const kinds, const int kind, const char* scope, const char* scope2, const char *access);
 extern void makeBasicTag (const vString* const name, kindOption* const kinds, const int kind, const char* scope, const char *vartype);
+extern void makeBasicFunctionTag (const vString* const name, kindOption* const kinds, const int kind, const char *arglist);
 
 extern parserDefinition* parserNew (const char* name);
 extern const char *getLanguageName (const langType language);

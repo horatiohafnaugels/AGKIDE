@@ -163,7 +163,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xalign">0</property>
-                            <property name="label" translatable="yes">This will build an APK from your media and bytecode that will run on any 2.3+ Android device. It can also be used to produce an APK suitable for the Google Play or Amazon store if you also provide a keystore file for signing. If you don't yet have a keystore file you can generate one from the Tools menu or in Eclispe.</property>
+                            <property name="label" translatable="yes">This will build an APK from your media and bytecode that will run on any 2.3+ Android device. It can also be used to produce an APK suitable for the Google Play, Amazon, or Ouya store if you also provide a keystore file for signing. If you don't yet have a keystore file you can generate one from the Tools menu or in Eclispe.</property>
                             <property name="wrap">True</property>
                           </object>
                           <packing>
@@ -725,7 +725,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xalign">0</property>
-                            <property name="label" translatable="yes">The following must be filled out if you want an APK suitable for submitting to the Google Play or Amazon store.</property>
+                            <property name="label" translatable="yes">The following must be filled out if you want an APK suitable for submitting to the Google Play, Amazon, or Ouya store.</property>
                             <property name="wrap">True</property>
                           </object>
                           <packing>
@@ -1265,6 +1265,12 @@
     <property name="can_focus">False</property>
     <property name="pixel_size">13</property>
     <property name="icon_name">broadcast</property>
+  </object>
+  <object class="GtkImage" id="image14">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-close</property>
+    <property name="icon-size">1</property>
   </object>
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
@@ -3017,6 +3023,22 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
                                     <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="remember_open_projects">
+                                    <property name="label" translatable="yes">Remember open projects</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="tooltip_text" translatable="yes">When active, any projects that were open when the IDE was closed will be reopened when the IDE is restarted</property>
+                                    <property name="use_underline">True</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">False</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
                               </object>
@@ -7105,6 +7127,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -7125,6 +7150,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -8987,6 +9015,15 @@ To generate a keystore file you need to submit some information about you or you
                           </object>
                         </child>
                         <child>
+                          <object class="GtkImageMenuItem" id="project_close_all">
+                            <property name="label" translatable="yes">Close All Projects</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="image">image14</property>
+                            <property name="use_stock">False</property>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkSeparatorMenuItem" id="menuitem2">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -9016,7 +9053,7 @@ To generate a keystore file you need to submit some information about you or you
                         </child>
                         <child>
                           <object class="GtkImageMenuItem" id="menu_close_all1">
-                            <property name="label" translatable="yes">C_lose All</property>
+                            <property name="label" translatable="yes">C_lose All Documents</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="use_underline">True</property>

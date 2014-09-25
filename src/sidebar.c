@@ -55,6 +55,7 @@ static struct
 {
 	GtkWidget *remove_item;
 	GtkWidget *add_item;
+	GtkWidget *open_external_item;
 	GtkWidget *expand_all;
 	GtkWidget *collapse_all;
 }
@@ -70,7 +71,8 @@ enum
 {
 	OPENFILES_ACTION_OPEN = 0,
 	OPENFILES_ACTION_REMOVE,
-	OPENFILES_ACTION_ADD
+	OPENFILES_ACTION_ADD,
+	OPENFILES_ACTION_OPEN_EXTERNAL
 };
 
 /* documents tree model columns */
@@ -943,6 +945,22 @@ static void create_openfiles_popup_menu(void)
 
 	openfiles_popup_menu = gtk_menu_new();
 
+	// open external
+	item = gtk_image_menu_item_new_with_label(_("Open Containing Folder"));
+	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
+		gtk_image_new_from_stock(GTK_STOCK_OPEN, GTK_ICON_SIZE_MENU));
+	gtk_widget_show(item);
+	gtk_container_add(GTK_CONTAINER(openfiles_popup_menu), item);
+	g_signal_connect(item, "activate",
+			G_CALLBACK(on_openfiles_document_action), GINT_TO_POINTER(OPENFILES_ACTION_OPEN_EXTERNAL));
+	doc_items.open_external_item = item;
+
+	// separator
+	item = gtk_separator_menu_item_new();
+	gtk_widget_show(item);
+	gtk_container_add(GTK_CONTAINER(openfiles_popup_menu), item);
+
+	// remove
 	item = gtk_image_menu_item_new_with_label(_("Remove From Project"));
 	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
 		gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU));
@@ -952,6 +970,7 @@ static void create_openfiles_popup_menu(void)
 			G_CALLBACK(on_openfiles_document_action), GINT_TO_POINTER(OPENFILES_ACTION_REMOVE));
 	doc_items.remove_item = item;
 
+	// add
 	item = gtk_menu_item_new_with_label(_("Add To Current Project"));
 	gtk_widget_hide(item);
 	gtk_container_add(GTK_CONTAINER(openfiles_popup_menu), item);
@@ -959,16 +978,19 @@ static void create_openfiles_popup_menu(void)
 			G_CALLBACK(on_openfiles_document_action), GINT_TO_POINTER(OPENFILES_ACTION_ADD));
 	doc_items.add_item = item;
 
+	// separator
 	item = gtk_separator_menu_item_new();
 	gtk_widget_show(item);
 	gtk_container_add(GTK_CONTAINER(openfiles_popup_menu), item);
 	
+	// expand
 	doc_items.expand_all = ui_image_menu_item_new(GTK_STOCK_ADD, _("_Expand All"));
 	gtk_widget_show(doc_items.expand_all);
 	gtk_container_add(GTK_CONTAINER(openfiles_popup_menu), doc_items.expand_all);
 	g_signal_connect(doc_items.expand_all, "activate",
 					 G_CALLBACK(on_openfiles_expand_collapse), GINT_TO_POINTER(TRUE));
 
+	// collapse
 	doc_items.collapse_all = ui_image_menu_item_new(GTK_STOCK_REMOVE, _("_Collapse All"));
 	gtk_widget_show(doc_items.collapse_all);
 	gtk_container_add(GTK_CONTAINER(openfiles_popup_menu), doc_items.collapse_all);
@@ -1047,6 +1069,54 @@ static void on_openfiles_document_action(GtkMenuItem *menuitem, gpointer user_da
 					if ( app->project ) sidebar_openfiles_remove_file( NULL, filename );
 					project_add_file( app->project, filename, TRUE );
 				}
+			}
+		}
+		else if ( action == OPENFILES_ACTION_OPEN_EXTERNAL )
+		{
+			if ( type == 0 )
+			{
+				gtk_tree_model_get(model, &iter, DOCUMENTS_FILENAME, &filename, -1);
+				if ( !g_path_is_absolute( filename ) )
+					dialogs_show_msgbox(GTK_MESSAGE_ERROR,"File does not have a folder as it has not been saved");
+				else
+				{
+#ifdef G_OS_WIN32
+					gchar *filepath = g_strdup( filename );
+					utils_str_replace_char( filepath, '\\', '/' );
+					char* slash = strrchr( filepath, '/' );
+					if ( slash ) *slash = 0;
+					utils_str_replace_char( filepath, '/', '\\' );
+					gchar *cmdline = g_strconcat("explorer.exe", " \"", filepath, "\"", NULL);
+					g_spawn_command_line_async(cmdline, NULL);
+					g_free(cmdline);
+					g_free(filepath);
+#else 
+                    gchar *filepath = g_strdup( filename );
+					utils_str_replace_char( filepath, '\\', '/' );
+					char* slash = strrchr( filepath, '/' );
+					if ( slash ) *slash = 0;
+					gchar *cmdline = g_strconcat("open", " \"", filepath, "\"", NULL);
+					g_spawn_command_line_async(cmdline, NULL);
+					g_free(cmdline);
+                    g_free(filepath);
+#endif
+				}
+			}
+			else if ( type == 1 && project )
+			{
+#ifdef G_OS_WIN32
+				gchar *filepath = g_strdup( project->base_path );
+				utils_str_replace_char( filepath, '/', '\\' );
+				if ( filepath[ strlen(filepath) - 1 ] == '\\' ) filepath[ strlen(filepath) - 1 ] = 0;
+				gchar *cmdline = g_strconcat("explorer.exe", " \"", filepath, "\"", NULL);
+				g_spawn_command_line_async(cmdline, NULL);
+				g_free(cmdline);
+				g_free(filepath);
+#else 
+				gchar *cmdline = g_strconcat("open", " \"", project->base_path, "\"", NULL);
+				g_spawn_command_line_async(cmdline, NULL);
+				g_free(cmdline);
+#endif
 			}
 		}
 	}

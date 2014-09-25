@@ -539,10 +539,25 @@ static int parse_function( const char* p )
 		int len = (int)(p-start);
 		if ( len >= 50 ) len = 50;
 
+		// look for args
+		while( isspace(*p) ) p++;
+		if ( *p != '(' ) return 1; // it was a function, just not formatted correctly
+		const char* start2 = p;
+		while( *p && *p != ')' ) p++;
+		if ( *p != ')' ) return 1;
+		int len2 = (int)(p-start2) + 1;
+		if ( len2 >= 50 ) len2 = 50;
+
 		vString *name = vStringNew ();
-		vStringNCatS (name, start, len);
-		makeBasicTag( name, BasicKinds, K_FUNCTION, 0, 0 );
+		vString *args = vStringNew ();
+
+		vStringNCatS (name, start, len);		
+		vStringNCatS (args, start2, len2);		
+
+		makeBasicFunctionTag( name, BasicKinds, K_FUNCTION, args->buffer );
+
 		vStringDelete (name);
+		vStringDelete (args);
 
 		return 1;
 	}

@@ -1824,7 +1824,7 @@ gboolean utils_spawn_async(const gchar *dir, gchar **argv, gchar **env, GSpawnFl
 	}
 
 #ifdef G_OS_WIN32
-	result = win32_spawn(dir, argv, env, flags, NULL, NULL, NULL, error);
+	result = win32_spawn_async(dir, argv, env, flags, NULL, NULL, NULL, error);
 #else
 	result = g_spawn_async(dir, argv, env, flags, NULL, NULL, child_pid, error);
 #endif

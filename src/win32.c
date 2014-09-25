@@ -1077,6 +1077,70 @@ static gchar *create_temp_file(void)
 	return name;
 }
 
+static
+gboolean _broken_win32_spawn_async(const gchar *dir, gchar **argv, gchar **env, GSpawnFlags flags,
+					 gchar **std_out, gchar **std_err, gint *exit_status, GError **error)
+{
+	TCHAR  buffer[CMDSIZE]=TEXT("");
+	TCHAR  cmdline[CMDSIZE] = TEXT("");
+	TCHAR* lpPart[CMDSIZE]={NULL};
+	DWORD  retval = 0;
+	gint argc = 0, i;
+	gint cmdpos = 0;
+
+	SECURITY_ATTRIBUTES saAttr;
+	BOOL fSuccess;
+	
+	while (argv[argc])
+	{
+		++argc;
+	}
+	
+	if (flags & G_SPAWN_SEARCH_PATH)
+	{
+		retval = SearchPath(NULL, argv[0], ".exe", sizeof(buffer), buffer, lpPart);
+		if (retval > 0)
+			g_snprintf(cmdline, sizeof(cmdline), "\"%s\"", buffer);
+		else
+			g_strlcpy(cmdline, argv[0], sizeof(cmdline));
+		cmdpos = 1;
+	}
+	else
+	{
+		if ( strchr( argv[0], ' ' ) )
+			g_snprintf(cmdline, sizeof(cmdline), "\"%s\"", argv[0]);
+		else
+			strcpy( cmdline, argv[0] );
+		cmdpos = 1;
+	}
+
+	for (i = cmdpos; i < argc; i++)
+	{
+		if ( strchr( argv[i], ' ' ) )
+			g_snprintf(cmdline, sizeof(cmdline), "%s \"%s\"", cmdline, argv[i]);
+		else
+			g_snprintf(cmdline, sizeof(cmdline), "%s %s", cmdline, argv[i]);
+	}
+
+	//MessageBox(NULL, cmdline, cmdline, MB_OK);
+
+	/* Set the bInheritHandle flag so pipe handles are inherited. */
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = TRUE;
+	saAttr.lpSecurityDescriptor = NULL;
+
+	/* Now create the child process. */
+	fSuccess = CreateChildProcessASync(cmdline, dir);
+	
+	if (! fSuccess)
+	{
+		geany_debug("win32_spawn: Create async process failed");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 /* Sometimes this blocks for 30s before aborting when there are several
  * pages of (error) output and sometimes hangs - see the FIXME.
@@ -1253,6 +1317,12 @@ gboolean _broken_win32_spawn(const gchar *dir, gchar **argv, gchar **env, GSpawn
 	return TRUE;
 }
 
+gboolean win32_spawn_async(const gchar *dir, gchar **argv, gchar **env, GSpawnFlags flags,
+					 gchar **std_out, gchar **std_err, gint *exit_status, GError **error)
+{
+	return _broken_win32_spawn_async(dir, argv, env, flags, std_out, std_err, exit_status, error);
+}
+
 
 /* Note: g_spawn is broken for receiving both stdio and stderr e.g. when
  * running make and there are compile errors. See glib/giowin32.c header
@@ -1407,7 +1477,7 @@ static gboolean CreateChildProcess(geany_win32_spawn *gw_spawn, TCHAR *szCmdline
 	expandedCmdline = win32_expand_environment_variables(szCmdline);
 
 	MultiByteToWideChar(CP_UTF8, 0, expandedCmdline, -1, w_commandline, G_N_ELEMENTS(w_commandline));
-	MultiByteToWideChar(CP_UTF8, 0, dir, -1, w_dir, G_N_ELEMENTS(w_dir));
+	if ( dir ) MultiByteToWideChar(CP_UTF8, 0, dir, -1, w_dir, G_N_ELEMENTS(w_dir));
 
 	/* Create the child process. */
 	bFuncRetn = CreateProcessW(NULL,
@@ -1417,7 +1487,7 @@ static gboolean CreateChildProcess(geany_win32_spawn *gw_spawn, TCHAR *szCmdline
 		TRUE,          /* handles are inherited */
 		CREATE_NO_WINDOW,             /* creation flags */
 		NULL,          /* use parent's environment */
-		w_dir,           /* use parent's current directory */
+		dir ? w_dir : NULL,           /* use parent's current directory */
 		&siStartInfo,  /* STARTUPINFO pointer */
 		&piProcInfo);  /* receives PROCESS_INFORMATION */
 
@@ -1460,7 +1530,7 @@ static gboolean CreateChildProcess(geany_win32_spawn *gw_spawn, TCHAR *szCmdline
 	return FALSE;
 }
 
-gboolean CreateChildProcessASync(gchar *szCmdline)
+gboolean CreateChildProcessASync(const gchar *szCmdline, const gchar* dir)
 {
 	PROCESS_INFORMATION piProcInfo;
 	STARTUPINFO siStartInfo;
@@ -1483,16 +1553,14 @@ gboolean CreateChildProcessASync(gchar *szCmdline)
 		FALSE,          /* handles are inherited */
 		0,             /* creation flags */
 		NULL,          /* use parent's environment */
-		NULL,           /* use parent's current directory */
+		dir,           /* use parent's current directory */
 		&siStartInfo,  /* STARTUPINFO pointer */
 		&piProcInfo);  /* receives PROCESS_INFORMATION */
-
-	//g_free(expandedCmdline);
 
 	if (bFuncRetn == 0)
 	{
 		gchar *msg = g_win32_error_message(GetLastError());
-		geany_debug("CreateChildProcess: CreateProcess failed (%s)", msg);
+		geany_debug("CreateChildProcessASync: CreateProcess failed (%s)", msg);
 		g_free(msg);
 		return FALSE;
 	}

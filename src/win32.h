@@ -66,6 +66,6 @@ gchar *win32_get_installation_dir(void);
 
 gchar *win32_expand_environment_variables(const gchar *str);
 
-gboolean CreateChildProcessASync(gchar *szCmdline);
+gboolean CreateChildProcessASync(const gchar *szCmdline, const gchar *dir);
 
 #endif

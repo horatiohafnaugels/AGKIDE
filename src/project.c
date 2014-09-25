@@ -188,12 +188,18 @@ void project_new(void)
 				ui_add_recent_project_file(app->project->file_name);
 
 				// write some default files
+				/*
 				gchar *new_filename = g_build_filename( app->project->base_path, "setup.agc", NULL );
-				copy_template_file("setup.agc", new_filename);
+				if ( g_file_test( new_filename, G_FILE_TEST_EXISTS ) == 0 )
+					copy_template_file("setup.agc", new_filename);
 				g_free(new_filename);
+				*/
 
-				new_filename = g_build_filename( app->project->base_path, "main.agc", NULL );
-				copy_template_file("main.agc", new_filename);
+				gchar *new_filename = g_build_filename( app->project->base_path, "main.agc", NULL );
+				if ( g_file_test( new_filename, G_FILE_TEST_EXISTS ) == 0 )
+					copy_template_file("main.agc", new_filename);
+				else
+					project_add_file( app->project, new_filename, TRUE );
 				g_free(new_filename);
 
 				break;
@@ -2892,18 +2898,11 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 		{
 			gboolean create_dir;
 
-			create_dir = dialogs_show_question_full(NULL, GTK_STOCK_OK, GTK_STOCK_CANCEL,
-				_("Create the project's base path directory?"),
-				_("The path \"%s\" does not exist."),
-				base_path);
+			err_code = utils_mkdir(locale_path, TRUE);
 
-			if (create_dir)
-				err_code = utils_mkdir(locale_path, TRUE);
-
-			if (! create_dir || err_code != 0)
+			if (err_code != 0)
 			{
-				if (err_code != 0)
-					SHOW_ERR1(_("Project base directory could not be created (%s)."), g_strerror(err_code));
+				SHOW_ERR1(_("Project base directory could not be created (%s)."), g_strerror(err_code));
 				gtk_widget_grab_focus(e->base_path);
 				utils_free_pointers(1, locale_path, NULL);
 				return FALSE;
@@ -3299,7 +3298,8 @@ void project_load_prefs(GKeyFile *config)
 	
 	if (local_prefs.project_file_path == NULL)
 	{
-		local_prefs.project_file_path = g_build_filename(g_get_home_dir(), "AGK Projects", NULL);
+		//local_prefs.project_file_path = g_build_filename(g_get_home_dir(), "AGK Projects", NULL);
+		local_prefs.project_file_path = g_build_filename(g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS), "AGK Projects", NULL);
 	}
 
 	/*

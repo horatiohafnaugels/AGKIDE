@@ -328,6 +328,58 @@ static gchar *get_session_file_string(GeanyDocument *doc)
 	return fname;
 }
 
+void configuration_save_open_projects(GKeyFile *config)
+{
+	gint npage;
+	gchar *tmp;
+	gchar entry[30];
+	guint i = 0, j = 0, max;
+	
+	for ( i = 0; i < projects_array->len; i++ )
+	{
+		if ( !projects[i]->is_valid ) 
+			continue;
+
+		gchar *fname;
+
+		g_snprintf(entry, sizeof(entry), "PROJECT_FILE_NAME_%d", j);
+
+		gchar* path = g_build_filename( projects[i]->base_path, projects[i]->name, NULL );
+		SETPTR( path, g_strconcat( path, ".agk", NULL ) );
+		
+		gchar* utf8_filename = utils_get_utf8_from_locale(path);
+		gchar* escaped_filename = g_uri_escape_string(utf8_filename, NULL, TRUE);
+
+		gint current = 0;
+		if ( projects[i] == app->project ) current = 1;
+
+		fname = g_strdup_printf( "%d;%s", current, escaped_filename );
+
+		g_key_file_set_string(config, "projects", entry, fname);
+		g_free(fname);
+		g_free(path);
+		g_free(escaped_filename);
+		g_free(utf8_filename);
+		j++;
+	}
+	/* if open filenames less than saved session files, delete existing entries in the list */
+	i = j;
+	while (TRUE)
+	{
+		g_snprintf(entry, sizeof(entry), "PROJECT_FILE_NAME_%d", i);
+		tmp = g_key_file_get_string(config, "projects", entry, NULL);
+		if (G_UNLIKELY(tmp == NULL))
+		{
+			break;
+		}
+		else
+		{
+			g_key_file_remove_key(config, "projects", entry, NULL);
+			g_free(tmp);
+			i++;
+		}
+	}
+}
 
 void configuration_save_session_files(GKeyFile *config, GeanyProject *project)
 {
@@ -373,6 +425,7 @@ void configuration_save_session_files(GKeyFile *config, GeanyProject *project)
 			g_free(fname);
 			g_free(escaped_filename);
 			g_free(utf8_filename);
+			g_free(relative_path);
 			j++;
 		}
 	}
@@ -503,6 +556,7 @@ static void save_dialog_prefs(GKeyFile *config)
 	//g_key_file_set_boolean(config, PACKAGE, "pref_main_project_file_in_basedir", project_prefs.project_file_in_basedir);
 	g_key_file_set_boolean(config, PACKAGE, "pref_main_save_winpos", prefs.save_winpos);
 	g_key_file_set_boolean(config, PACKAGE, "pref_main_confirm_exit", prefs.confirm_exit);
+	g_key_file_set_boolean(config, PACKAGE, "pref_remember_projects", prefs.remember_projects);
 	g_key_file_set_boolean(config, PACKAGE, "pref_main_suppress_status_messages", prefs.suppress_status_messages);
 	g_key_file_set_boolean(config, PACKAGE, "switch_msgwin_pages", prefs.switch_to_status);
 	g_key_file_set_boolean(config, PACKAGE, "beep_on_errors", prefs.beep_on_errors);
@@ -711,6 +765,8 @@ void configuration_save(void)
 	save_recent_files(config, ui_prefs.recent_queue, "recent_files");
 	save_recent_files(config, ui_prefs.recent_projects_queue, "recent_projects");
 
+	if ( prefs.remember_projects ) configuration_save_open_projects(config);
+
 	/*
 	if (cl_options.load_session)
 		configuration_save_session_files(config);
@@ -754,6 +810,47 @@ void configuration_load_recent_files(GKeyFile *config)
 {
 	load_recent_files(config, ui_prefs.recent_queue, "recent_files");
 	load_recent_files(config, ui_prefs.recent_projects_queue, "recent_projects");
+}
+
+void configuration_load_open_projects(GKeyFile *config)
+{
+	guint i;
+	gboolean have_session_files;
+	gchar entry[30];
+	gchar **tmp_array;
+	GError *error = NULL;
+
+	have_session_files = TRUE;
+	i = 0;
+	while (have_session_files)
+	{
+		g_snprintf(entry, sizeof(entry), "PROJECT_FILE_NAME_%d", i);
+		tmp_array = g_key_file_get_string_list(config, "projects", entry, NULL, &error);
+		if (! tmp_array || error)
+		{
+			g_error_free(error);
+			error = NULL;
+			have_session_files = FALSE;
+		}
+		else
+		{
+			gchar* unescaped_filename = g_uri_unescape_string(tmp_array[1], NULL);
+			gchar* locale_filename = utils_get_locale_from_utf8(unescaped_filename);
+
+			GeanyProject *curr_project = app->project;
+			project_load_file(locale_filename);
+			if ( atoi(tmp_array[0]) == 0 ) 
+				app->project = curr_project;
+
+			g_free(locale_filename);
+			g_free(unescaped_filename);
+			g_strfreev(tmp_array);
+		}
+		i++;
+	}
+
+	if ( app->project == NULL ) app->project = project_find_first_valid();
+	project_update_list();
 }
 
 /*
@@ -807,7 +904,7 @@ void configuration_load_session_files(GKeyFile *config, GeanyProject *project)
 
 void configuration_load_project_files(GKeyFile *config, GeanyProject *project)
 {
-	guint i;
+	guint i, j;
 	gchar entry[16];
 	gchar **tmp_array;
 	GError *error = NULL;
@@ -869,7 +966,7 @@ void configuration_load_project_files(GKeyFile *config, GeanyProject *project)
 			error = NULL;
 			break;
 		}
-		
+
 		gint new_idx = project_get_new_file_idx( project );
 		if (new_idx == -1)	/* expand the array, no free places */
 		{
@@ -883,8 +980,7 @@ void configuration_load_project_files(GKeyFile *config, GeanyProject *project)
 		gchar* locale_filename = utils_get_locale_from_utf8(unescaped_filename);
 
 		GeanyProjectFile *file = project->project_files->pdata[new_idx];
-		file->is_valid = TRUE;
-
+		
 		if ( !g_path_is_absolute(locale_filename) )
 		{
 			file->file_name = g_build_filename( project->base_path, locale_filename, NULL );
@@ -894,6 +990,33 @@ void configuration_load_project_files(GKeyFile *config, GeanyProject *project)
 		}
 		else
 			file->file_name = g_strdup( locale_filename );
+
+		gboolean bFound = FALSE;
+		for (j = 0; j < project->project_files->len; j++)
+		{
+			GeanyProjectFile *file2 = project->project_files->pdata[j];
+			if (file2 != NULL && file2->is_valid)
+			{
+				if ( strcmp( file2->file_name, file->file_name ) == 0 ) 
+				{
+					g_free(file->file_name);
+					file->file_name = 0;
+					bFound = TRUE;
+					break;
+				}
+			}
+		}
+
+		if ( bFound ) 
+		{
+			i++;
+			g_free(locale_filename);
+			g_free(unescaped_filename);
+			g_strfreev(tmp_array);
+			continue;
+		}
+
+		file->is_valid = TRUE;
 
 		gint index = atoi( tmp_array[1] );
 		if ( index > 0 && index < project->project_groups->len ) 
@@ -948,6 +1071,7 @@ static void load_dialog_prefs(GKeyFile *config)
 
 	/* general */
 	prefs.confirm_exit = utils_get_setting_boolean(config, PACKAGE, "pref_main_confirm_exit", FALSE);
+	prefs.remember_projects = utils_get_setting_boolean(config, PACKAGE, "pref_remember_projects", TRUE);
 	prefs.suppress_status_messages = utils_get_setting_boolean(config, PACKAGE, "pref_main_suppress_status_messages", FALSE);
 	//prefs.load_session = utils_get_setting_boolean(config, PACKAGE, "pref_main_load_session", TRUE);
 	prefs.load_session = FALSE;
@@ -1319,6 +1443,27 @@ gboolean configuration_load(void)
 	return TRUE;
 }
 
+gboolean configuration_load_projects(void)
+{
+	if ( !prefs.remember_projects ) return TRUE;
+
+	gchar *configfile = g_build_filename(app->configdir, "geany.conf", NULL);
+	GKeyFile *config = g_key_file_new();
+
+	if (! g_file_test(configfile, G_FILE_TEST_IS_REGULAR))
+	{	/* config file does not (yet) exist, so try to load a global config file which may be */
+		/* created by distributors */
+		geany_debug("No user config file found, trying to use global configuration.");
+		SETPTR(configfile, g_build_filename(app->datadir, "geany.conf", NULL));
+	}
+	g_key_file_load_from_file(config, configfile, G_KEY_FILE_NONE, NULL);
+	g_free(configfile);
+
+	configuration_load_open_projects(config);
+
+	g_key_file_free(config);
+	return TRUE;
+}
 
 static gboolean open_session_file(gchar **tmp, guint len)
 {

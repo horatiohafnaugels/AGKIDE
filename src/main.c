@@ -1280,8 +1280,11 @@ gint main(gint argc, gchar **argv)
     
 #endif
 
+	configuration_load_projects();
+
 	update_message_height();
 	g_signal_connect(ui_lookup_widget(main_widgets.window, "scrolledwindow1"), "set-focus-child", G_CALLBACK(on_scrolledwindow1_focus_in_event), NULL);
+	g_signal_connect(ui_lookup_widget(main_widgets.window, "vpaned2"), "notify::position", G_CALLBACK(on_vpaned2_position_changed), NULL);
 
 	if ( interface_prefs.auto_hide_message_bar )
 		hide_message_bar();

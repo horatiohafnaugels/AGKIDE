@@ -694,3 +694,5 @@ void hide_message_bar();
 void set_full_message_height( gint height );
 
 G_MODULE_EXPORT gboolean on_scrolledwindow1_focus_in_event(GtkContainer *container, GtkWidget *widget, gpointer user_data);
+
+G_MODULE_EXPORT void on_vpaned2_position_changed(GObject *object, GParamSpec *pspec, gpointer user_data);

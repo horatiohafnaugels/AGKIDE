@@ -901,6 +901,7 @@ void show_build_options()
 
 void build_save_prefs(GKeyFile *config)
 {
+	g_key_file_set_string(config, "buildAGK", "IDE_version", AGK_VERSION);
 	g_key_file_set_string(config, "buildAGK", "compiler_path", FALLBACK(build_prefs.agk_compiler_path, ""));
 	g_key_file_set_integer(config, "buildAGK", "broadcast_port", build_prefs.agk_broadcast_port);
 	//g_key_file_set_boolean(config, "buildAGK", "enable_local", build_prefs.agk_enable_local);
@@ -909,14 +910,15 @@ void build_save_prefs(GKeyFile *config)
 
 void build_load_prefs(GKeyFile *config)
 {
+	build_prefs.IDE_version = utils_get_setting_string(config, "buildAGK", "IDE_version", NULL);
 	build_prefs.agk_compiler_path = utils_get_setting_string(config, "buildAGK", "compiler_path", NULL);
 	
 #ifdef G_OS_WIN32
-    if (build_prefs.agk_compiler_path == NULL)
+	if (build_prefs.agk_compiler_path == NULL || build_prefs.IDE_version == NULL || strcmp(build_prefs.IDE_version,AGK_VERSION) != 0 )
 	{
         gchar *path;
 		path = win32_get_installation_dir();
-        build_prefs.agk_compiler_path = g_build_filename(path, "/../applications", NULL);
+        build_prefs.agk_compiler_path = g_build_filename(path, "/../Compiler", NULL);
 		utils_tidy_path( build_prefs.agk_compiler_path );
         g_free(path);
     }
@@ -1052,13 +1054,11 @@ GPid build_compile_project_spawn_cmd(GeanyProject *project)
 	argv[1] = g_strdup(" -agk main.agc");
 	argv[2] = NULL;
 #else
-	gchar* path2 = g_strconcat( path, " -agk main.agc", NULL );
 	argv = g_new0(gchar *, 4);
-	argv[0] = g_strdup("/bin/sh");
-	argv[1] = g_strdup("-c");
-	argv[2] = g_strdup(path2);
+	argv[0] = g_strdup(path);
+	argv[1] = g_strdup("-agk");
+	argv[2] = g_strdup("main.agc");
 	argv[3] = NULL;
-	g_free(path2);
 #endif
 
 	utf8_cmd_string = utils_get_utf8_from_locale(path);

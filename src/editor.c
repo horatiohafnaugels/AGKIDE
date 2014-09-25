@@ -818,6 +818,12 @@ static void on_char_added(GeanyEditor *editor, SCNotification *nt)
 			editor_show_calltip(editor, --pos);
 			break;
 		}
+		case ',':
+		{
+			/* show calltips */
+			editor_show_calltip(editor, -1);
+			break;
+		}
 		case ')':
 		{	/* hide calltips */
 			if (SSM(sci, SCI_CALLTIPACTIVE, 0, 0))

@@ -31,6 +31,7 @@ typedef struct GeanyPrefs
 	gboolean		load_plugins;
 	gboolean		save_winpos;
 	gboolean		confirm_exit;
+	gboolean		remember_projects;
 	gboolean		beep_on_errors;		/* use utils_beep() instead */
 	gboolean		suppress_status_messages;
 	gboolean		switch_to_status;

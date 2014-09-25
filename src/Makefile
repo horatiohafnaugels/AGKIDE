@@ -279,12 +279,12 @@ CATOBJEXT = NONE
 CC = gcc
 CCDEPMODE = depmode=gcc3
 ifdef DEBUG
-CFLAGS=-O0 -g -I/Users/paulj/gtk/inst/include -x objective-c
+CFLAGS=-O0 -g -I/Users/paulj/gtk/inst/include -x objective-c -mmacosx-version-min=10.7
 DEFINES += -DGEANY_DEBUG
 else
-CFLAGS=-O2 -I/Users/paulj/gtk/inst/include -x objective-c
+CFLAGS=-O2 -I/Users/paulj/gtk/inst/include -x objective-c -mmacosx-version-min=10.7
 endif
-#CFLAGS = -I/Users/paulj/gtk/inst/include -x objective-c
+#CFLAGS = -I/Users/paulj/gtk/inst/include -x objective-c -mmacosx-version-min=10.7
 CPP = gcc -E
 CPPFLAGS = 
 CXX = g++

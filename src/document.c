@@ -836,7 +836,7 @@ GeanyDocument *document_open_file(const gchar *locale_filename, gboolean readonl
 	if ( ext && utils_str_casecmp( ext, ".agk" ) == 0 )
 	{
 		// looks like a project file
-		if ( dialogs_show_question("That file looks like an AGK project, do you want to load it as a project instead?") )
+		//if ( dialogs_show_question("That file looks like an AGK project, do you want to load it as a project instead?") )
 		{
 			if ( project_find_by_filename( locale_filename ) )
 			{
