@@ -26,7 +26,7 @@ $ export PKG_CONFIG_PATH="../../../../../gtk/source/gtk+-2.24.21:../../../../../
 
 now run
 
-$ export CFLAGS="-I$HOME/gtk/inst/include"
+$ export CFLAGS="-I$HOME/gtk/inst/include -x objective-c -mmacosx-version-min=10.7"
 $ export LIBS="-lgtkmacintegration"
 
 and finally run this with the prefix path set to where you want the final IDE executable to be, for your first attempt I recommend using this path, the bundler uses it later

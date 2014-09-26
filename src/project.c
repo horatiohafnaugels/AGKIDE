@@ -598,9 +598,12 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		}
 
 		// check icon
-		if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto android_dialog_clean_up; }
-		if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto android_dialog_clean_up; }
-		if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto android_dialog_clean_up; }
+		//if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto android_dialog_clean_up; }
+		if ( app_icon && *app_icon )
+		{
+			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto android_dialog_clean_up; }
+			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto android_dialog_clean_up; }
+		}
 
 		if ( app_type == 2 )
 		{
@@ -842,71 +845,74 @@ android_dialog_continue:
 		}
 
 		// load icon file
-		icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
-		if ( !icon_image || error )
+		if ( app_icon && *app_icon )
 		{
-			SHOW_ERR1( "Failed to load image icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto android_dialog_cleanup2;
-		}
+			icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
+			if ( !icon_image || error )
+			{
+				SHOW_ERR1( "Failed to load image icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
 
-		// scale it and save it
-		// 96x96
-		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "icon.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto android_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// scale it and save it
+			// 96x96
+			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "icon.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 72x72
-		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-hdpi", "icon.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save hdpi icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto android_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 72x72
+			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-hdpi", "icon.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save hdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 48x48
-		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-mdpi", "icon.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save mdpi icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto android_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 48x48
+			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-mdpi", "icon.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save mdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 36x36
-		image_filename = g_build_path( "/", tmp_folder, "res", "drawable-ldpi", "icon.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save ldpi icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto android_dialog_cleanup2;
-		}
-				
-		gdk_pixbuf_unref( icon_scaled_image );
-		icon_scaled_image = NULL;
+			// 36x36
+			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-ldpi", "icon.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save ldpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+					
+			gdk_pixbuf_unref( icon_scaled_image );
+			icon_scaled_image = NULL;
 
-		g_free( image_filename );
-		image_filename = NULL;
+			g_free( image_filename );
+			image_filename = NULL;
+		}
 
 		// load ouya icon and check size
 		if ( app_type == 2 )
@@ -1549,9 +1555,12 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		}
 		
 		// check icon
-		if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto ios_dialog_clean_up; }
-		if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto ios_dialog_clean_up; }
-		if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto ios_dialog_clean_up; }
+		//if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto ios_dialog_clean_up; }
+		if ( app_icon && *app_icon )
+		{
+			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto ios_dialog_clean_up; }
+		}
 
 		// check profile
 		if ( !profile || !*profile ) { SHOW_ERR("You must select a provisioning profile"); goto ios_dialog_clean_up; }
@@ -1993,123 +2002,126 @@ ios_dialog_continue:
 		}
 
 		// load icon file
-		icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
-		if ( !icon_image || error )
+		if ( app_icon && *app_icon )
 		{
-			SHOW_ERR1( "Failed to load image icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
+			icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
+			if ( !icon_image || error )
+			{
+				SHOW_ERR1( "Failed to load image icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
 
-		// scale it and save it
-		// 152x152
-		image_filename = g_build_path( "/", app_folder, "icon-152.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 152, 152, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 152x152 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// scale it and save it
+			// 152x152
+			image_filename = g_build_path( "/", app_folder, "icon-152.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 152, 152, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 152x152 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 144x144
-		image_filename = g_build_path( "/", app_folder, "icon-144.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 144x144 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 144x144
+			image_filename = g_build_path( "/", app_folder, "icon-144.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 144x144 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 120x120
-		image_filename = g_build_path( "/", app_folder, "icon-120.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 120, 120, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 120x120 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 120x120
+			image_filename = g_build_path( "/", app_folder, "icon-120.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 120, 120, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 120x120 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 114x114
-		image_filename = g_build_path( "/", app_folder, "icon-114.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 114, 114, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 114x114 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 114x114
+			image_filename = g_build_path( "/", app_folder, "icon-114.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 114, 114, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 114x114 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 76x76
-		image_filename = g_build_path( "/", app_folder, "icon-76.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 76, 76, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 76x76 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 76x76
+			image_filename = g_build_path( "/", app_folder, "icon-76.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 76, 76, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 76x76 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 72x72
-		image_filename = g_build_path( "/", app_folder, "icon-72.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 72x72 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 72x72
+			image_filename = g_build_path( "/", app_folder, "icon-72.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 72x72 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 60x60
-		image_filename = g_build_path( "/", app_folder, "icon-60.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 60, 60, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 60x60 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-		gdk_pixbuf_unref( icon_scaled_image );
-		g_free( image_filename );
+			// 60x60
+			image_filename = g_build_path( "/", app_folder, "icon-60.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 60, 60, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 60x60 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
 
-		// 57x57
-		image_filename = g_build_path( "/", app_folder, "icon-57.png", NULL );
-		icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 57, 57, GDK_INTERP_HYPER );
-		if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-		{
-			SHOW_ERR1( "Failed to save 57x57 icon: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
-						
-		gdk_pixbuf_unref( icon_scaled_image );
-		icon_scaled_image = NULL;
+			// 57x57
+			image_filename = g_build_path( "/", app_folder, "icon-57.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 57, 57, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 57x57 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+							
+			gdk_pixbuf_unref( icon_scaled_image );
+			icon_scaled_image = NULL;
 
-		g_free( image_filename );
-		image_filename = NULL;
+			g_free( image_filename );
+			image_filename = NULL;
+		}
 
 		while (gtk_events_pending())
 			gtk_main_iteration();

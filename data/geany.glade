@@ -9021,6 +9021,7 @@ To generate a keystore file you need to submit some information about you or you
                             <property name="can_focus">False</property>
                             <property name="image">image14</property>
                             <property name="use_stock">False</property>
+                            <signal name="activate" handler="on_project_close_all_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>

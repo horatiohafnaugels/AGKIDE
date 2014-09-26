@@ -192,7 +192,7 @@ CATALOGS =
 CATOBJEXT = NONE
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -I/Users/paulj/gtk/inst/include
+CFLAGS = -I/Users/paulj/gtk/inst/include -mmacosx-version-min=10.7
 CPP = gcc -E
 CPPFLAGS = 
 CXX = g++

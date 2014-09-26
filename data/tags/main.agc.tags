@@ -1233,3 +1233,4 @@ GetRawRotationVectorY2|Float|()|
 GetRawRotationVectorZ2|Float|()|
 GetRawRotationVectorW2|Float|()|
 SetSkeleton2DFlip||(Integer iSkeleton, Integer flipH, Integer flipV)|
+GetDocumentsPath|String|()|
