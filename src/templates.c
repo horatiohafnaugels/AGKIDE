@@ -214,7 +214,7 @@ void copy_template_file(const gchar* template_filename, const gchar* new_filenam
 	if (template)
 	{
 		/* line endings will be converted */
-		document_new_file(new_filename, ft, template);
+		document_new_file(new_filename, ft, template, FALSE);
 	}
 	else
 	{
@@ -254,7 +254,7 @@ on_new_with_file_template(GtkMenuItem *menuitem, G_GNUC_UNUSED gpointer user_dat
 	if (template)
 	{
 		/* line endings will be converted */
-		document_new_file(new_filename, ft, template);
+		document_new_file(new_filename, ft, template, FALSE);
 	}
 	else
 	{

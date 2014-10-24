@@ -11,9 +11,13 @@ dist_icons_apps_DATA =							\
 	classviewer-other.png						\
 	classviewer-struct.png						\
 	classviewer-var.png							\
-	geany.png
+	agk.png
 
 dist_icons_actions_DATA =						\
 	geany-build.png								\
 	geany-close-all.png							\
-	geany-save-all.png
+	geany-save-all.png \
+	broadcast.png \
+	compile.png \
+	run.png \
+	stop.png

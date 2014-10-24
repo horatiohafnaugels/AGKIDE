@@ -149,6 +149,8 @@ typedef struct GeanyEditorPrefs
 	/* This setting may be overridden when a project is opened. Use @c editor_get_prefs(). */
 	gboolean	long_line_enabled;
 	gint		autocompletion_update_freq;
+
+	gint		IDE_version;
 }
 GeanyEditorPrefs;
 

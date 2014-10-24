@@ -14,10 +14,6 @@ WIN32_BUILD_FILES = \
 
 SYS_DATA_FILES = \
 	data/c99.tags \
-	data/php.tags \
-	data/python.tags \
-	data/pascal.tags \
-	data/html_entities.tags \
 	$(srcdir)/data/filetypes.* \
 	data/filetype_extensions.conf \
 	data/snippets.conf \
@@ -25,6 +21,9 @@ SYS_DATA_FILES = \
 	$(srcdir)/data/templates/* \
 	$(srcdir)/data/templates/files/* \
 	$(srcdir)/data/colorschemes/* \
+	$(srcdir)/data/android/* \
+	$(srcdir)/data/ios/* \
+	$(srcdir)/data/tags/* \
 	$(top_srcdir)/data/geany.glade \
 	data/geany.css \
 	data/geany.gtkrc
@@ -36,8 +35,6 @@ EXTRA_DIST = \
 	geany.desktop.in \
 	geany.pc.in \
 	geany.spec \
-	ChangeLog.pre-0-17 \
-	ChangeLog.pre-1-22 \
 	HACKING \
 	README.I18N \
 	README.Packagers \
@@ -87,7 +84,16 @@ install-data-only:
 	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/colorschemes/; \
 	  fi \
 	done
-
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/tags;
+	for file in $(srcdir)/data/tags/*; do \
+	  if test -f $$file; then \
+	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/tags/; \
+	  fi \
+	done
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/android;
+	rsync -r --exclude=.svn $(srcdir)/data/android/. $(pkgdatadir)/android
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/ios;
+	rsync -r --exclude=.svn $(srcdir)/data/ios/. $(pkgdatadir)/ios
 
 dist-hook:
 	@if test -d "$(top_srcdir)/.git"; then \

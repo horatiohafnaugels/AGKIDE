@@ -165,7 +165,7 @@ extern GPtrArray *documents_array;
 
 /* These functions will replace the older functions. For now they have a documents_ prefix. */
 
-GeanyDocument* document_new_file(const gchar *filename, GeanyFiletype *ft, const gchar *text);
+GeanyDocument* document_new_file(const gchar *filename, GeanyFiletype *ft, const gchar *text, gboolean ignore_project);
 
 GeanyDocument* document_new_file_if_non_open(void);
 

@@ -528,7 +528,7 @@ def build(bld):
     ext = '.txt' if is_win32 else ''
     html_dir = '' if is_win32 else 'html/'
     html_name = 'Manual.html' if is_win32 else 'index.html'
-    for filename in 'AUTHORS ChangeLog COPYING README NEWS THANKS TODO'.split():
+    for filename in 'COPYING README'.split():
         basename = _uc_first(filename, bld)
         destination_filename = '%s%s' % (basename, ext)
         destination = os.path.join(base_dir, destination_filename)

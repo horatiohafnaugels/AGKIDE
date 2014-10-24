@@ -1063,6 +1063,11 @@ gint sci_get_first_visible_line(ScintillaObject *sci)
 	return (gint) SSM(sci, SCI_GETFIRSTVISIBLELINE, 0, 0);
 }
 
+void sci_set_first_visible_line(ScintillaObject *sci, gint line)
+{
+	SSM(sci, SCI_SETFIRSTVISIBLELINE, line, 0);
+}
+
 
 /**
  *  Sets the current indicator. This is necessary to define an indicator for a range of text or

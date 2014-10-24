@@ -51,11 +51,6 @@ install-data-local:
 	$(INSTALL_DATA) $(srcdir)/geany.html $(DOCDIR)/html/index.html
 	$(INSTALL_DATA) $(srcdir)/geany.txt $(DOCDIR)/manual.txt
 	$(INSTALL_DATA) $(top_srcdir)/README $(DOCDIR)
-	$(INSTALL_DATA) $(top_srcdir)/ChangeLog $(DOCDIR)
-	$(INSTALL_DATA) $(top_srcdir)/NEWS $(DOCDIR)
 	$(INSTALL_DATA) $(top_srcdir)/COPYING $(DOCDIR)
-	$(INSTALL_DATA) $(top_srcdir)/AUTHORS $(DOCDIR)
-	$(INSTALL_DATA) $(top_srcdir)/TODO $(DOCDIR)
-	$(INSTALL_DATA) $(top_srcdir)/THANKS $(DOCDIR)
 	$(INSTALL_DATA) $(top_srcdir)/scintilla/License.txt $(DOCDIR)/ScintillaLicense.txt
 

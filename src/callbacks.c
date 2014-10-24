@@ -133,6 +133,12 @@ static void quit_app(void)
 /* wrapper function to abort exit process if cancel button is pressed */
 G_MODULE_EXPORT gboolean on_exit_clicked(GtkWidget *widget, gpointer gdata)
 {
+	if ( install_thread_running && install_thread )
+	{
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Cannot quit whilst an update is in progress, please wait");
+		return TRUE;
+	}
+
 	main_status.quitting = TRUE;
 
 	if (! check_no_unsaved())
@@ -163,7 +169,7 @@ G_MODULE_EXPORT gboolean on_exit_clicked(GtkWidget *widget, gpointer gdata)
 
 G_MODULE_EXPORT void on_new1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
-	document_new_file(NULL, NULL, NULL);
+	document_new_file(NULL, NULL, NULL, FALSE);
 }
 
 
@@ -1856,6 +1862,37 @@ G_MODULE_EXPORT void on_menu_tools_ios_export_player_activate(GtkMenuItem *menui
 	project_export_ipa();
 	app->project = curr_project;
 #endif
+}
+
+G_MODULE_EXPORT void on_menu_tools_install_files_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	if (ui_widgets.install_dialog == NULL)
+	{
+		ui_widgets.install_dialog = create_install_dialog();
+		gtk_widget_set_name(ui_widgets.install_dialog, "Install Additional Files");
+		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.install_dialog), GTK_WINDOW(main_widgets.window));
+
+		g_signal_connect(ui_widgets.install_dialog, "response", G_CALLBACK(on_install_dialog_response), NULL);
+        g_signal_connect(ui_widgets.install_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+		ui_setup_open_button_callback_install(ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_file_entry")));
+		ui_setup_open_button_callback_install(ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_file_entry")));
+	}
+
+	gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_file_entry")), install_prefs.projects_folder );
+	gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_file_entry")), install_prefs.tier2_folder );
+
+	int index = 2-install_prefs.update_projects_mode;
+	if ( index > 2 ) index = 0;
+	gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_update_combo")), index );
+
+	index = 2-install_prefs.update_tier2_mode;
+	if ( index > 2 ) index = 0;
+	gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_update_combo")), index ); 
+
+	gtk_window_present(GTK_WINDOW(ui_widgets.install_dialog));
 }
 
 G_MODULE_EXPORT void on_project_close1_activate(GtkMenuItem *menuitem, gpointer user_data)

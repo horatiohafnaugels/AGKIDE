@@ -86,6 +86,13 @@ GtkWidget *project_choice_container;
 
 extern ProjectPrefs project_prefs;
 
+typedef struct GlobalProjectPrefs
+{
+	gchar *project_file_path;
+} GlobalProjectPrefs;
+
+extern GlobalProjectPrefs global_project_prefs;
+
 
 void project_init(void);
 

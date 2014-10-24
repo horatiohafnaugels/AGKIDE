@@ -56,10 +56,7 @@ ProjectPrefs project_prefs = { NULL, FALSE, FALSE };
 
 static GSList *stash_groups = NULL;
 
-static struct
-{
-	gchar *project_file_path; /* in UTF-8 */
-} local_prefs = { NULL };
+GlobalProjectPrefs global_project_prefs = { NULL };
 
 static gboolean entries_modified;
 
@@ -302,7 +299,7 @@ static void run_import_dialog(GtkDialog *dialog)
 
 void project_open(void)
 {
-	const gchar *dir = local_prefs.project_file_path;
+	const gchar *dir = global_project_prefs.project_file_path;
 	gchar *file;
 	GtkWidget *dialog;
 	GtkFileFilter *filter;
@@ -374,7 +371,7 @@ void project_open(void)
 
 void project_import(void)
 {
-	const gchar *dir = local_prefs.project_file_path;
+	const gchar *dir = global_project_prefs.project_file_path;
 	gchar *file;
 	GtkWidget *dialog;
 	GtkFileFilter *filter;
@@ -749,7 +746,7 @@ android_dialog_continue:
 		gchar *zip_add_file = 0;
 		gchar *str_out = NULL;
 
-		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE ) )
+		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
 		{
 			SHOW_ERR( "Failed to copy source folder" );
 			goto android_dialog_cleanup2;
@@ -934,7 +931,7 @@ android_dialog_continue:
 
 			// copy it to the res folder
 			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "ouya_icon.png", NULL );
-			utils_copy_file( ouya_icon, image_filename, TRUE );
+			utils_copy_file( ouya_icon, image_filename, TRUE, NULL );
 		}
 
 		while (gtk_events_pending())
@@ -1379,7 +1376,7 @@ keystore_dialog_continue:
 		{
 			keystore_name = g_strdup( output_file );
 			g_free(output_file);
-			output_file = local_prefs.project_file_path;
+			output_file = global_project_prefs.project_file_path;
 		}
 
 		if ( !g_file_test( path_to_keytool, G_FILE_TEST_EXISTS ) )
@@ -1473,7 +1470,7 @@ void project_generate_keystore()
 	const gchar *output_file = gtk_entry_get_text(GTK_ENTRY(widget));
 	if ( !output_file || !*output_file )
 	{
-		gchar* out_path = g_build_filename( local_prefs.project_file_path, "release.keystore", NULL );
+		gchar* out_path = g_build_filename( global_project_prefs.project_file_path, "release.keystore", NULL );
 		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.keystore_dialog, "keystore_output_file_entry")), out_path );
 		g_free(out_path);
 	}
@@ -1622,7 +1619,7 @@ ios_dialog_continue:
         if ( app->project )
             tmp_folder = g_build_filename( app->project->base_path, "build_tmp", NULL );
         else
-            tmp_folder = g_build_filename( local_prefs.project_file_path, "build_tmp", NULL );
+            tmp_folder = g_build_filename( global_project_prefs.project_file_path, "build_tmp", NULL );
 		
         gchar* app_folder = g_build_filename( tmp_folder, app_name, NULL );
 		SETPTR(app_folder, g_strconcat( app_folder, ".app", NULL ));
@@ -1664,7 +1661,7 @@ ios_dialog_continue:
 		mz_zip_archive zip_archive;
 		memset(&zip_archive, 0, sizeof(zip_archive));
 		
-		if ( !utils_copy_folder( src_folder, app_folder, TRUE ) )
+		if ( !utils_copy_folder( src_folder, app_folder, TRUE, NULL ) )
 		{
 			SHOW_ERR( "Failed to copy source folder" );
 			goto ios_dialog_cleanup2;
@@ -1806,7 +1803,7 @@ ios_dialog_continue:
 		
 		if ( status != 0 || !str_out )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get code signing identities (error: %s)", str_out );
+			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
 			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
@@ -1898,7 +1895,7 @@ ios_dialog_continue:
 		
 		if ( status != 0 || !str_out )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get code signing identities (error: %s)", str_out );
+			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
 			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
@@ -1939,8 +1936,7 @@ ios_dialog_continue:
 
 		// copy provisioning profile
 		temp_filename1 = g_build_filename( app_folder, "embedded.mobileprovision", NULL );
-		utils_copy_file( profile, temp_filename1, TRUE );
-
+		utils_copy_file( profile, temp_filename1, TRUE, NULL );
 		// edit Info.plist
 		g_free(temp_filename1);
 		temp_filename1 = g_build_filename( app_folder, "Info.plist", NULL );
@@ -2132,7 +2128,7 @@ ios_dialog_continue:
             if ( temp_filename1 ) g_free(temp_filename1);
             temp_filename1 = g_build_filename( app->project->base_path, "media", NULL );
             temp_filename2 = g_build_filename( app_folder, "media", NULL );
-            utils_copy_folder( temp_filename1, temp_filename2, TRUE );
+            utils_copy_folder( temp_filename1, temp_filename2, TRUE, NULL );
         }
 
 		g_free(str_out);
@@ -2395,7 +2391,7 @@ void project_export_ipa()
         }
         else
         {
-            gchar* apk_path = g_build_filename( local_prefs.project_file_path, "AGK Player.ipa", NULL );
+            gchar* apk_path = g_build_filename( global_project_prefs.project_file_path, "AGK Player.ipa", NULL );
             gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
             g_free(apk_path);
         }
@@ -2865,7 +2861,8 @@ gboolean project_import_from_file(const gchar *filename)
  * Returns: FALSE if the user needs to change any data. */
 static gboolean update_config(const PropertyDialogElements *e, gboolean new_project)
 {
-	const gchar *name, *file_name, *base_path;
+	const gchar *name, *file_name;
+	gchar *base_path;
 	gchar *locale_filename;
 	gsize name_len;
 	gint err_code = 0;
@@ -2888,11 +2885,12 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 		return FALSE;
 	}
 
-	base_path = gtk_entry_get_text(GTK_ENTRY(e->base_path));
+	base_path = g_strdup(gtk_entry_get_text(GTK_ENTRY(e->base_path)));
 	if (EMPTY(base_path))
 	{
 		SHOW_ERR(_("The project must have a base path"));
 		gtk_widget_grab_focus(e->base_path);
+		g_free(base_path);
 		return FALSE;
 	}
 	else
@@ -2903,6 +2901,7 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 		{	
 			SHOW_ERR(_("The project path must be an absolute path"));
 			gtk_widget_grab_focus(e->base_path);
+			g_free(base_path);
 			return FALSE;
 		}
 
@@ -2917,6 +2916,7 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 				SHOW_ERR1(_("Project base directory could not be created (%s)."), g_strerror(err_code));
 				gtk_widget_grab_focus(e->base_path);
 				utils_free_pointers(1, locale_path, NULL);
+				g_free(base_path);
 				return FALSE;
 			}
 		}
@@ -2925,11 +2925,12 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 
 	if (new_project)
 	{
+		// make sure base path ends in a slash
+		if ( base_path[ strlen(base_path)-1 ] != '/' && base_path[ strlen(base_path)-1 ] != '\\' )
+			SETPTR(base_path, g_strconcat(base_path, G_DIR_SEPARATOR_S, NULL) );
+
 		// generate project filename from project path and name
-		if ( base_path[ strlen(base_path)-1 ] == '/' || base_path[ strlen(base_path)-1 ] == '\\' )
-			file_name = g_strconcat(base_path, name, "." GEANY_PROJECT_EXT, NULL);
-		else
-			file_name = g_strconcat(base_path, G_DIR_SEPARATOR_S, name, "." GEANY_PROJECT_EXT, NULL);
+		file_name = g_strconcat(base_path, name, "." GEANY_PROJECT_EXT, NULL);
 	}
 	else
 		file_name = gtk_label_get_text(GTK_LABEL(e->file_name));
@@ -2938,6 +2939,7 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 	{
 		SHOW_ERR(_("You have specified an invalid project filename."));
 		gtk_widget_grab_focus(e->file_name);
+		g_free(base_path);
 		return FALSE;
 	}
 
@@ -2950,6 +2952,7 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 		SHOW_ERR1(_("Project file could not be written (%s)."), g_strerror(err_code));
 		gtk_widget_grab_focus(e->file_name);
 		g_free(locale_filename);
+		g_free(base_path);
 		return FALSE;
 	}
 	g_free(locale_filename);
@@ -2967,6 +2970,8 @@ static gboolean update_config(const PropertyDialogElements *e, gboolean new_proj
 
 	ui_project_buttons_update();	
 	update_ui();
+
+	g_free(base_path);
 
 	return TRUE;
 }
@@ -3060,7 +3065,7 @@ static void on_name_entry_changed(GtkEditable *editable, PropertyDialogElements 
 {
 	gchar *base_path;
 	gchar *name;
-	const gchar *project_dir = local_prefs.project_file_path;
+	const gchar *project_dir = global_project_prefs.project_file_path;
 
 	if (entries_modified)
 		return;
@@ -3213,11 +3218,9 @@ static gboolean write_config(GeanyProject *project, gboolean emit_signal)
 
 	g_return_val_if_fail(app->project != NULL, FALSE);
 
-	p = app->project;
-
 	config = g_key_file_new();
 	/* try to load an existing config to keep manually added comments */
-	filename = utils_get_locale_from_utf8(p->file_name);
+	filename = utils_get_locale_from_utf8(project->file_name);
 	g_key_file_load_from_file(config, filename, G_KEY_FILE_NONE, NULL);
 
 	foreach_slist(node, stash_groups)
@@ -3226,14 +3229,14 @@ static gboolean write_config(GeanyProject *project, gboolean emit_signal)
 	//g_key_file_set_string(config, "project", "name", p->name);
 	//g_key_file_set_string(config, "project", "base_path", p->base_path);
 
-	if (p->description)
-		g_key_file_set_string(config, "project", "description", p->description);
+	if (project->description)
+		g_key_file_set_string(config, "project", "description", project->description);
 
-	configuration_save_project_files(config,p);
+	configuration_save_project_files(config,project);
 	
 	/* store the session files into the project too */
 	if (project_prefs.project_session)
-		configuration_save_session_files(config,p);
+		configuration_save_session_files(config,project);
 	
 	if (emit_signal)
 	{
@@ -3293,7 +3296,7 @@ void project_save_prefs(GKeyFile *config)
 		g_key_file_set_string(config, "project", "session_file", utf8_filename);
 	}
 	g_key_file_set_string(config, "project", "project_file_path",
-		FALLBACK(local_prefs.project_file_path, ""));
+		FALLBACK(global_project_prefs.project_file_path, ""));
 }
 
 
@@ -3305,27 +3308,27 @@ void project_load_prefs(GKeyFile *config)
 		project_prefs.session_file = utils_get_setting_string(config, "project",
 			"session_file", "");
 	}
-	local_prefs.project_file_path = utils_get_setting_string(config, "project",
+	global_project_prefs.project_file_path = utils_get_setting_string(config, "project",
 		"project_file_path", NULL);
 	
-	if (local_prefs.project_file_path == NULL)
+	if (global_project_prefs.project_file_path == NULL)
 	{
-		//local_prefs.project_file_path = g_build_filename(g_get_home_dir(), "AGK Projects", NULL);
-		local_prefs.project_file_path = g_build_filename(g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS), "AGK Projects", NULL);
+		//global_project_prefs.project_file_path = g_build_filename(g_get_home_dir(), "AGK Projects", NULL);
+		global_project_prefs.project_file_path = g_build_filename(g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS), "AGK Projects", NULL);
 	}
 
 	/*
-	if (local_prefs.project_file_path == NULL)
+	if (global_project_prefs.project_file_path == NULL)
 	{
-		//local_prefs.project_file_path = g_build_filename(g_get_home_dir(), PROJECT_DIR, NULL);
+		//global_project_prefs.project_file_path = g_build_filename(g_get_home_dir(), PROJECT_DIR, NULL);
 		gchar *path;
 #ifdef G_OS_WIN32
 		path = win32_get_installation_dir();
 #else
 		path = g_strdup(GEANY_DATADIR);
 #endif
-		local_prefs.project_file_path = g_build_filename(path, "../../Projects", NULL);
-		utils_tidy_path( local_prefs.project_file_path );
+		global_project_prefs.project_file_path = g_build_filename(path, "../../Projects", NULL);
+		utils_tidy_path( global_project_prefs.project_file_path );
 	}
 	*/
 }
@@ -3338,9 +3341,9 @@ void project_setup_prefs(void)
 	GtkWidget *path_btn = ui_lookup_widget(ui_widgets.prefs_dialog, "project_file_path_button");
 	static gboolean callback_setup = FALSE;
 
-	g_return_if_fail(local_prefs.project_file_path != NULL);
+	g_return_if_fail(global_project_prefs.project_file_path != NULL);
 
-	gtk_entry_set_text(GTK_ENTRY(path_entry), local_prefs.project_file_path);
+	gtk_entry_set_text(GTK_ENTRY(path_entry), global_project_prefs.project_file_path);
 	if (! callback_setup)
 	{	/* connect the callback only once */
 		callback_setup = TRUE;
@@ -3357,7 +3360,7 @@ void project_apply_prefs(void)
 	const gchar *str;
 
 	str = gtk_entry_get_text(GTK_ENTRY(path_entry));
-	SETPTR(local_prefs.project_file_path, g_strdup(str));
+	SETPTR(global_project_prefs.project_file_path, g_strdup(str));
 }
 
 

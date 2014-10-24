@@ -6,7 +6,7 @@ iconsdir = $(datadir)/icons/hicolor
 dist_icons_DATA = index.theme
 endif
 
-dist_noinst_DATA = geany.ico
+dist_noinst_DATA = agk.ico
 
 gtk_update_icon_cache = gtk-update-icon-cache -f -t
 

@@ -244,7 +244,7 @@ static void main_init(void)
 	gchar *install_dir = win32_get_installation_dir();
 	path = g_build_filename(install_dir, "share", "icons", NULL);
 	g_free(install_dir);
-#else
+#elif __APPLE__
 	//path = g_build_filename(GEANY_DATADIR, "icons", NULL);
     char szRoot[ 1024 ];
 	uint32_t size = 1024;
@@ -255,6 +255,8 @@ static void main_init(void)
         path = g_build_filename(szRoot, "../Resources/share/icons", NULL);
         utils_tidy_path(path);
     }
+#else
+    path = g_build_filename(GEANY_DATADIR, "icons", NULL);
 #endif
 
 	gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), path);
@@ -271,6 +273,9 @@ static void main_init(void)
 	ui_widgets.open_colorsel	= NULL;
 	ui_widgets.prefs_dialog		= NULL;
 	ui_widgets.android_dialog		= NULL;
+	ui_widgets.ios_dialog		= NULL;
+	ui_widgets.keystore_dialog		= NULL;
+	ui_widgets.install_dialog		= NULL;
 	main_status.main_window_realized = FALSE;
 	file_prefs.tab_order_ltr		= FALSE;
 	file_prefs.tab_order_beside		= FALSE;
@@ -439,7 +444,7 @@ static void setup_paths(void)
 	doc_dir = g_build_filename(install_dir, "doc", NULL);
 
 	g_free(install_dir);
-#else
+#elif __APPLE__
 	//data_dir = g_build_filename(GEANY_DATADIR, "geany", NULL); /* e.g. /usr/share/geany */
 	//doc_dir = g_build_filename(GEANY_DOCDIR, "html", NULL);
     char szRoot[ 1024 ];
@@ -453,6 +458,9 @@ static void setup_paths(void)
         utils_tidy_path(data_dir);
         utils_tidy_path(doc_dir);
     }
+#else
+    data_dir = g_build_filename(GEANY_DATADIR, "geany", NULL); /* e.g. /usr/share/geany */
+    doc_dir = g_build_filename(GEANY_DOCDIR, "html", NULL);
 #endif
 
 	/* convert path names to locale encoding */
@@ -870,7 +878,7 @@ gboolean main_handle_filename(const gchar *locale_filename)
 	{	/* create new file with the given filename */
 		gchar *utf8_filename = utils_get_utf8_from_locale(filename);
 
-		doc = document_new_file(utf8_filename, NULL, NULL);
+		doc = document_new_file(utf8_filename, NULL, NULL, TRUE);
 		if (doc != NULL)
 			ui_add_recent_document(doc);
 		g_free(utf8_filename);
@@ -1289,6 +1297,91 @@ gint main(gint argc, gchar **argv)
 	if ( interface_prefs.auto_hide_message_bar )
 		hide_message_bar();
 
+	// if IDE has updated update projects and libraries folders
+	if ( editor_prefs.IDE_version < AGK_VERSION_INT )
+	{
+		if ( install_prefs.update_projects_mode == -1 || install_prefs.update_tier2_mode == -1 )
+		{
+			// first time, show install dialog
+			on_menu_tools_install_files_activate( NULL, NULL );
+		}
+		else
+		{
+			int update_projects = 0;
+			int update_tier2 = 0;
+			int question_asked = 0;
+
+			// check projects
+			if ( install_prefs.projects_folder && *install_prefs.projects_folder )
+			{
+				if ( install_prefs.update_projects_mode == 2 ) update_projects = 1;
+				else if ( install_prefs.update_projects_mode == 1 ) 
+				{
+					question_asked = 1;
+					if ( dialogs_show_question( "AGK has updated, do you want to update your chosen projects folder?" ) ) update_projects = 1;
+				}
+			}
+
+			// check tier 2
+			if ( install_prefs.tier2_folder && *install_prefs.tier2_folder )
+			{
+				if ( install_prefs.update_tier2_mode == 2 ) update_tier2 = 1;
+				else if ( install_prefs.update_tier2_mode == 1 ) 
+				{
+					if ( question_asked )
+					{
+						if ( dialogs_show_question( "and update your chosen C++ libraries folder?" ) ) update_tier2 = 1;
+					}
+					else
+					{
+						if ( dialogs_show_question( "AGK has updated, do you want to update your chosen projects folder?" ) ) update_tier2 = 1;
+					}
+				}
+			}
+
+			if ( update_projects || update_tier2 )
+			{
+				int i;
+				gchar final_progress[ 1024 ];
+				for ( i = 0; i < 1024; i++ )
+				{
+					install_file_progress[ i ] = 0;
+					final_progress[ i ] = 0;
+				}
+
+				install_thread_running = 1;
+				install_thread = g_thread_create( CopyAdditionalFiles, (gpointer)(update_projects | (update_tier2 << 1)), TRUE, NULL );
+
+				while( install_thread_running )
+				{
+					g_usleep( 50 * 1000 );
+
+					strcpy( final_progress, "Updating: " );
+					strcat( final_progress, (gchar*) install_file_progress );
+					ui_set_statusbar( FALSE, final_progress );
+
+					while (gtk_events_pending())
+						gtk_main_iteration();
+				}
+                
+                gpointer result = g_thread_join(install_thread);
+                if ( result > 0 )
+                {
+                    dialogs_show_msgbox( GTK_MESSAGE_ERROR, install_file_progress );
+                    ui_set_statusbar( FALSE, "Update failed" );
+                }
+                else
+                    ui_set_statusbar( FALSE, "Update complete" );
+
+				install_thread = 0;
+			}
+		}
+	}
+
+#ifdef G_OS_WIN32
+	win32_check_xinput();
+#endif
+
 	gtk_main();
 	return 0;
 }
@@ -1372,6 +1465,9 @@ void main_quit(void)
 
 	if (ui_widgets.prefs_dialog && GTK_IS_WIDGET(ui_widgets.prefs_dialog)) gtk_widget_destroy(ui_widgets.prefs_dialog);
 	if (ui_widgets.android_dialog && GTK_IS_WIDGET(ui_widgets.android_dialog)) gtk_widget_destroy(ui_widgets.android_dialog);
+	if (ui_widgets.ios_dialog && GTK_IS_WIDGET(ui_widgets.ios_dialog)) gtk_widget_destroy(ui_widgets.ios_dialog);
+	if (ui_widgets.keystore_dialog && GTK_IS_WIDGET(ui_widgets.keystore_dialog)) gtk_widget_destroy(ui_widgets.keystore_dialog);
+	if (ui_widgets.install_dialog && GTK_IS_WIDGET(ui_widgets.install_dialog)) gtk_widget_destroy(ui_widgets.install_dialog);
 	if (ui_widgets.open_fontsel && GTK_IS_WIDGET(ui_widgets.open_fontsel)) gtk_widget_destroy(ui_widgets.open_fontsel);
 	if (ui_widgets.open_colorsel && GTK_IS_WIDGET(ui_widgets.open_colorsel)) gtk_widget_destroy(ui_widgets.open_colorsel);
 #ifdef HAVE_VTE

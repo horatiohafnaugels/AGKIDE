@@ -91,12 +91,21 @@ void win32_init()
 {
 	if ( !lib_dwmapi )
 	{
-		HMODULE lib_dwmapi = LoadLibrary( "Dwmapi.dll" );
+		lib_dwmapi = LoadLibrary( "Dwmapi.dll" );
 		if ( lib_dwmapi )
 		{
 			DwmIsActive = (HRESULT(__stdcall *)(int*)) GetProcAddress( lib_dwmapi, "DwmIsCompositionEnabled" );
 		}
 	}
+}
+
+void win32_check_xinput()
+{
+	HMODULE lib_xinput = LoadLibrary( "XInput9_1_0.dll" );
+	if ( !lib_xinput )
+		dialogs_show_msgbox( GTK_MESSAGE_WARNING, "AGK could not detect the latest version of DirectX, please make sure you have the \"DirectX End-User Runtime\" installed or apps may not run properly on this machine" );
+	else
+		FreeLibrary(lib_xinput);
 }
 
 void win32_finalize()
@@ -330,7 +339,7 @@ gchar *win32_show_folder_dialog(GtkWidget *parent, const gchar *title, const gch
 	bi.lpszTitle = w_title;
 	bi.lpfn = BrowseCallbackProc;
 	bi.lParam = (LPARAM) get_dir_for_path(initial_dir);
-	bi.ulFlags = BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT;
+	bi.ulFlags = BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NEWDIALOGSTYLE;
 
 	pidl = SHBrowseForFolderW(&bi);
 
@@ -1530,7 +1539,7 @@ static gboolean CreateChildProcess(geany_win32_spawn *gw_spawn, TCHAR *szCmdline
 	return FALSE;
 }
 
-gboolean CreateChildProcessASync(const gchar *szCmdline, const gchar* dir)
+gboolean CreateChildProcessASync(gchar *szCmdline, const gchar* dir)
 {
 	PROCESS_INFORMATION piProcInfo;
 	STARTUPINFO siStartInfo;

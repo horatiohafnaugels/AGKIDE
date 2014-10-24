@@ -6,8 +6,9 @@ AC_INIT([Geany], [1.24.1],
 AC_CONFIG_SRCDIR([src/geany.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([1.11 -Wall parallel-tests subdir-objects])
+AM_INIT_AUTOMAKE([foreign 1.11 -Wall parallel-tests subdir-objects])
 AC_CONFIG_HEADERS([config.h])
+AM_MAINTAINER_MODE([disable])
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 

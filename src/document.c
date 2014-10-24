@@ -678,7 +678,7 @@ static void store_saved_encoding(GeanyDocument *doc)
 GeanyDocument *document_new_file_if_non_open(void)
 {
 	if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(main_widgets.notebook)) == 0)
-		return document_new_file(NULL, NULL, NULL);
+		return document_new_file(NULL, NULL, NULL, TRUE);
 
 	return NULL;
 }
@@ -695,12 +695,12 @@ GeanyDocument *document_new_file_if_non_open(void)
  *
  *  @return The new document.
  **/
-GeanyDocument *document_new_file(const gchar *utf8_filename, GeanyFiletype *ft, const gchar *text)
+GeanyDocument *document_new_file(const gchar *utf8_filename, GeanyFiletype *ft, const gchar *text, gboolean ignore_project)
 {
 	GeanyDocument *doc;
 	GeanyProject *project = NULL;
 
-	if (app->project != NULL )
+	if (app->project != NULL && !ignore_project )
 	{
 		if ( !utf8_filename || !g_path_is_absolute(utf8_filename) )
 		{
@@ -2964,7 +2964,7 @@ GeanyDocument *document_clone(GeanyDocument *old_doc)
 	else
 		text = sci_get_contents(old_sci, -1);
 
-	doc = document_new_file(NULL, old_doc->file_type, text);
+	doc = document_new_file(NULL, old_doc->file_type, text, TRUE);
 	g_free(text);
 	document_set_text_changed(doc, TRUE);
 

@@ -19,11 +19,7 @@ all: geanyfunctions.h
 
 
 demoplugin_la_LDFLAGS    = -module -avoid-version
-classbuilder_la_LDFLAGS  = -module -avoid-version
-htmlchars_la_LDFLAGS     = -module -avoid-version
-export_la_LDFLAGS        = -module -avoid-version
 saveactions_la_LDFLAGS   = -module -avoid-version
-filebrowser_la_LDFLAGS   = -module -avoid-version
 splitwindow_la_LDFLAGS   = -module -avoid-version
 
 if PLUGINS
@@ -46,12 +42,8 @@ MINGW_CFLAGS = \
 .PHONY: all clean
 
 all-local: \
-	classbuilder.dll \
-	htmlchars.dll \
-	export.dll \
 	saveactions.dll \
-	splitwindow.dll \
-	filebrowser.dll
+	splitwindow.dll
 
 .c.dll:
 	$(CC) $(MINGW_CFLAGS) -o $@.o -c $<
@@ -64,11 +56,7 @@ else
 
 # Plugins to be installed
 plugin_LTLIBRARIES = \
-	classbuilder.la \
-	htmlchars.la \
-	export.la \
 	saveactions.la \
-	filebrowser.la \
 	splitwindow.la
 
 # Plugins not to be installed
@@ -76,27 +64,15 @@ noinst_LTLIBRARIES = \
 	demoplugin.la
 
 demoplugin_la_SOURCES    = demoplugin.c
-classbuilder_la_SOURCES  = classbuilder.c
-htmlchars_la_SOURCES     = htmlchars.c
-export_la_SOURCES        = export.c
 saveactions_la_SOURCES   = saveactions.c
-filebrowser_la_SOURCES   = filebrowser.c
 splitwindow_la_SOURCES   = splitwindow.c
 
 demoplugin_la_CFLAGS    = -DG_LOG_DOMAIN=\""Demoplugin"\"
-classbuilder_la_CFLAGS  = -DG_LOG_DOMAIN=\""Classbuilder"\"
-htmlchars_la_CFLAGS     = -DG_LOG_DOMAIN=\""HTMLChars"\"
-export_la_CFLAGS        = -DG_LOG_DOMAIN=\""Export"\"
 saveactions_la_CFLAGS   = -DG_LOG_DOMAIN=\""SaveActions"\"
-filebrowser_la_CFLAGS   = -DG_LOG_DOMAIN=\""FileBrowser"\"
 splitwindow_la_CFLAGS   = -DG_LOG_DOMAIN=\""SplitWindow"\"
 
 demoplugin_la_LIBADD    = $(GTK_LIBS)
-classbuilder_la_LIBADD  = $(GTK_LIBS)
-htmlchars_la_LIBADD     = $(GTK_LIBS)
-export_la_LIBADD        = $(GTK_LIBS) -lm
 saveactions_la_LIBADD   = $(GTK_LIBS)
-filebrowser_la_LIBADD   = $(GTK_LIBS)
 splitwindow_la_LIBADD   = $(GTK_LIBS)
 
 endif # MINGW

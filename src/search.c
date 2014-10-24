@@ -1644,8 +1644,14 @@ search_find_in_files(const gchar *utf8_search_text, const gchar *dir, const gcha
 	GError *error = NULL;
 	gboolean ret = FALSE;
 	gssize utf8_text_len;
+	gchar dir2[ 1024 ];
 
 	if (EMPTY(utf8_search_text) || ! dir) return TRUE;
+
+	strcpy( dir2, dir );
+
+	while ( strlen(dir2) > 0 && (dir2[ strlen(dir2)-1 ] == '/' || dir2[ strlen(dir2)-1 ] == '\\') )
+		dir2[ strlen(dir2)-1 ] = 0;
 
 	command_grep = g_find_program_in_path(tool_prefs.grep_cmd);
 	if (command_grep == NULL)
@@ -1698,7 +1704,7 @@ search_find_in_files(const gchar *utf8_search_text, const gchar *dir, const gcha
 	else
 	{
 		argv_prefix[i++] = NULL;
-		argv = search_get_argv((const gchar**)argv_prefix, dir);
+		argv = search_get_argv((const gchar**)argv_prefix, dir2);
 		g_strfreev(argv_prefix);
 	}
 
@@ -1711,7 +1717,7 @@ search_find_in_files(const gchar *utf8_search_text, const gchar *dir, const gcha
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(msgwindow.notebook), MSG_MESSAGE);
 	gtk_widget_grab_focus(msgwindow.notebook);
 
-	if (! g_spawn_async_with_pipes(dir, (gchar**)argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD,
+	if (! g_spawn_async_with_pipes(dir2, (gchar**)argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD,
 		NULL, NULL, &child_pid,
 		NULL, &stdout_fd, &stderr_fd, &error))
 	{
@@ -1726,7 +1732,7 @@ search_find_in_files(const gchar *utf8_search_text, const gchar *dir, const gcha
 
 		ui_progress_bar_start(_("Searching..."));
 
-		msgwin_set_messages_dir(dir);
+		msgwin_set_messages_dir(dir2);
 		/* we can pass 'enc' without strdup'ing it here because it's a global const string and
 		 * always exits longer than the lifetime of this function */
 		utils_set_up_io_channel(stdout_fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL,
@@ -1735,7 +1741,7 @@ search_find_in_files(const gchar *utf8_search_text, const gchar *dir, const gcha
 			TRUE, search_read_io_stderr, (gpointer) enc);
         g_child_watch_add(child_pid, search_close_pid, NULL);
 		
-		str = g_strdup_printf(_("%s %s -- %s (in directory: %s)"), tool_prefs.grep_cmd, opts, utf8_search_text, dir);
+		str = g_strdup_printf(_("%s %s -- %s (in directory: %s)"), tool_prefs.grep_cmd, opts, utf8_search_text, dir2);
 		utf8_str = utils_get_utf8_from_locale(str);
 		msgwin_msg_add_string(COLOR_BLUE, -1, NULL, utf8_str);
 		utils_free_pointers(2, str, utf8_str, NULL);

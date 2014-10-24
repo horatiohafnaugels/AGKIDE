@@ -1337,7 +1337,7 @@ static gboolean cb_func_file_action(guint key_id)
 	switch (key_id)
 	{
 		case GEANY_KEYS_FILE_NEW:
-			document_new_file(NULL, NULL, NULL);
+			document_new_file(NULL, NULL, NULL, FALSE);
 			break;
 		case GEANY_KEYS_FILE_OPEN:
 			on_open1_activate(NULL, NULL);

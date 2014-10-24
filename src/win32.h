@@ -24,6 +24,8 @@
 
 void win32_init();
 
+void win32_check_xinput();
+
 void win32_finalize();
 
 void win32_show_pref_file_dialog(GtkEntry *item);
@@ -66,6 +68,6 @@ gchar *win32_get_installation_dir(void);
 
 gchar *win32_expand_environment_variables(const gchar *str);
 
-gboolean CreateChildProcessASync(const gchar *szCmdline, const gchar *dir);
+gboolean CreateChildProcessASync(gchar *szCmdline, const gchar *dir);
 
 #endif

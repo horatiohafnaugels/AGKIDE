@@ -901,20 +901,16 @@ void show_build_options()
 
 void build_save_prefs(GKeyFile *config)
 {
-	g_key_file_set_string(config, "buildAGK", "IDE_version", AGK_VERSION);
 	g_key_file_set_string(config, "buildAGK", "compiler_path", FALLBACK(build_prefs.agk_compiler_path, ""));
 	g_key_file_set_integer(config, "buildAGK", "broadcast_port", build_prefs.agk_broadcast_port);
-	//g_key_file_set_boolean(config, "buildAGK", "enable_local", build_prefs.agk_enable_local);
-	//g_key_file_set_boolean(config, "buildAGK", "enable_broadcast", build_prefs.agk_enable_broadcast);
 }
 
 void build_load_prefs(GKeyFile *config)
 {
-	build_prefs.IDE_version = utils_get_setting_string(config, "buildAGK", "IDE_version", NULL);
 	build_prefs.agk_compiler_path = utils_get_setting_string(config, "buildAGK", "compiler_path", NULL);
 	
 #ifdef G_OS_WIN32
-	if (build_prefs.agk_compiler_path == NULL || build_prefs.IDE_version == NULL || strcmp(build_prefs.IDE_version,AGK_VERSION) != 0 )
+	if (build_prefs.agk_compiler_path == NULL || editor_prefs.IDE_version != AGK_VERSION_INT )
 	{
         gchar *path;
 		path = win32_get_installation_dir();
@@ -922,7 +918,7 @@ void build_load_prefs(GKeyFile *config)
 		utils_tidy_path( build_prefs.agk_compiler_path );
         g_free(path);
     }
-#else
+#elif __APPLE__
     //path = g_strdup(GEANY_DATADIR);
     char szRoot[ 1024 ];
     uint32_t size = 1024;
@@ -933,12 +929,13 @@ void build_load_prefs(GKeyFile *config)
         build_prefs.agk_compiler_path = g_build_filename(szRoot, "../Resources/share/applications", NULL);
         utils_tidy_path( build_prefs.agk_compiler_path );
     }
+#else
+    // todo linux
+    build_prefs.agk_compiler_path = g_strdup(GEANY_DATADIR);
 #endif
 		
 
 	build_prefs.agk_broadcast_port = utils_get_setting_integer(config, "buildAGK", "broadcast_port", 5689);
-	//build_prefs.agk_enable_local = utils_get_setting_boolean(config, "buildAGK", "enable_local", TRUE);
-	//build_prefs.agk_enable_broadcast = utils_get_setting_boolean(config, "buildAGK", "enable_broadcast", TRUE);
 }
 
 void build_setup_prefs(void)
@@ -1239,7 +1236,7 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
                 }
                 
                 loopcounter++;
-                usleep( 20 * 1000 ); // 20 milliseconds
+                g_usleep( 20 * 1000 ); // 20 milliseconds
             }
 #endif
 		}

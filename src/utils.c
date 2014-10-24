@@ -2213,18 +2213,20 @@ gchar *utils_parse_and_format_build_date(const gchar *input)
 	return g_strdup(input);
 }
 
-gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite)
+gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite, volatile gchar* progress)
 {
     g_return_val_if_fail (src != NULL, FALSE);
     g_return_val_if_fail (dst != NULL, FALSE);
 
     /* check source file */
     if (!g_file_test (src, G_FILE_TEST_EXISTS)) {
-        g_critical (G_STRLOC ": File '%s' not found.", src);
+        if ( progress ) sprintf( (gchar*)progress, "File '%s' not found", src );
+        else g_critical (G_STRLOC ": File '%s' not found.", src);
         return FALSE;
     }
     else if (!g_file_test (src, G_FILE_TEST_IS_REGULAR)) {
-        g_critical (G_STRLOC ": '%s' not a regular file.", src);
+        if ( progress ) sprintf( (gchar*)progress, "'%s' not a regular file.", src );
+        else g_critical (G_STRLOC ": '%s' not a regular file.", src);
         return FALSE;
     }
 
@@ -2232,13 +2234,15 @@ gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite
     if (g_file_test (dst, G_FILE_TEST_EXISTS)) {
 
         if (!overwrite) {
-            g_critical (G_STRLOC ": Destination file '%s' exists and overwrite is disabled.", dst);
+            if ( progress ) sprintf( (gchar*)progress, "Destination file '%s' exists and overwrite is disabled.", dst );
+            else g_critical (G_STRLOC ": Destination file '%s' exists and overwrite is disabled.", dst);
             return FALSE;
         }
 
         /* remove dest fileif overwrite is enabled */
         if (g_unlink (dst) != 0) {
-            g_critical (G_STRLOC ": %s.", g_strerror (errno));
+            if ( progress ) sprintf( (gchar*)progress, "%s", g_strerror (errno) );
+            else g_critical (G_STRLOC ": %s.", g_strerror (errno));
             return FALSE;
         }
     }
@@ -2248,14 +2252,16 @@ gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite
 
 	if ( !g_file_get_contents( src, &contents, &length, NULL ) )
 	{
-		g_critical (G_STRLOC ": Unable to open '%s' for reading. %s.", src, g_strerror (errno));
+        if ( progress ) sprintf( (gchar*)progress, "Unable to open '%s' for reading. %s.", src, g_strerror (errno) );
+        else g_critical (G_STRLOC ": Unable to open '%s' for reading. %s.", src, g_strerror (errno));
         return FALSE;
 	}
 
 	if ( !g_file_set_contents( dst, contents, length, NULL ) )
 	{
 		g_free(contents);
-		g_critical (G_STRLOC ": Unable to open '%s' for writing. %s.", dst, g_strerror (errno));
+        if ( progress ) sprintf( (gchar*)progress, "Unable to open '%s' for writing. %s.", dst, g_strerror (errno) );
+        else g_critical (G_STRLOC ": Unable to open '%s' for writing. %s.", dst, g_strerror (errno));
         return FALSE;
 	}
 
@@ -2264,25 +2270,28 @@ gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite
     return TRUE;
 }
 
-gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recursive )
+gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recursive, volatile gchar* progress )
 {
 	g_return_val_if_fail (src != NULL, FALSE);
     g_return_val_if_fail (dst != NULL, FALSE);
 
 	if (!g_file_test (src, G_FILE_TEST_EXISTS)) {
-        g_critical (G_STRLOC ": Location '%s' not found.", src);
+        if ( progress ) sprintf( (gchar*)progress, "Location '%s' not found.", src );
+        else g_critical (G_STRLOC ": Location '%s' not found.", src);
         return FALSE;
     }
 
 	if (!g_file_test (src, G_FILE_TEST_IS_DIR)) {
-        g_critical (G_STRLOC ": Location '%s' is not a directory.", src);
+        if ( progress ) sprintf( (gchar*)progress, "Location '%s' is not a directory.", src );
+        else g_critical (G_STRLOC ": Location '%s' is not a directory.", src);
         return FALSE;
     }
 
 	if (!g_file_test (dst, G_FILE_TEST_EXISTS)) {
         if ( g_mkdir_with_parents( dst, 0755 ) < 0 )
 		{
-			g_critical (G_STRLOC ": Failed to make destination directory '%s'", dst);
+            if ( progress ) sprintf( (gchar*)progress, "Failed to make destination directory '%s'", dst );
+            else g_critical (G_STRLOC ": Failed to make destination directory '%s'", dst);
 			return FALSE;
 		}
     }
@@ -2292,7 +2301,8 @@ gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recurs
 	GDir *dir = g_dir_open(src, 0, NULL);
 	if (dir == NULL)
 	{
-		g_critical (G_STRLOC ": Failed to open directory '%s'", src);
+        if ( progress ) sprintf( (gchar*)progress, "Failed to open directory '%s'", src );
+        else g_critical (G_STRLOC ": Failed to open directory '%s'", src);
 		return FALSE;
 	}
 
@@ -2305,7 +2315,7 @@ gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recurs
 		{
 			if ( recursive )
 			{
-				if ( !utils_copy_folder( fullsrcpath, fulldstpath, recursive ) ) 
+				if ( !utils_copy_folder( fullsrcpath, fulldstpath, recursive, progress ) ) 
 				{
 					g_dir_close(dir);
 					g_free(fullsrcpath);
@@ -2316,7 +2326,8 @@ gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recurs
 		}
 		else if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_REGULAR ) )
 		{
-			if ( !utils_copy_file( fullsrcpath, fulldstpath, TRUE ) ) 
+			if ( progress ) strcpy( progress, fulldstpath );
+			if ( !utils_copy_file( fullsrcpath, fulldstpath, TRUE, progress ) )
 			{
 				g_dir_close(dir);
 				g_free(fullsrcpath);

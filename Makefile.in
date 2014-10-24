@@ -79,14 +79,14 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = INSTALL NEWS README AUTHORS ChangeLog \
-	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
+DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(srcdir)/config.h.in $(srcdir)/geany.spec.in \
-	$(srcdir)/geany.pc.in COPYING THANKS TODO build-aux/ar-lib \
+	$(srcdir)/geany.pc.in COPYING INSTALL README build-aux/ar-lib \
 	build-aux/compile build-aux/config.guess build-aux/config.sub \
-	build-aux/install-sh build-aux/missing build-aux/ltmain.sh \
-	$(top_srcdir)/build-aux/ar-lib $(top_srcdir)/build-aux/compile \
+	build-aux/depcomp build-aux/install-sh build-aux/missing \
+	build-aux/ltmain.sh $(top_srcdir)/build-aux/ar-lib \
+	$(top_srcdir)/build-aux/compile \
 	$(top_srcdir)/build-aux/config.guess \
 	$(top_srcdir)/build-aux/config.sub \
 	$(top_srcdir)/build-aux/install-sh \
@@ -308,6 +308,7 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
@@ -410,10 +411,6 @@ WIN32_BUILD_FILES = \
 
 SYS_DATA_FILES = \
 	data/c99.tags \
-	data/php.tags \
-	data/python.tags \
-	data/pascal.tags \
-	data/html_entities.tags \
 	$(srcdir)/data/filetypes.* \
 	data/filetype_extensions.conf \
 	data/snippets.conf \
@@ -421,6 +418,9 @@ SYS_DATA_FILES = \
 	$(srcdir)/data/templates/* \
 	$(srcdir)/data/templates/files/* \
 	$(srcdir)/data/colorschemes/* \
+	$(srcdir)/data/android/* \
+	$(srcdir)/data/ios/* \
+	$(srcdir)/data/tags/* \
 	$(top_srcdir)/data/geany.glade \
 	data/geany.css \
 	data/geany.gtkrc
@@ -432,8 +432,6 @@ EXTRA_DIST = \
 	geany.desktop.in \
 	geany.pc.in \
 	geany.spec \
-	ChangeLog.pre-0-17 \
-	ChangeLog.pre-1-22 \
 	HACKING \
 	README.I18N \
 	README.Packagers \
@@ -461,19 +459,19 @@ all: config.h
 .SUFFIXES:
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu'; \
-	      $(am__cd) $(srcdir) && $(AUTOMAKE) --gnu \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign'; \
+	      $(am__cd) $(srcdir) && $(AUTOMAKE) --foreign \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu Makefile
+	  $(AUTOMAKE) --foreign Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -488,9 +486,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	$(am__cd) $(srcdir) && $(AUTOCONF)
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 
@@ -501,7 +499,7 @@ config.h: stamp-h1
 stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status config.h
-$(srcdir)/config.h.in:  $(am__configure_deps) 
+$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@
@@ -1027,6 +1025,16 @@ install-data-only:
 	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/colorschemes/; \
 	  fi \
 	done
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/tags;
+	for file in $(srcdir)/data/tags/*; do \
+	  if test -f $$file; then \
+	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/tags/; \
+	  fi \
+	done
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/android;
+	rsync -r --exclude=.svn $(srcdir)/data/android/. $(pkgdatadir)/android
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/ios;
+	rsync -r --exclude=.svn $(srcdir)/data/ios/. $(pkgdatadir)/ios
 
 dist-hook:
 	@if test -d "$(top_srcdir)/.git"; then \

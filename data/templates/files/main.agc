@@ -4,7 +4,7 @@
 
 // set window properties
 SetWindowTitle( "{project}" )
-SetScreenResolution( 1024, 768, 0 )
+SetWindowSize( 1024, 768, 0 )
 
 // set display properties
 SetVirtualResolution( 1024, 768 )

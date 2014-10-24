@@ -113,28 +113,29 @@ am__geany_SOURCES_DIST = about.c about.h build.c build.h callbacks.c \
 	geanywraplabel.c geanywraplabel.h gtkcompat.h highlighting.c \
 	highlighting.h highlightingmappings.h keybindings.c \
 	keybindings.h keyfile.c keyfile.h log.c log.h main.c main.h \
-	geany.h msgwindow.c msgwindow.h navqueue.c navqueue.h \
-	notebook.c notebook.h plugins.c plugins.h pluginutils.c \
-	pluginutils.h prefix.c prefix.h prefs.c prefs.h printing.c \
-	printing.h project.c project.h sciwrappers.c sciwrappers.h \
-	search.c search.h socket.c socket.h stash.c stash.h support.h \
-	symbols.c symbols.h templates.c templates.h toolbar.c \
-	toolbar.h tools.c tools.h sidebar.c sidebar.h ui_utils.c \
-	ui_utils.h utils.c utils.h vte.c vte.h win32.c win32.h
+	miniz.c miniz.h geany.h msgwindow.c msgwindow.h navqueue.c \
+	navqueue.h notebook.c notebook.h plugins.c plugins.h \
+	pluginutils.c pluginutils.h prefix.c prefix.h prefs.c prefs.h \
+	printing.c printing.h project.c project.h sciwrappers.c \
+	sciwrappers.h search.c search.h socket.c socket.h stash.c \
+	stash.h support.h symbols.c symbols.h templates.c templates.h \
+	toolbar.c toolbar.h tools.c tools.h sidebar.c sidebar.h \
+	ui_utils.c ui_utils.h utils.c utils.h vte.c vte.h win32.c \
+	win32.h
 am__objects_1 = about.$(OBJEXT) build.$(OBJEXT) callbacks.$(OBJEXT) \
 	dialogs.$(OBJEXT) document.$(OBJEXT) editor.$(OBJEXT) \
 	encodings.$(OBJEXT) filetypes.$(OBJEXT) \
 	geanyentryaction.$(OBJEXT) geanymenubuttonaction.$(OBJEXT) \
 	geanyobject.$(OBJEXT) geanywraplabel.$(OBJEXT) \
 	highlighting.$(OBJEXT) keybindings.$(OBJEXT) keyfile.$(OBJEXT) \
-	log.$(OBJEXT) main.$(OBJEXT) msgwindow.$(OBJEXT) \
-	navqueue.$(OBJEXT) notebook.$(OBJEXT) plugins.$(OBJEXT) \
-	pluginutils.$(OBJEXT) prefix.$(OBJEXT) prefs.$(OBJEXT) \
-	printing.$(OBJEXT) project.$(OBJEXT) sciwrappers.$(OBJEXT) \
-	search.$(OBJEXT) socket.$(OBJEXT) stash.$(OBJEXT) \
-	symbols.$(OBJEXT) templates.$(OBJEXT) toolbar.$(OBJEXT) \
-	tools.$(OBJEXT) sidebar.$(OBJEXT) ui_utils.$(OBJEXT) \
-	utils.$(OBJEXT)
+	log.$(OBJEXT) main.$(OBJEXT) miniz.$(OBJEXT) \
+	msgwindow.$(OBJEXT) navqueue.$(OBJEXT) notebook.$(OBJEXT) \
+	plugins.$(OBJEXT) pluginutils.$(OBJEXT) prefix.$(OBJEXT) \
+	prefs.$(OBJEXT) printing.$(OBJEXT) project.$(OBJEXT) \
+	sciwrappers.$(OBJEXT) search.$(OBJEXT) socket.$(OBJEXT) \
+	stash.$(OBJEXT) symbols.$(OBJEXT) templates.$(OBJEXT) \
+	toolbar.$(OBJEXT) tools.$(OBJEXT) sidebar.$(OBJEXT) \
+	ui_utils.$(OBJEXT) utils.$(OBJEXT)
 @MINGW_FALSE@am_geany_OBJECTS = $(am__objects_1) vte.$(OBJEXT)
 @MINGW_TRUE@am_geany_OBJECTS = $(am__objects_1) win32.$(OBJEXT)
 geany_OBJECTS = $(am_geany_OBJECTS)
@@ -331,6 +332,7 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
@@ -445,7 +447,7 @@ SRCS = \
 	keybindings.c keybindings.h \
 	keyfile.c keyfile.h \
 	log.c log.h \
-	main.c main.h geany.h \
+	main.c main.h miniz.c miniz.h geany.h \
 	msgwindow.c msgwindow.h \
 	navqueue.c navqueue.h \
 	notebook.c notebook.h \
@@ -552,7 +554,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .cxx .lo .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -561,9 +563,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/Makefile
+	  $(AUTOMAKE) --foreign src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -577,9 +579,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 install-binPROGRAMS: $(bin_PROGRAMS)
@@ -660,6 +662,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keyfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miniz.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/msgwindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/navqueue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/notebook.Po@am__quote@

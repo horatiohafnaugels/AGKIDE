@@ -450,13 +450,20 @@ LoadSkeleton2DFromSpineFile||(Integer iSkeleton, String filename, Float scale, I
 LoadSkeleton2DFromSpineFile|Integer|(String filename, Float scale, Integer atlasImage, Integer loadAnim)|
 SetSkeleton2DPosition||(Integer iSkeleton, Float x, Float y)|
 SetSkeleton2DRotation||(Integer iSkeleton, Float r)|
+SetSkeleton2DFlip||(Integer iSkeleton, Integer flipH, Integer flipV)|
 SetSkeleton2DDepth||(Integer iSkeleton, Integer depth)|
 FixSkeleton2DToScreen||(Integer iSkeleton, Integer mode)|
+GetSkeleton2DX|Float|(Integer iSkeleton)|
+GetSkeleton2DY|Float|(Integer iSkeleton)|
+GetSkeleton2DAngle|Float|(Integer iSkeleton)|
 GetSkeleton2DBone|Integer|(Integer iSkeleton, String name)|
 GetSkeleton2DBoneParent|Integer|(Integer iSkeleton, Integer bone)|
 GetSkeleton2DBoneX|Float|(Integer iSkeleton, Integer bone)|
 GetSkeleton2DBoneY|Float|(Integer iSkeleton, Integer bone)|
 GetSkeleton2DBoneAngle|Float|(Integer iSkeleton, Integer bone)|
+GetSkeleton2DBoneCurrX|Float|(Integer iSkeleton, Integer bone)|
+GetSkeleton2DBoneCurrY|Float|(Integer iSkeleton, Integer bone)|
+GetSkeleton2DBoneCurrAngle|Float|(Integer iSkeleton, Integer bone)|
 SetSkeleton2DBonePosition||(Integer iSkeleton, Integer bone, Float x, Float y)|
 SetSkeleton2DBoneAngle||(Integer iSkeleton, Integer bone, Float r)|
 SetSkeleton2DBoneScale||(Integer iSkeleton, Integer bone, Float sx, Float sy)|
@@ -775,10 +782,13 @@ GetRawRotationVectorX|Float|()|
 GetRawRotationVectorY|Float|()|
 GetRawRotationVectorZ|Float|()|
 GetRawRotationVectorW|Float|()|
-GetRawGPSLatitude|Float|()|
-GetRawGPSLongitude|Float|()|
+GetRawRotationVectorX2|Float|()|
+GetRawRotationVectorY2|Float|()|
+GetRawRotationVectorZ2|Float|()|
+GetRawRotationVectorW2|Float|()|
 CompleteRawJoystickDetection||()|
 GetRawJoystickExists|Integer|(Integer index)|
+GetRawJoystickConnected|Integer|(Integer index)|
 GetRawJoystickX|Float|(Integer index)|
 GetRawJoystickY|Float|(Integer index)|
 GetRawJoystickZ|Float|(Integer index)|
@@ -913,6 +923,7 @@ GetHoursFromUnix|Integer|(Integer unixtime)|
 GetMinutesFromUnix|Integer|(Integer unixtime)|
 GetSecondsFromUnix|Integer|(Integer unixtime)|
 SetInneractiveDetails||(String szCode)|
+CreateFullscreenAdvert||()|
 CreateAdvert||(Integer type, Integer horz, Integer vert, Integer test)|
 CreateAdvertEx||(Integer type, Integer horz, Integer vert, Integer test, Float offsetx, Float offsety)|
 SetAdvertPosition||(Float x, Float y, Float width)|
@@ -937,6 +948,7 @@ InAppPurchaseActivate||(Integer iID)|
 GetInAppPurchaseState|Integer|()|
 InAppPurchaseRestore||()|
 SetAdMobDetails||(String szID)|
+SetChartboostDetails||(String szKey1, String szKey2)|
 SetAdvertVisible||(Integer iVisible)|
 RequestAdvertRefresh||()|
 TwitterSetup||(String szKey, String szSecret)|
@@ -1134,7 +1146,8 @@ DeleteLightDirectional||(Integer lightID)|
 ClearLightDirectionals||()|
 SetLightDirectionalDirection||(Integer lightID, Float vx, Float vy, Float vz)|
 SetLightDirectionalColor||(Integer lightID, Integer red, Integer green, Integer blue)|
-SetScreenResolution||(Integer width, Integer height, Integer fullscreen)|
+SetWindowSize||(Integer width, Integer height, Integer fullscreen)|
+SetScreenResolution||(Integer width, Integer height)|
 GetDeviceName|String|()|
 GetDeviceBaseName|String|()|
 GetDeviceType|String|()|
@@ -1188,6 +1201,7 @@ GetVideoHeight|Float|()|
 SetRawWritePath||(String str)|
 GetWritePath|String|()|
 GetReadPath|String|()|
+GetDocumentsPath|String|()|
 SetCurrentDir|Integer|(String szPath)|
 MakeFolder|Integer|(String szName)|
 DeleteFolder||(String szName)|
@@ -1203,21 +1217,18 @@ GetCurrentDate|String|()|
 GetCurrentTime|String|()|
 OpenBrowser||(String url)|
 GetInternetState|Integer|()|
+SetPushNotificationKeys||(String data1, String reserved)|
 PushNotificationSetup|Integer|()|
 GetPushNotificationToken|String|()|
 GetNotificationType|Integer|()|
 SetNotificationImage||(Integer iImageIndex)|
 SetNotificationText||(String pText)|
 GetNFCExists|Integer|()|
-GetRawNFCCount|Integer|()|
-GetRawFirstNFCDevice|Integer|()|
-GetRawNextNFCDevice|Integer|()|
-GetRawNFCName|String|(Integer iIndex)|
-SendRawNFCData|Integer|(Integer iIndex, String pMessageText)|
-GetRawNFCDataState|Integer|(Integer iIndex)|
-GetRawNFCData|String|(Integer iIndex)|
 StartGPSTracking||()|
 StopGPSTracking||()|
+GetRawGPSLatitude|Float|()|
+GetRawGPSLongitude|Float|()|
+GetRawGPSAltitude|Float|()|
 GetGameCenterExists|Integer|()|
 GameCenterSetup||()|
 GameCenterLogin||()|
@@ -1227,10 +1238,4 @@ GameCenterShowLeaderBoard||(String szBoardID)|
 GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplete)|
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
-SetPushNotificationKeys||(String data1, String reserved)|
-GetRawRotationVectorX2|Float|()|
-GetRawRotationVectorY2|Float|()|
-GetRawRotationVectorZ2|Float|()|
-GetRawRotationVectorW2|Float|()|
-SetSkeleton2DFlip||(Integer iSkeleton, Integer flipH, Integer flipV)|
-GetDocumentsPath|String|()|
+SetCameraAspect||(Integer cameraID, Float aspect)|

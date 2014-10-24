@@ -27,6 +27,9 @@
 
 G_BEGIN_DECLS
 
+extern volatile int install_thread_running;
+extern volatile gchar install_file_progress[ 1024 ];
+extern GThread* install_thread;
 
 /** Sets a name to lookup @a widget from @a owner.
  * @param owner Usually a window, dialog or popup menu.
@@ -72,8 +75,19 @@ typedef struct GeanyInterfacePrefs
 }
 GeanyInterfacePrefs;
 
-
 extern GeanyInterfacePrefs interface_prefs;
+
+
+typedef struct AGKInstallPrefs
+{
+	gchar		*projects_folder;
+	gint		update_projects_mode;
+	gchar		*tier2_folder;
+	gint		update_tier2_mode;
+}
+AGKInstallPrefs;
+
+extern AGKInstallPrefs install_prefs;
 
 
 /** Important widgets in the main window.
@@ -141,6 +155,7 @@ typedef struct UIWidgets
 	GtkWidget	*android_dialog;
 	GtkWidget	*ios_dialog;
 	GtkWidget	*keystore_dialog;
+	GtkWidget	*install_dialog;
 
 	/* other widgets not needed in GeanyMainWidgets */
 	GtkWidget	*statusbar;			/* use ui_set_statusbar() to set */
@@ -224,6 +239,7 @@ GtkWidget *create_prefs_dialog(void);
 GtkWidget *create_android_dialog(void);
 GtkWidget *create_ios_dialog(void);
 GtkWidget *create_keystore_dialog(void);
+GtkWidget *create_install_dialog(void);
 GtkWidget *create_project_dialog(void);
 GtkWidget *create_toolbar_popup_menu1(void);
 GtkWidget *create_window1(void);
@@ -349,6 +365,10 @@ gint ui_get_gtk_settings_integer(const gchar *property_name, gint default_value)
 GdkPixbuf *ui_get_mime_icon(const gchar *mime_type, GtkIconSize size);
 
 void ui_focus_current_document(void);
+
+void on_install_dialog_response(GtkDialog *dialog, gint response, gpointer user_data);
+
+gpointer CopyAdditionalFiles(gpointer data);
 
 G_END_DECLS
 

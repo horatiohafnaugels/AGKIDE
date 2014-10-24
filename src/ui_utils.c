@@ -71,6 +71,11 @@
 GeanyInterfacePrefs	interface_prefs;
 GeanyMainWidgets	main_widgets;
 
+AGKInstallPrefs install_prefs;
+volatile int install_thread_running = 0;
+volatile gchar install_file_progress[ 1024 ];
+GThread *install_thread = 0;
+
 UIPrefs			ui_prefs;
 UIWidgets		ui_widgets;
 
@@ -82,6 +87,7 @@ static GtkWidget* prefs_dialog = NULL;
 static GtkWidget* android_dialog = NULL;
 static GtkWidget* ios_dialog = NULL;
 static GtkWidget* keystore_dialog = NULL;
+static GtkWidget* install_dialog = NULL;
 static GtkWidget* project_dialog = NULL;
 
 static struct
@@ -1780,6 +1786,7 @@ static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data);
 static void ui_path_box_open_clicked_android(GtkButton *button, gpointer user_data);
 static void ui_path_box_open_clicked_ios(GtkButton *button, gpointer user_data);
 static void ui_path_box_open_clicked_keystore(GtkButton *button, gpointer user_data);
+static void ui_path_box_open_clicked_install(GtkButton *button, gpointer user_data);
 
 /* Setup a GtkButton to run a GtkFileChooser, setting entry text if successful.
  * title can be NULL.
@@ -1832,6 +1839,17 @@ void ui_setup_open_button_callback_keystore(GtkWidget *open_btn, const gchar *ti
 	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked_keystore), path_entry);
 }
 
+void ui_setup_open_button_callback_install(GtkWidget *open_btn, const gchar *title,
+		GtkFileChooserAction action, GtkEntry *entry)
+{
+	GtkWidget *path_entry = GTK_WIDGET(entry);
+
+	if (title)
+		g_object_set_data_full(G_OBJECT(open_btn), "title", g_strdup(title),
+				(GDestroyNotify) g_free);
+	g_object_set_data(G_OBJECT(open_btn), "action", GINT_TO_POINTER(action));
+	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked_install), path_entry);
+}
 
 
 //#ifndef G_OS_WIN32
@@ -2149,6 +2167,44 @@ static void ui_path_box_open_clicked_keystore(GtkButton *button, gpointer user_d
 	}
 }
 
+static void ui_path_box_open_clicked_install(GtkButton *button, gpointer user_data)
+{
+	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
+	GtkEntry *entry = user_data;
+	const gchar *title = g_object_get_data(G_OBJECT(button), "title");
+	gchar *utf8_path = NULL;
+
+	g_return_if_fail(action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+
+	if (title == NULL)
+		title = (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ?
+			_("Select Folder") : _("Select File");
+
+	if (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)
+	{
+		gchar *path = g_path_get_dirname(gtk_entry_get_text(GTK_ENTRY(entry)));
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_folder_dialog(ui_widgets.install_dialog, title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, path);
+		}
+
+		g_free(path);
+	}
+
+	if (utf8_path != NULL)
+	{
+		gtk_entry_set_text(GTK_ENTRY(entry), utf8_path);
+		g_free(utf8_path);
+	}
+}
+
 void ui_statusbar_showhide(gboolean state)
 {
 	/* handle statusbar visibility */
@@ -2208,7 +2264,7 @@ static void on_config_file_clicked(GtkWidget *widget, gpointer user_data)
 		if (g_file_test(global_file, G_FILE_TEST_EXISTS))
 			g_file_get_contents(global_file, &global_content, NULL, NULL);
 
-		document_new_file(utf8_filename, ft, global_content);
+		document_new_file(utf8_filename, ft, global_content, TRUE);
 
 		utils_free_pointers(4, utf8_filename, base_name, global_file, global_content, NULL);
 	}
@@ -2481,6 +2537,11 @@ GtkWidget *create_keystore_dialog(void)
 	return keystore_dialog;
 }
 
+GtkWidget *create_install_dialog(void)
+{
+	return install_dialog;
+}
+
 GtkWidget *create_project_dialog(void)
 {
 	return project_dialog;
@@ -2560,6 +2621,7 @@ void ui_init_builder(void)
 	android_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "android_dialog"));
 	ios_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "ios_dialog"));
 	keystore_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "keystore_dialog"));
+	install_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "installation_dialog"));
 	project_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "project_dialog"));
 	toolbar_popup_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "toolbar_popup_menu1"));
 	window1 = GTK_WIDGET(gtk_builder_get_object(builder, "window1"));
@@ -2569,6 +2631,7 @@ void ui_init_builder(void)
 	g_object_set_data(G_OBJECT(android_dialog), "android_dialog", android_dialog);
 	g_object_set_data(G_OBJECT(ios_dialog), "ios_dialog", ios_dialog);
 	g_object_set_data(G_OBJECT(keystore_dialog), "keystore_dialog", keystore_dialog);
+	g_object_set_data(G_OBJECT(install_dialog), "installation_dialog", install_dialog);
 	g_object_set_data(G_OBJECT(project_dialog), "project_dialog", project_dialog);
 	g_object_set_data(G_OBJECT(toolbar_popup_menu1), "toolbar_popup_menu1", toolbar_popup_menu1);
 	g_object_set_data(G_OBJECT(window1), "window1", window1);
@@ -2691,6 +2754,8 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(ios_dialog);
 	if (GTK_IS_WIDGET(keystore_dialog))
 		gtk_widget_destroy(keystore_dialog);
+	if (GTK_IS_WIDGET(install_dialog))
+		gtk_widget_destroy(install_dialog);
 	if (GTK_IS_WIDGET(project_dialog))
 		gtk_widget_destroy(project_dialog);
 	if (GTK_IS_WIDGET(toolbar_popup_menu1))
@@ -3175,4 +3240,211 @@ const gchar *ui_lookup_stock_label(const gchar *stock_id)
 
 	g_warning("No stock id '%s'!", stock_id);
 	return NULL;
+}
+
+
+void on_install_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	if ( install_thread_running ) return;
+
+	if ( response != 1 && response != 2 )
+	{
+		gtk_widget_hide(GTK_WIDGET(dialog));
+	}
+	else
+	{
+		int i;
+		GtkWidget *widget;
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.install_dialog, "additional_files_install"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.install_dialog, "button11"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.install_dialog, "button10"), FALSE );
+		
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// project files
+		widget = ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_file_entry");
+		if ( install_prefs.projects_folder ) g_free(install_prefs.projects_folder);
+		install_prefs.projects_folder = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_update_combo");
+		gchar *projects_update_mode = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		install_prefs.update_projects_mode = 0;
+		if ( strcmp(projects_update_mode,"Update these files") == 0 ) install_prefs.update_projects_mode = 2;
+		else if ( strcmp(projects_update_mode,"Ask me what to do") == 0 ) install_prefs.update_projects_mode = 1;
+		g_free(projects_update_mode);
+
+		if ( global_project_prefs.project_file_path ) g_free(global_project_prefs.project_file_path);
+		global_project_prefs.project_file_path = g_strdup(install_prefs.projects_folder);
+
+		// tier 2 files
+		widget = ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_file_entry");
+		if ( install_prefs.tier2_folder ) g_free(install_prefs.tier2_folder);
+		install_prefs.tier2_folder = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_update_combo");
+		gchar *tier2_update_mode = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		install_prefs.update_tier2_mode = 0;
+		if ( strcmp(tier2_update_mode,"Update these files") == 0 ) install_prefs.update_tier2_mode = 2;
+		else if ( strcmp(tier2_update_mode,"Ask me what to do") == 0 ) install_prefs.update_tier2_mode = 1;
+		g_free(tier2_update_mode);
+
+        int success = 1;
+		if ( response == 1 )
+		{
+			int data = 0;
+			if ( install_prefs.projects_folder && *install_prefs.projects_folder ) data |= 1;
+			if ( install_prefs.tier2_folder && *install_prefs.tier2_folder ) data |= 2;
+
+			if ( data )
+			{
+				gchar final_progress[ 1024 ];
+				for ( i = 0; i < 1024; i++ )
+				{
+					install_file_progress[ i ] = 0;
+					final_progress[ i ] = 0;
+				}
+
+				GtkWidget *status = ui_lookup_widget(ui_widgets.install_dialog, "install_files_progress");
+
+				install_thread_running = 1;
+				install_thread = g_thread_create( CopyAdditionalFiles, (gpointer) data, TRUE, NULL );
+
+				while( install_thread_running )
+				{
+					g_usleep( 100 * 1000 );
+					//g_thread_yield();
+
+					strcpy( final_progress, "Installing: " );
+					strcat( final_progress, (gchar*) install_file_progress );
+					gtk_label_set_text( GTK_LABEL(status), final_progress );
+
+					while (gtk_events_pending())
+						gtk_main_iteration();
+				}
+                
+                gpointer result = g_thread_join(install_thread);
+                if ( result > 0 )
+                {
+                    success = 0;
+                    dialogs_show_msgbox( GTK_MESSAGE_ERROR, install_file_progress );
+                }
+
+				install_thread = 0;
+				gtk_label_set_text( GTK_LABEL(status), (gchar*) "" );
+			}
+		}
+
+		if ( success )
+            gtk_widget_hide(GTK_WIDGET(dialog));
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.install_dialog, "additional_files_install"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.install_dialog, "button11"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.install_dialog, "button10"), TRUE );
+	}
+}
+
+gpointer CopyAdditionalFiles(gpointer data)
+{
+	int data_int = (int) data;
+
+	// get source folders
+	gchar *projects_path = NULL;
+	gchar *tier2_path = NULL;
+
+#ifdef G_OS_WIN32
+	gchar *install_dir = win32_get_installation_dir();
+	projects_path = g_build_filename( install_dir, "..\\..\\Projects", NULL );
+	tier2_path = g_build_filename( install_dir, "..\\..\\Tier 2", NULL );
+	g_free(install_dir);
+#elif __APPLE__
+	char szRoot[ 1024 ];
+	uint32_t size = 1024;
+	if ( _NSGetExecutablePath(szRoot, &size) == 0 )
+	{
+		gchar *slash = strrchr( szRoot, '/' );
+		if ( slash ) *slash = 0;
+		projects_path = g_build_filename(szRoot, "../Resources/Projects", NULL);
+		tier2_path = g_build_filename(szRoot, "../Resources/Tier 2", NULL);
+	}
+#else
+	
+#endif
+    
+    int result = 0;
+
+	do
+	{
+		if ( !projects_path )
+		{
+			//dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get projects source folder");
+            strcpy( (gchar*)install_file_progress, "Failed to get projects source folder" );
+            result = 1;
+			break;
+		}
+
+		if ( !tier2_path )
+		{
+			strcpy( (gchar*)install_file_progress, "Failed to get C++ libraries source folder");
+            result = 1;
+			break;
+		}
+
+		utils_tidy_path(projects_path);
+		utils_tidy_path(tier2_path);
+
+		if ( (data_int & 1) )
+		{
+			// install project files
+			if (!g_file_test (projects_path, G_FILE_TEST_EXISTS)) {
+				sprintf( (gchar*)install_file_progress, "Failed to find projects source folder at location: %s", projects_path);
+                result = 1;
+				break;
+			}
+
+			if (!g_file_test (projects_path, G_FILE_TEST_IS_DIR)) {
+				sprintf( (gchar*)install_file_progress, "Unexpected: Projects source folder is not a folder: %s", projects_path);
+                result = 1;
+				break;
+			}
+
+			if ( !utils_copy_folder( projects_path, install_prefs.projects_folder, TRUE, (gchar*) &install_file_progress ) )
+			{
+				//strcpy( install_file_progress, "Failed to copy the projects folder");
+                result = 1;
+				break;
+			}
+		}
+
+		if ( (data_int & 2) )
+		{
+			// install tier 2 files
+			if (!g_file_test (tier2_path, G_FILE_TEST_EXISTS)) {
+				sprintf( (gchar*)install_file_progress, "Failed to find C++ libraries folder at location: %s", tier2_path);
+                result = 1;
+				break;
+			}
+
+			if (!g_file_test (tier2_path, G_FILE_TEST_IS_DIR)) {
+				sprintf( (gchar*)install_file_progress, "Unexpected: C++ libraries folder is not a folder: %s", tier2_path);
+                result = 1;
+				break;
+			}
+
+			if ( !utils_copy_folder( tier2_path, install_prefs.tier2_folder, TRUE, (gchar*) &install_file_progress ) )
+			{
+				//strcpy(install_file_progress, "Failed to copy the C++ libraries folder");
+                result = 1;
+				break;
+			}
+		}
+	} while (0);
+
+	if ( projects_path ) g_free(projects_path);
+	if ( tier2_path ) g_free(tier2_path);
+
+	install_thread_running = 0;
+
+	return (gpointer)result;
 }

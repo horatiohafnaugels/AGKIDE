@@ -297,9 +297,9 @@ GDate *utils_parse_date(const gchar *input);
 
 gchar *utils_parse_and_format_build_date(const gchar *input);
 
-gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite);
+gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite, volatile gchar* progress);
 
-gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recursive );
+gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recursive, volatile gchar* progress );
 
 gboolean utils_remove_folder_recursive ( const gchar* src );
 

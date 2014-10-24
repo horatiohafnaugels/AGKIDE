@@ -419,7 +419,7 @@ void configuration_save_session_files(GKeyFile *config, GeanyProject *project)
 			gint current = 0;
 			if ( doc == curr_doc ) current = 1;
 
-			fname = g_strdup_printf( "%d;%s", current, escaped_filename );
+			fname = g_strdup_printf( "%d;%s;%d;%d", current, escaped_filename, sci_get_current_position(doc->editor->sci), document_get_notebook_page(doc) );
 
 			g_key_file_set_string(config, "files", entry, fname);
 			g_free(fname);
@@ -542,6 +542,13 @@ void configuration_save_project_files(GKeyFile *config, GeanyProject *project)
 #endif
 }
 
+static void save_install_prefs(GKeyFile *config)
+{
+	g_key_file_set_string(config, "AGKInstall", "projects_folder", install_prefs.projects_folder);
+	g_key_file_set_integer(config, "AGKInstall", "projects_update", install_prefs.update_projects_mode);
+	g_key_file_set_string(config, "AGKInstall", "libraries_folder", install_prefs.tier2_folder);
+	g_key_file_set_integer(config, "AGKInstall", "libraries_update", install_prefs.update_tier2_mode);
+}
 
 static void save_dialog_prefs(GKeyFile *config)
 {
@@ -561,6 +568,8 @@ static void save_dialog_prefs(GKeyFile *config)
 	g_key_file_set_boolean(config, PACKAGE, "switch_msgwin_pages", prefs.switch_to_status);
 	g_key_file_set_boolean(config, PACKAGE, "beep_on_errors", prefs.beep_on_errors);
 	g_key_file_set_boolean(config, PACKAGE, "auto_focus", prefs.auto_focus);
+
+	g_key_file_set_integer(config, PACKAGE, "IDE_version_int", AGK_VERSION_INT);
 
 	/* interface */
 	g_key_file_set_boolean(config, PACKAGE, "sidebar_symbol_visible", interface_prefs.sidebar_symbol_visible);
@@ -760,6 +769,7 @@ void configuration_save(void)
 
 	save_dialog_prefs(config);
 	save_ui_prefs(config);
+	save_install_prefs(config);
 	build_save_prefs(config);
 	project_save_prefs(config);	/* save project filename, etc. */
 	save_recent_files(config, ui_prefs.recent_queue, "recent_files");
@@ -1040,6 +1050,13 @@ static void get_setting_color(GKeyFile *config, const gchar *section, const gcha
 }
 #endif
 
+static void load_install_prefs(GKeyFile *config)
+{
+	install_prefs.projects_folder = utils_get_setting_string(config, "AGKInstall", "projects_folder", NULL);
+	install_prefs.update_projects_mode = utils_get_setting_integer(config, "AGKInstall", "projects_update", -1);
+	install_prefs.tier2_folder = utils_get_setting_string(config, "AGKInstall", "libraries_folder", NULL);
+	install_prefs.update_tier2_mode = utils_get_setting_integer(config, "AGKInstall", "libraries_update", -1);
+}
 
 /* note: new settings should be added in init_pref_groups() */
 static void load_dialog_prefs(GKeyFile *config)
@@ -1120,7 +1137,12 @@ static void load_dialog_prefs(GKeyFile *config)
 	editor_prefs.show_indent_guide = utils_get_setting_boolean(config, PACKAGE, "show_indent_guide", FALSE);
 	editor_prefs.show_white_space = utils_get_setting_boolean(config, PACKAGE, "show_white_space", FALSE);
 	editor_prefs.show_line_endings = utils_get_setting_boolean(config, PACKAGE, "show_line_endings", FALSE);
-	editor_prefs.scroll_stop_at_last_line = utils_get_setting_boolean(config, PACKAGE, "scroll_stop_at_last_line", TRUE);
+	editor_prefs.scroll_stop_at_last_line = utils_get_setting_boolean(config, PACKAGE, "scroll_stop_at_last_line", FALSE);
+
+	editor_prefs.IDE_version = utils_get_setting_integer(config, PACKAGE, "IDE_version_int", 0);
+	if ( editor_prefs.IDE_version < 1 )
+		editor_prefs.scroll_stop_at_last_line = FALSE;
+
 	editor_prefs.auto_close_xml_tags = utils_get_setting_boolean(config, PACKAGE, "auto_close_xml_tags", TRUE);
 	editor_prefs.complete_snippets = utils_get_setting_boolean(config, PACKAGE, "complete_snippets", TRUE);
 	editor_prefs.auto_complete_symbols = utils_get_setting_boolean(config, PACKAGE, "auto_complete_symbols", TRUE);
@@ -1174,9 +1196,9 @@ static void load_dialog_prefs(GKeyFile *config)
 	toolbar_prefs.visible = utils_get_setting_boolean(config, PACKAGE, "pref_toolbar_show", TRUE);
 	toolbar_prefs.append_to_menu = utils_get_setting_boolean(config, PACKAGE, "pref_toolbar_append_to_menu", FALSE);
 	{
-		toolbar_prefs.use_gtk_default_style = utils_get_setting_boolean(config, PACKAGE, "pref_toolbar_use_gtk_default_style", TRUE);
+		toolbar_prefs.use_gtk_default_style = utils_get_setting_boolean(config, PACKAGE, "pref_toolbar_use_gtk_default_style", FALSE);
 		if (! toolbar_prefs.use_gtk_default_style)
-			toolbar_prefs.icon_style = utils_get_setting_integer(config, PACKAGE, "pref_toolbar_icon_style", GTK_TOOLBAR_ICONS);
+			toolbar_prefs.icon_style = utils_get_setting_integer(config, PACKAGE, "pref_toolbar_icon_style", GTK_TOOLBAR_BOTH);
 
 		toolbar_prefs.use_gtk_default_icon = utils_get_setting_boolean(config, PACKAGE, "pref_toolbar_use_gtk_default_icon", FALSE);
 		if (! toolbar_prefs.use_gtk_default_icon)
@@ -1432,6 +1454,7 @@ gboolean configuration_load(void)
 
 	load_dialog_prefs(config);
 	load_ui_prefs(config);
+	load_install_prefs(config);
 	project_load_prefs(config);
 	build_load_prefs(config);
 	configuration_load_recent_files(config);
@@ -1512,6 +1535,21 @@ static gboolean open_session_file(gchar **tmp, guint len)
 	return ret;
 }
 
+static gint session_file_compare(gconstpointer a, gconstpointer b)
+{
+	gchar **tmpA = *((gchar***) a);
+	gchar **tmpB = *((gchar***) b);
+
+	int orderA = 0;
+	int orderB = 0;
+
+	if ( tmpA && g_strv_length(tmpA) > 3 ) orderA = atoi(tmpA[3]);
+	if ( tmpB && g_strv_length(tmpB) > 3 ) orderB = atoi(tmpB[3]);
+
+	if ( orderA < orderB ) return -1;
+	else if ( orderA > orderB ) return 1;
+	else return 0;
+}
 
 /* Open session files
  * Note: notebook page switch handler and adding to recent files list is always disabled
@@ -1525,6 +1563,8 @@ void configuration_open_files(GeanyProject *project)
 	main_status.opening_session_files = TRUE;
 
 	GeanyDocument *set_curr_doc = NULL;
+
+	g_ptr_array_sort( session_files, session_file_compare );
 
 	i = file_prefs.tab_order_ltr ? 0 : (session_files->len - 1);
 	while (TRUE)
@@ -1545,6 +1585,7 @@ void configuration_open_files(GeanyProject *project)
 			if (g_file_test(locale_filename, G_FILE_TEST_IS_REGULAR))
 			{
 				GeanyDocument *doc = document_open_file_full( NULL, locale_filename, 0, FALSE, NULL, NULL );
+				if ( g_strv_length(tmp) > 2 ) editor_goto_pos(doc->editor, atoi(tmp[2]), FALSE);
 				if ( atoi(tmp[0]) == 1 ) set_curr_doc = doc;
 			}
 			else
