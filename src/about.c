@@ -40,7 +40,7 @@
 #define INFO "<span size=\"larger\" weight=\"bold\">%s</span>"
 #define CODENAME "<span>Built on Geany 1.24.1</span>"
 #define BUILDDATE "<span size=\"smaller\">%s</span>"
-#define COPYRIGHT _("AGK Copyright (c)  2014\nThe Game Creators Ltd\n\nGeany Copyright (c)  2005-2014\nColomban Wendling\nNick Treleaven\nMatthew Brush\nEnrico Tröger\nFrank Lanitz\nAll rights reserved.")
+#define COPYRIGHT _("App Game Kit (c) 2014\nThe Game Creators Ltd. All Rights Reserved.\n\nGeany Copyright (c)  2005-2014\nColomban Wendling\nNick Treleaven\nMatthew Brush\nEnrico Tröger\nFrank Lanitz\nAll rights reserved.")
 
 static const gchar *contributors =
 "Adam Ples, "
@@ -102,6 +102,10 @@ static GtkWidget *create_dialog(void)
 	guint i, row = 0;
 	gchar *build_date;
 
+	GtkWidget *eula_textview;
+	GtkWidget *eula_scrollwin;
+	gchar *eula_text = NULL;
+
 	dialog = gtk_dialog_new();
 
 	/* configure dialog */
@@ -113,7 +117,7 @@ static GtkWidget *create_dialog(void)
 	gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 	gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
 	gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-	gtk_window_set_default_size(GTK_WINDOW(dialog),420,420);
+	gtk_window_set_default_size(GTK_WINDOW(dialog),600,480);
 	g_signal_connect(dialog, "key-press-event", G_CALLBACK(gb_on_key_pressed), NULL);
 
 	/* create header */
@@ -321,9 +325,9 @@ static GtkWidget *create_dialog(void)
 	GtkWidget *pLicenseLabel = gtk_label_new(NULL);
 	//gtk_label_set_justify(GTK_LABEL(pLicenseLabel), GTK_JUSTIFY_CENTER);
 	gtk_misc_set_alignment(GTK_MISC(pLicenseLabel),0,0.5);
-	gtk_label_set_selectable(GTK_LABEL(pLicenseLabel), FALSE);
+	gtk_label_set_selectable(GTK_LABEL(pLicenseLabel), TRUE);
 	gtk_label_set_use_markup(GTK_LABEL(pLicenseLabel), TRUE);
-	gtk_label_set_markup(GTK_LABEL(pLicenseLabel), "The following license applies to the IDE only:");
+	gtk_label_set_markup(GTK_LABEL(pLicenseLabel), "The following license applies to the IDE only\nThe source code can be found at https://github.com/TheGameCreators/AGKIDE");
 	gtk_misc_set_padding(GTK_MISC(pLicenseLabel), 0, 0);
 	gtk_widget_show(pLicenseLabel);
 
@@ -333,8 +337,6 @@ static GtkWidget *create_dialog(void)
 
 	//gtk_box_pack_start(GTK_BOX(license_scrollwin), pLicenseLabel, FALSE, FALSE, 0);
 	//gtk_container_add(GTK_CONTAINER(license_scrollwin), pLicenseLabel);
-
-	
 
 	g_snprintf(buffer, sizeof(buffer), "%s" G_DIR_SEPARATOR_S "GPL-2", app->datadir);
 
@@ -352,6 +354,41 @@ static GtkWidget *create_dialog(void)
 	label = gtk_label_new(_("License"));
 	gtk_widget_show(label);
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), pLicenseBox, label);
+
+
+
+	// create EULA tab
+	eula_scrollwin = gtk_scrolled_window_new(NULL, NULL);
+	gtk_container_set_border_width(GTK_CONTAINER(eula_scrollwin), 6);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(eula_scrollwin), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(eula_scrollwin), GTK_SHADOW_IN);
+	eula_textview = gtk_text_view_new();
+	gtk_text_view_set_left_margin(GTK_TEXT_VIEW(eula_textview), 2);
+	gtk_text_view_set_right_margin(GTK_TEXT_VIEW(eula_textview), 2);
+	gtk_text_view_set_editable(GTK_TEXT_VIEW(eula_textview), FALSE);
+	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(eula_textview), FALSE);
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(eula_textview),GTK_WRAP_WORD);
+	gtk_widget_show(eula_textview);
+
+	gtk_container_add(GTK_CONTAINER(eula_scrollwin), eula_textview);
+
+	g_snprintf(buffer, sizeof(buffer), "%s" G_DIR_SEPARATOR_S "AGK2EULA.txt", app->datadir);
+
+	g_file_get_contents(buffer, &eula_text, NULL, NULL);
+	if (eula_text == NULL)
+	{
+		eula_text = g_strdup(
+			_("EULA text could not be found, please visit http://www.appgamekit.com for more information."));
+	}
+	tb = gtk_text_view_get_buffer(GTK_TEXT_VIEW(eula_textview));
+	gtk_text_buffer_set_text(tb, eula_text, -1);
+
+	g_free(eula_text);
+
+	label = gtk_label_new(_("EULA"));
+	gtk_widget_show(label);
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), eula_scrollwin, label);
+
 
 	gtk_widget_show_all(dialog);
 	return dialog;

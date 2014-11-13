@@ -1221,6 +1221,7 @@ on_prefs_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 			kb_update();
 			tools_create_insert_custom_command_menu_items();
 			keybindings_write_to_file();
+            update_window_menu();
 		}
 
 		/* Printing */

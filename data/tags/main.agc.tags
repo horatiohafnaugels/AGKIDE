@@ -1239,3 +1239,5 @@ GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplet
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
 SetCameraAspect||(Integer cameraID, Float aspect)|
+SetSpriteAdditionalImage||(Integer iSpriteIndex, Integer iImageIndex, Integer iStage)|
+IsSupportedDepthTexture|Integer|()|

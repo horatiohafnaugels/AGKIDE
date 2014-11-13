@@ -334,7 +334,7 @@ static int parse_dim( const char* p )
 		while (isspace(*p)) 
 			p++;
 
-		if ( !*p )
+		if ( !*p || isAGKComment(p) )
 		{
 			const char *vartype = "integer";
 			if ( *varend == '#' ) vartype = "float";

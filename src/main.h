@@ -51,6 +51,7 @@ GeanyStatus;
 
 extern GeanyStatus main_status;
 
+void update_window_menu();
 
 const gchar *main_get_version_string(void);
 

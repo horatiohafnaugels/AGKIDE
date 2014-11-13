@@ -1804,7 +1804,7 @@
                         <property name="can_focus">False</property>
                         <property name="xalign">0</property>
                         <property name="label" translatable="yes">AGK comes with a set of example projects for BASIC and a set of native libraries for development with C++. By default these are located in the AGK installation folder but it might be more convenient to store them elsewhere, and in the case of Windows the Program Files directory is not writeable so is not suitable for projects. This dialog will let you copy these additional files to a location of your choice, and optionally keep those locations up to date as the local files are updated. 
-You can leave either path blank if you do not want to install these files.</property>
+You can close this dialog and come back to it at any time from the Tools-&gt;Install Additional Files menu option. You can leave either path blank if you do not want to install these files.</property>
                         <property name="wrap">True</property>
                       </object>
                     </child>
@@ -7119,7 +7119,7 @@ To generate a keystore file you need to submit some information about you or you
                               <object class="GtkTable" id="table9">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="n_rows">2</property>
+                                <property name="n_rows">3</property>
                                 <property name="n_columns">2</property>
                                 <property name="column_spacing">6</property>
                                 <property name="row_spacing">6</property>
@@ -7226,7 +7226,7 @@ To generate a keystore file you need to submit some information about you or you
                                       <object class="GtkLabel" id="label29">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">(Default: 5689)</property>
+                                        <property name="label" translatable="yes">(Default: 5689) (Currently has no affect)</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -7244,6 +7244,57 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="right_attach">2</property>
                                     <property name="top_attach">1</property>
                                     <property name="bottom_attach">2</property>
+                                    <property name="y_options"/>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="label47">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="xalign">0</property>
+                                    <property name="label" translatable="yes">Direct Connection IP:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
+                                    <property name="x_options">GTK_FILL</property>
+                                    <property name="y_options"/>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkHBox" id="hbox45">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkEntry" id="entry_direct_ip">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="tooltip_text" translatable="yes">Enter the IP of a device to broadcast apps directly to it, this is useful if AGK has trouble detecting the device</property>
+                                        <property name="invisible_char">●</property>
+                                        <property name="width_chars">20</property>
+                                        <property name="invisible_char_set">True</property>
+                                        <property name="caps_lock_warning">False</property>
+                                        <property name="primary_icon_activatable">False</property>
+                                        <property name="secondary_icon_activatable">False</property>
+                                        <property name="primary_icon_sensitive">True</property>
+                                        <property name="secondary_icon_sensitive">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
+                                    <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
                                 </child>
@@ -7568,6 +7619,21 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -7588,6 +7654,21 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -10768,6 +10849,15 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="label" translatable="yes">Generate Keystore File</property>
                                     <property name="use_underline">True</property>
                                     <signal name="activate" handler="on_menu_tools_android_keystore_activate" swapped="no"/>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkMenuItem" id="menu_tools_android_browse_to_player">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Browse to AGK Player</property>
+                                    <property name="use_underline">True</property>
+                                    <signal name="activate" handler="on_menu_tools_android_browse_to_player_activate" swapped="no"/>
                                   </object>
                                 </child>
                               </object>

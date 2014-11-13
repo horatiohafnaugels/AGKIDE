@@ -165,8 +165,7 @@ typedef struct BuildPrefs
 {
 	gchar *agk_compiler_path; /* in UTF-8 */
 	gint agk_broadcast_port;
-//	gboolean agk_enable_local;
-//	gboolean agk_enable_broadcast;
+	gchar *agk_broadcast_ip;
 } BuildPrefs;
 
 GPid build_pid;

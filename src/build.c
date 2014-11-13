@@ -903,6 +903,7 @@ void build_save_prefs(GKeyFile *config)
 {
 	g_key_file_set_string(config, "buildAGK", "compiler_path", FALLBACK(build_prefs.agk_compiler_path, ""));
 	g_key_file_set_integer(config, "buildAGK", "broadcast_port", build_prefs.agk_broadcast_port);
+	g_key_file_set_string(config, "buildAGK", "direct_ip", FALLBACK(build_prefs.agk_broadcast_ip, ""));
 }
 
 void build_load_prefs(GKeyFile *config)
@@ -936,6 +937,7 @@ void build_load_prefs(GKeyFile *config)
 		
 
 	build_prefs.agk_broadcast_port = utils_get_setting_integer(config, "buildAGK", "broadcast_port", 5689);
+	build_prefs.agk_broadcast_ip = utils_get_setting_string(config, "buildAGK", "direct_ip", "");
 }
 
 void build_setup_prefs(void)
@@ -943,6 +945,7 @@ void build_setup_prefs(void)
 	GtkWidget *compiler_path_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_compiler_path1");
 	GtkWidget *compiler_path_button = ui_lookup_widget(ui_widgets.prefs_dialog, "button_build_compiler_path1");
 	GtkWidget *broadcast_port_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_broadcast_port1");
+	GtkWidget *direct_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_direct_ip");
 	static gboolean callback_setup = FALSE;
 
 	g_return_if_fail(build_prefs.agk_compiler_path != NULL);
@@ -952,6 +955,7 @@ void build_setup_prefs(void)
 
 	gtk_entry_set_text(GTK_ENTRY(compiler_path_entry), build_prefs.agk_compiler_path);
 	gtk_entry_set_text(GTK_ENTRY(broadcast_port_entry), port);
+	gtk_entry_set_text(GTK_ENTRY(direct_ip_entry), build_prefs.agk_broadcast_ip);
 
 	if (! callback_setup)
 	{	/* connect the callback only once */
@@ -964,6 +968,7 @@ void build_apply_prefs(void)
 {
 	GtkWidget *compiler_path_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_compiler_path1");
 	GtkWidget *broadcast_port_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_broadcast_port1");
+	GtkWidget *direct_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_direct_ip");
 	const gchar *str;
 
 	str = gtk_entry_get_text(GTK_ENTRY(compiler_path_entry));
@@ -971,6 +976,9 @@ void build_apply_prefs(void)
 
 	str = gtk_entry_get_text(GTK_ENTRY(broadcast_port_entry));
 	build_prefs.agk_broadcast_port = atoi( str );
+
+	str = gtk_entry_get_text(GTK_ENTRY(direct_ip_entry));
+	SETPTR(build_prefs.agk_broadcast_ip, g_strdup(str));
 }
 
 GPid build_run_project_spawn_cmd(GeanyProject *project);
@@ -1309,9 +1317,18 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 		ui_progress_bar_start("Broadcasting");
 	}
 
-	gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnectall\nrun\n", NULL );
-	write(gdb_in.fd, cmdline, strlen(cmdline) );
-	g_free(cmdline);
+	if ( build_prefs.agk_broadcast_ip && *build_prefs.agk_broadcast_ip )
+	{
+		gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnect ", build_prefs.agk_broadcast_ip, "\nconnectall\nrun\n", NULL );
+		write(gdb_in.fd, cmdline, strlen(cmdline) );
+		g_free(cmdline);
+	}
+	else
+	{
+		gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnectall\nrun\n", NULL );
+		write(gdb_in.fd, cmdline, strlen(cmdline) );
+		g_free(cmdline);
+	}
 
 	/*
 	gchar output[ 256 ];

@@ -2229,6 +2229,19 @@ gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite
         else g_critical (G_STRLOC ": '%s' not a regular file.", src);
         return FALSE;
     }
+    
+#ifndef G_OS_WIN32
+    if (g_file_test (src, G_FILE_TEST_IS_SYMLINK)) {
+        gchar* link = g_file_read_link( src, NULL );
+        if ( link )
+        {
+            symlink( link, dst );
+            g_free(link);
+        }
+        return TRUE;
+    }
+#endif
+
 
     /* check the destination */
     if (g_file_test (dst, G_FILE_TEST_EXISTS)) {
@@ -2264,7 +2277,7 @@ gboolean utils_copy_file (const gchar *src, const gchar *dst, gboolean overwrite
         else g_critical (G_STRLOC ": Unable to open '%s' for writing. %s.", dst, g_strerror (errno));
         return FALSE;
 	}
-
+    
 	g_free(contents);
     
     return TRUE;
@@ -2286,6 +2299,19 @@ gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recurs
         else g_critical (G_STRLOC ": Location '%s' is not a directory.", src);
         return FALSE;
     }
+    
+#ifndef G_OS_WIN32
+    if (g_file_test (src, G_FILE_TEST_IS_SYMLINK)) {
+        gchar* link = g_file_read_link( src, NULL );
+        if ( link )
+        {
+            symlink( link, dst );
+            g_free( link );
+        }
+        return TRUE;
+    }
+#endif
+
 
 	if (!g_file_test (dst, G_FILE_TEST_EXISTS)) {
         if ( g_mkdir_with_parents( dst, 0755 ) < 0 )

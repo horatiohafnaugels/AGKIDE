@@ -345,8 +345,24 @@ G_MODULE_EXPORT void on_redo1_activate(GtkMenuItem *menuitem, gpointer user_data
 
 G_MODULE_EXPORT void on_cut1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
+    GtkWindow *topwindow = 0;
+    
+    GList *pGtkWindowList = gtk_window_list_toplevels();
+    GList *pNode;
+    for (pNode = pGtkWindowList; pNode != NULL; pNode = pNode->next)
+    {
+        GtkWindow *pGtkWindow = GTK_WINDOW(pNode->data);
+        if ( gtk_window_has_toplevel_focus(pGtkWindow) )
+        {
+            topwindow = pGtkWindow;
+            break;
+        }
+    }
+    
+    if ( !topwindow ) return;
+    
 	GeanyDocument *doc = document_get_current();
-	GtkWidget *focusw = gtk_window_get_focus(GTK_WINDOW(main_widgets.window));
+	GtkWidget *focusw = gtk_window_get_focus(GTK_WINDOW(topwindow));
 
 	if (GTK_IS_EDITABLE(focusw))
 		gtk_editable_cut_clipboard(GTK_EDITABLE(focusw));
@@ -365,8 +381,24 @@ G_MODULE_EXPORT void on_cut1_activate(GtkMenuItem *menuitem, gpointer user_data)
 
 G_MODULE_EXPORT void on_copy1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
+    GtkWindow *topwindow = 0;
+    
+    GList *pGtkWindowList = gtk_window_list_toplevels();
+    GList *pNode;
+    for (pNode = pGtkWindowList; pNode != NULL; pNode = pNode->next)
+    {
+        GtkWindow *pGtkWindow = GTK_WINDOW(pNode->data);
+        if ( gtk_window_has_toplevel_focus(pGtkWindow) )
+        {
+            topwindow = pGtkWindow;
+            break;
+        }
+    }
+    
+    if ( !topwindow ) return;
+    
 	GeanyDocument *doc = document_get_current();
-	GtkWidget *focusw = gtk_window_get_focus(GTK_WINDOW(main_widgets.window));
+	GtkWidget *focusw = gtk_window_get_focus(GTK_WINDOW(topwindow));
 
 	if (GTK_IS_EDITABLE(focusw))
 		gtk_editable_copy_clipboard(GTK_EDITABLE(focusw));
@@ -385,8 +417,24 @@ G_MODULE_EXPORT void on_copy1_activate(GtkMenuItem *menuitem, gpointer user_data
 
 G_MODULE_EXPORT void on_paste1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
+    GtkWindow *topwindow = 0;
+    
+    GList *pGtkWindowList = gtk_window_list_toplevels();
+    GList *pNode;
+    for (pNode = pGtkWindowList; pNode != NULL; pNode = pNode->next)
+    {
+        GtkWindow *pGtkWindow = GTK_WINDOW(pNode->data);
+        if ( gtk_window_has_toplevel_focus(pGtkWindow) )
+        {
+            topwindow = pGtkWindow;
+            break;
+        }
+    }
+    
+    if ( !topwindow ) return;
+    
 	GeanyDocument *doc = document_get_current();
-	GtkWidget *focusw = gtk_window_get_focus(GTK_WINDOW(main_widgets.window));
+	GtkWidget *focusw = gtk_window_get_focus(GTK_WINDOW(topwindow));
 
 	if (GTK_IS_EDITABLE(focusw))
 		gtk_editable_paste_clipboard(GTK_EDITABLE(focusw));
@@ -1861,6 +1909,26 @@ G_MODULE_EXPORT void on_menu_tools_ios_export_player_activate(GtkMenuItem *menui
 	app->project = NULL;
 	project_export_ipa();
 	app->project = curr_project;
+#endif
+}
+
+G_MODULE_EXPORT void on_menu_tools_android_browse_to_player_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+#ifdef G_OS_WIN32
+	gchar *filepath = g_build_filename( app->datadir, "../../../Players/Android", NULL );
+	utils_tidy_path( filepath );
+	utils_str_replace_char( filepath, '/', '\\' );
+	gchar *cmdline = g_strconcat("explorer.exe", " \"", filepath, "\"", NULL);
+	g_spawn_command_line_async(cmdline, NULL);
+	g_free(cmdline);
+	g_free(filepath);
+#else
+	gchar *filepath = g_build_filename( app->datadir, "../../../../../Players/Android", NULL );
+	utils_tidy_path( filepath );
+	gchar *cmdline = g_strconcat("open", " \"", filepath, "\"", NULL);
+	g_spawn_command_line_async(cmdline, NULL);
+	g_free(cmdline);
+	g_free(filepath);
 #endif
 }
 

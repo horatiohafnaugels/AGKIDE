@@ -26,7 +26,8 @@ SYS_DATA_FILES = \
 	$(srcdir)/data/tags/* \
 	$(top_srcdir)/data/geany.glade \
 	data/geany.css \
-	data/geany.gtkrc
+	data/geany.gtkrc \
+	data/AGK2EULA.txt
 
 EXTRA_DIST = \
 	autogen.sh \

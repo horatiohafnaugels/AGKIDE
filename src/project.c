@@ -792,8 +792,8 @@ android_dialog_continue:
 			strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"></uses-permission>\n" );
 		}
 		if ( permission_wake ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WAKE_LOCK\"></uses-permission>\n" );
-		if ( permission_location_coarse && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_LOCATION_COARSE\"></uses-permission>\n" );
-		if ( permission_location_fine && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_LOCATION_FINE\"></uses-permission>\n" );
+		if ( permission_location_coarse && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"></uses-permission>\n" );
+		if ( permission_location_fine && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"></uses-permission>\n" );
 		if ( permission_billing && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.BILLING\"></uses-permission>\n" );
 		if ( permission_push && app_type == 0 ) 
 		{

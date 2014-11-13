@@ -1061,6 +1061,18 @@ static void setup_gtk2_styles(void)
 }
 #endif
 
+#ifdef __APPLE__
+GtkosxApplication *theApp = 0;
+#endif
+
+void update_window_menu()
+{
+#ifdef __APPLE__
+    if ( theApp == 0 ) return;
+    gtkosx_application_sync_menubar( theApp );
+#endif
+}
+
 gint main(gint argc, gchar **argv)
 {
 	GeanyDocument *doc;
@@ -1278,7 +1290,7 @@ gint main(gint argc, gchar **argv)
     
 #ifdef __APPLE__
     
-    GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+    theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
     
     gtk_widget_hide (ui_lookup_widget(main_widgets.window, "menubar1"));
     GtkMenuShell *menu_shell = GTK_MENU_SHELL(ui_lookup_widget(main_widgets.window, "menubar1"));
