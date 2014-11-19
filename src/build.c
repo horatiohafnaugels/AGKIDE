@@ -3529,6 +3529,9 @@ void build_run_project( gint deviceID )
 
 void build_broadcast_project( gint deviceID )
 {
+#ifdef AGK_FREE_VERSION
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Broadcasting is disabled in the trial version");
+#else
 	if (broadcast_pid > (GPid) 0)
 	{
 		if ( broadcast_pid > (GPid) 0 ) 
@@ -3542,10 +3545,11 @@ void build_broadcast_project( gint deviceID )
 
 	//dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Run Project %s on device %d", app->project ? app->project->name : "NULL", deviceID);
 	if ( build_compile_project(2) == 0 ) return;
+#endif
 }
 
 // compiles, runs, and debugs the current project
 void build_debug_project( gint deviceID )
 {
-	dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Debugging not yet implemented");
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging not yet implemented");
 }

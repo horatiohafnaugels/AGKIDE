@@ -652,7 +652,11 @@ static void parse_command_line_options(gint *argc, gchar ***argv)
 	}
 	else
 	{
+#ifdef AGK_FREE_VERSION
+		app->configdir = g_build_filename(g_get_user_config_dir(), "agktrial", NULL);
+#else
 		app->configdir = g_build_filename(g_get_user_config_dir(), "agk", NULL);
+#endif
 	}
 
 	if (generate_tags)

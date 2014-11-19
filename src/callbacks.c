@@ -1877,12 +1877,20 @@ G_MODULE_EXPORT void on_project_import1_activate(GtkMenuItem *menuitem, gpointer
 
 G_MODULE_EXPORT void on_project_export_apk_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
+#ifdef AGK_FREE_VERSION
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting is not available in the trial version");
+#else
 	project_export_apk();
+#endif
 }
 
 G_MODULE_EXPORT void on_menu_tools_android_keystore_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
+#ifdef AGK_FREE_VERSION
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Generating a keystore is not available in the trial version");
+#else
 	project_generate_keystore();
+#endif
 }
 
 G_MODULE_EXPORT void on_project_export_ipa_activate(GtkMenuItem *menuitem, gpointer user_data)
@@ -1890,13 +1898,17 @@ G_MODULE_EXPORT void on_project_export_ipa_activate(GtkMenuItem *menuitem, gpoin
 #ifndef __APPLE__
 	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting to IPA is only possible on Mac");
 #else
-	if ( !app->project )
-	{
-		dialogs_show_msgbox(GTK_MESSAGE_ERROR, "You must have a project open to export it");
-		return;
-	}
+	#ifdef AGK_FREE_VERSION
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting is not available in the trial version");
+	#else
+		if ( !app->project )
+		{
+			dialogs_show_msgbox(GTK_MESSAGE_ERROR, "You must have a project open to export it");
+			return;
+		}
 
-	project_export_ipa();
+		project_export_ipa();
+	#endif
 #endif
 }
 
@@ -1905,30 +1917,38 @@ G_MODULE_EXPORT void on_menu_tools_ios_export_player_activate(GtkMenuItem *menui
 #ifndef __APPLE__
 	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting to IPA is only possible on Mac");
 #else
-	GeanyProject *curr_project = app->project;
-	app->project = NULL;
-	project_export_ipa();
-	app->project = curr_project;
+	#ifdef AGK_FREE_VERSION
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "iOS player is not available in the trial version");
+	#else
+		GeanyProject *curr_project = app->project;
+		app->project = NULL;
+		project_export_ipa();
+		app->project = curr_project;
+	#endif
 #endif
 }
 
 G_MODULE_EXPORT void on_menu_tools_android_browse_to_player_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
-#ifdef G_OS_WIN32
-	gchar *filepath = g_build_filename( app->datadir, "../../../Players/Android", NULL );
-	utils_tidy_path( filepath );
-	utils_str_replace_char( filepath, '/', '\\' );
-	gchar *cmdline = g_strconcat("explorer.exe", " \"", filepath, "\"", NULL);
-	g_spawn_command_line_async(cmdline, NULL);
-	g_free(cmdline);
-	g_free(filepath);
+#ifdef AGK_FREE_VERSION
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Android player is not available in the trial version");
 #else
-	gchar *filepath = g_build_filename( app->datadir, "../../../../../Players/Android", NULL );
-	utils_tidy_path( filepath );
-	gchar *cmdline = g_strconcat("open", " \"", filepath, "\"", NULL);
-	g_spawn_command_line_async(cmdline, NULL);
-	g_free(cmdline);
-	g_free(filepath);
+	#ifdef G_OS_WIN32
+		gchar *filepath = g_build_filename( app->datadir, "../../../Players/Android", NULL );
+		utils_tidy_path( filepath );
+		utils_str_replace_char( filepath, '/', '\\' );
+		gchar *cmdline = g_strconcat("explorer.exe", " \"", filepath, "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+		g_free(filepath);
+	#else
+		gchar *filepath = g_build_filename( app->datadir, "../../../../../Players/Android", NULL );
+		utils_tidy_path( filepath );
+		gchar *cmdline = g_strconcat("open", " \"", filepath, "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+		g_free(filepath);
+	#endif
 #endif
 }
 

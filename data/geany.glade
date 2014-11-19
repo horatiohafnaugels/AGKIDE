@@ -1022,7 +1022,7 @@
                                             <property name="width_request">150</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="tooltip_text" translatable="yes">must be at least 96x96 pixels, PNG only, can contain transparency</property>
+                                            <property name="tooltip_text" translatable="yes">The name of the alias used when the keystore file was generated</property>
                                             <property name="invisible_char">●</property>
                                             <property name="invisible_char_set">True</property>
                                             <property name="primary_icon_activatable">False</property>
@@ -1056,7 +1056,7 @@
                                             <property name="width_request">150</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="tooltip_text" translatable="yes">A-Z . and underscore only, should be in the format com.mycompany.my_app</property>
+                                            <property name="tooltip_text" translatable="yes">The alias password used when the keystore file was generated</property>
                                             <property name="visibility">False</property>
                                             <property name="invisible_char">●</property>
                                             <property name="invisible_char_set">True</property>
@@ -7634,6 +7634,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -7654,6 +7657,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

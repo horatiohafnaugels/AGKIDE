@@ -568,9 +568,10 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			  && (app_name[i] < 65 || app_name[i] > 90) 
 			  && (app_name[i] < 48 || app_name[i] > 57) 
 			  && app_name[i] != 32 
+			  && app_name[i] != 45
 			  && app_name[i] != 95 ) 
 			{ 
-				SHOW_ERR("App name contains invalid characters, must be A-Z 0-9 spaces and undersore only"); 
+				SHOW_ERR("App name contains invalid characters, must be A-Z, 0-9, dash, spaces, and undersore only"); 
 				goto android_dialog_clean_up; 
 			}
 		}
@@ -1067,9 +1068,16 @@ android_dialog_continue:
 		
 		if ( status != 0 )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %s)", str_out );
-			else SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %d)", status );
-			goto android_dialog_cleanup2;
+			if ( status > 255 )
+			{
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "jarsigner returned unexpected status code %d, attempting to continue", status);
+			}
+			else
+			{
+				if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %s)", str_out );
+				else SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %d)", status );
+				goto android_dialog_cleanup2;
+			}
 		}
 
 		if ( str_out ) g_free(str_out);
@@ -1452,6 +1460,7 @@ keystore_dialog_cleanup2:
 
 void project_generate_keystore()
 {
+
 
 	if (ui_widgets.keystore_dialog == NULL)
 	{
