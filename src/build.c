@@ -1177,6 +1177,26 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 
 	g_return_val_if_fail(project != NULL && project->is_valid, (GPid) 0);
 
+	// copy steam files
+#ifdef G_OS_WIN32
+	if ( strstr( build_prefs.agk_compiler_path, "Steam" ) > 0 )
+	{
+		gchar *path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam_api.dll", NULL );
+		gchar *path2 = g_strconcat( project->base_path, "steam_api.dll", NULL );
+		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )
+			utils_copy_file( path1, path2, TRUE, NULL );
+		g_free(path1);
+		g_free(path2);
+
+		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam_appid.txt", NULL );
+		path2 = g_strconcat( project->base_path, "steam_appid.txt", NULL );
+		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )
+			utils_copy_file( path1, path2, TRUE, NULL );
+		g_free(path1);
+		g_free(path2);
+	}
+#endif
+
 	gchar *name = g_path_get_basename( project->base_path );
 #ifdef G_OS_WIN32
 	gchar *main_path = g_strconcat( project->base_path, name, ".exe", NULL );
@@ -1779,6 +1799,20 @@ static void agk_run_exit_cb(GPid child_pid, gint status, gpointer user_data)
 	g_spawn_close_pid(child_pid);
 
 	if ( pid == &broadcast_pid ) ui_progress_bar_stop();
+	if ( pid == &local_pid && app->project )
+	{
+#ifdef G_OS_WIN32
+		gchar *path1 = g_strconcat( app->project->base_path, "steam_api.dll", NULL );
+		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )
+			g_unlink( path1 );
+		g_free(path1);
+
+		path1 = g_strconcat( app->project->base_path, "steam_appid.txt", NULL );
+		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )
+			g_unlink( path1 );
+		g_free(path1);
+#endif
+	}
 	*pid = 0;
 	/* reset the stop button and menu item to the original meaning */
 	update_build_menu3();

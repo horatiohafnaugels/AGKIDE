@@ -1163,7 +1163,15 @@ static void load_dialog_prefs(GKeyFile *config)
 	 * use current locale encoding as default for new files (should be UTF-8 in most cases) */
 	g_get_charset(&default_charset);
 	tmp_string = utils_get_setting_string(config, PACKAGE, "pref_editor_default_new_encoding",
-		default_charset);
+		/*default_charset*/ "WINDOWS-1252");
+
+	// from version 3 default is extended ASCII
+	if ( editor_prefs.IDE_version < 3 )
+	{
+		if ( tmp_string ) g_free(tmp_string);
+		tmp_string = g_strdup("WINDOWS-1252");
+	}
+
 	if (tmp_string)
 	{
 		const GeanyEncoding *enc = encodings_get_from_charset(tmp_string);
@@ -1174,8 +1182,17 @@ static void load_dialog_prefs(GKeyFile *config)
 
 		g_free(tmp_string);
 	}
+
 	tmp_string = utils_get_setting_string(config, PACKAGE, "pref_editor_default_open_encoding",
-		"none");
+		/*"none"*/ "WINDOWS-1252");
+
+	// from version 3 default is extended ASCII
+	if ( editor_prefs.IDE_version < 3 )
+	{
+		if ( tmp_string ) g_free(tmp_string);
+		tmp_string = g_strdup("WINDOWS-1252");
+	}
+
 	if (tmp_string)
 	{
 		const GeanyEncoding *enc = encodings_get_from_charset(tmp_string);

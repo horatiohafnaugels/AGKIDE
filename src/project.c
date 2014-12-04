@@ -976,7 +976,7 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+		if ( status != 0 && status < 256 )
 		{
 			SHOW_ERR1( "Package tool returned error code: %d", status );
 			goto android_dialog_cleanup2;
@@ -1066,7 +1066,7 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+		if ( status != 0 && status < 256 )
 		{
 			if ( status > 255 )
 			{
@@ -1102,7 +1102,7 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Zip align tool returned error: %s", str_out );
 			else SHOW_ERR1( "Zip align tool returned error code: %d", status );
@@ -1425,7 +1425,7 @@ keystore_dialog_continue:
 			goto keystore_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "keytool program returned error: %s", str_out );
 			else SHOW_ERR1( "keytool program returned error code: %d", status );
@@ -1810,7 +1810,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 || !str_out )
+		if ( (status != 0 && status < 256) || !str_out )
 		{
 			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
 			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
@@ -1902,7 +1902,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 || !str_out )
+		if ( (status != 0 && status < 256) || !str_out )
 		{
 			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
 			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
@@ -1999,7 +1999,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 || !str_out )
+		if ( (status != 0 && status < 256) || !str_out )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get user name (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to get user name (error: %d)", status );
@@ -2159,7 +2159,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 || !str_out )
+		if ( (status != 0 && status < 256) || !str_out )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get user name (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to get user name (error: %d)", status );
@@ -2188,7 +2188,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 || !str_out )
+		if ( (status != 0 && status < 256) || !str_out )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get group name (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to get group name (error: %d)", status );
@@ -2218,7 +2218,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file ownership (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to set file ownership (error: %d)", status );
@@ -2245,7 +2245,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file permissions (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to set file permissions (error: %d)", status );
@@ -2277,7 +2277,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign app (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to sign app (error: %d)", status );
