@@ -979,7 +979,14 @@ static gchar *get_plugin_path(void)
     }
     return path;
 #else
-   	return g_build_filename(GEANY_LIBDIR, "geany", NULL);
+	gchar szExePath[1024];
+	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+	readlink( "/proc/self/exe", szExePath, 1024 );
+	gchar* szSlash = strrchr( szExePath, '/' );
+	if ( szSlash ) *szSlash = 0;
+   	gchar *path = g_build_filename(szExePath, "../lib/geany", NULL);
+	utils_tidy_path(path);
+	return path;
 #endif
 }
 

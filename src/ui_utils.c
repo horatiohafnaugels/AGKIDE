@@ -3369,7 +3369,13 @@ gpointer CopyAdditionalFiles(gpointer data)
 		tier2_path = g_build_filename(szRoot, "../Resources/Tier 2", NULL);
 	}
 #else
-	
+	gchar szExePath[1024];
+	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+	readlink( "/proc/self/exe", szExePath, 1024 );
+	gchar* szSlash = strrchr( szExePath, '/' );
+	if ( szSlash ) *szSlash = 0;
+	projects_path = g_build_filename( szExePath, "../../../Projects", NULL );
+	tier2_path = g_build_filename( szExePath, "../../../Tier2", NULL );
 #endif
     
     int result = 0;

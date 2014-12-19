@@ -256,7 +256,14 @@ static void main_init(void)
         utils_tidy_path(path);
     }
 #else
-    path = g_build_filename(GEANY_DATADIR, "icons", NULL);
+    //path = g_build_filename(GEANY_DATADIR, "icons", NULL);
+	gchar szExePath[1024];
+	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+	readlink( "/proc/self/exe", szExePath, 1024 );
+	gchar* szSlash = strrchr( szExePath, '/' );
+	if ( szSlash ) *szSlash = 0;
+	path = g_build_filename(szExePath, "../share/icons", NULL);
+    utils_tidy_path(path);
 #endif
 
 	gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), path);
@@ -459,8 +466,17 @@ static void setup_paths(void)
         utils_tidy_path(doc_dir);
     }
 #else
-    data_dir = g_build_filename(GEANY_DATADIR, "geany", NULL); /* e.g. /usr/share/geany */
-    doc_dir = g_build_filename(GEANY_DOCDIR, "html", NULL);
+    //data_dir = g_build_filename(GEANY_DATADIR, "geany", NULL); /* e.g. /usr/share/geany */
+    //doc_dir = g_build_filename(GEANY_DOCDIR, "doc", NULL);
+	gchar szExePath[1024];
+	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+	readlink( "/proc/self/exe", szExePath, 1024 );
+	gchar* szSlash = strrchr( szExePath, '/' );
+	if ( szSlash ) *szSlash = 0;
+	data_dir = g_build_filename(szExePath, "../share/geany", NULL);
+    doc_dir = g_build_filename(szExePath, "../share/doc", NULL);
+    utils_tidy_path(data_dir);
+    utils_tidy_path(doc_dir);
 #endif
 
 	/* convert path names to locale encoding */

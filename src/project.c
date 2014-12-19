@@ -93,6 +93,8 @@ static void init_stash_prefs(void);
  * please avoid special characters and spaces, look at the source for details or ask Frank */
 #define PROJECT_DIR _("projects")
 
+static gint ios_exporting_player = 0;
+
 
 /* TODO: this should be ported to Glade like the project preferences dialog,
  * then we can get rid of the PropertyDialogElements struct altogether as
@@ -1625,7 +1627,7 @@ ios_dialog_continue:
 		// make temporary folder
 		gchar* ios_folder = g_build_filename( app->datadir, "ios", NULL );
 		gchar* tmp_folder;
-        if ( app->project )
+        if ( !ios_exporting_player && app->project )
             tmp_folder = g_build_filename( app->project->base_path, "build_tmp", NULL );
         else
             tmp_folder = g_build_filename( global_project_prefs.project_file_path, "build_tmp", NULL );
@@ -2132,7 +2134,7 @@ ios_dialog_continue:
 			gtk_main_iteration();
 
 		// copy media folder
-        if ( app->project )
+        if ( !ios_exporting_player && app->project )
         {
             if ( temp_filename1 ) g_free(temp_filename1);
             temp_filename1 = g_build_filename( app->project->base_path, "media", NULL );
@@ -2405,6 +2407,8 @@ void project_export_ipa()
             g_free(apk_path);
         }
 	}
+
+	ios_exporting_player = app->project ? 0 : 1;
 
 	gtk_window_present(GTK_WINDOW(ui_widgets.ios_dialog));
 }

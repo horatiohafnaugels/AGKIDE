@@ -1330,8 +1330,10 @@ G_MODULE_EXPORT void on_help1_activate(GtkMenuItem *menuitem, gpointer user_data
 				gchar *filedata = 0;
 #ifdef G_OS_WIN32
 				gchar *filename = g_build_filename( win32_get_installation_dir(), "/../Help/corekeywordlinks.txt", NULL );
-#else
+#elif __APPLE__
 				gchar *filename = g_build_filename( app->datadir, "/../Help/corekeywordlinks.txt", NULL);
+#else
+				gchar *filename = g_build_filename( app->datadir, "/../../../Help/corekeywordlinks.txt", NULL);
 #endif
 				gchar* locale_filename = utils_get_locale_from_utf8(filename);
 				if (! g_file_get_contents(locale_filename, &filedata, NULL, &err))
@@ -1360,8 +1362,10 @@ G_MODULE_EXPORT void on_help1_activate(GtkMenuItem *menuitem, gpointer user_data
 				filedata = 0;
 #ifdef G_OS_WIN32
 				filename = g_build_filename( win32_get_installation_dir(), "/../Help/keywordlinks.txt", NULL );
-#else
+#elif __APPLE__
 				filename = g_build_filename( app->datadir, "/../Help/keywordlinks.txt", NULL);
+#else
+				filename = g_build_filename( app->datadir, "/../../../Help/keywordlinks.txt", NULL);
 #endif
 				locale_filename = utils_get_locale_from_utf8(filename);
 				if (! g_file_get_contents(locale_filename, &filedata, NULL, &err))
@@ -1941,10 +1945,17 @@ G_MODULE_EXPORT void on_menu_tools_android_browse_to_player_activate(GtkMenuItem
 		g_spawn_command_line_async(cmdline, NULL);
 		g_free(cmdline);
 		g_free(filepath);
-	#else
+	#elif __APPLE__
 		gchar *filepath = g_build_filename( app->datadir, "../../../../../Players/Android", NULL );
 		utils_tidy_path( filepath );
 		gchar *cmdline = g_strconcat("open", " \"", filepath, "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+		g_free(filepath);
+	#else
+		gchar *filepath = g_build_filename( app->datadir, "../../../../Players/Android", NULL );
+		utils_tidy_path( filepath );
+		gchar *cmdline = g_strconcat("xdg-open", " \"", filepath, "\"", NULL);
 		g_spawn_command_line_async(cmdline, NULL);
 		g_free(cmdline);
 		g_free(filepath);

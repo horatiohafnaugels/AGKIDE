@@ -2043,9 +2043,12 @@ gchar *utils_get_help_url(const gchar *suffix)
 	skip = 8;
 	uri = g_strconcat("file:///", win32_get_installation_dir(), "/../Help/home.html", NULL);
 	g_strdelimit(uri, "\\", '/'); /* replace '\\' by '/' */
-#else
+#elif __APLLE__
 	skip = 7;
 	uri = g_strconcat("file://", app->datadir, "/../Help/home.html", NULL);
+#else
+	skip = 7;
+	uri = g_strconcat("file://", app->datadir, "/../../../Help/home.html", NULL);
 #endif
 
 	//geany_debug( "%s", uri );

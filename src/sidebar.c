@@ -1090,12 +1090,21 @@ static void on_openfiles_document_action(GtkMenuItem *menuitem, gpointer user_da
 					g_spawn_command_line_async(cmdline, NULL);
 					g_free(cmdline);
 					g_free(filepath);
-#else 
+#elif __APPLE__ 
                     gchar *filepath = g_strdup( filename );
 					utils_str_replace_char( filepath, '\\', '/' );
 					char* slash = strrchr( filepath, '/' );
 					if ( slash ) *slash = 0;
 					gchar *cmdline = g_strconcat("open", " \"", filepath, "\"", NULL);
+					g_spawn_command_line_async(cmdline, NULL);
+					g_free(cmdline);
+                    g_free(filepath);
+#else
+					gchar *filepath = g_strdup( filename );
+					utils_str_replace_char( filepath, '\\', '/' );
+					char* slash = strrchr( filepath, '/' );
+					if ( slash ) *slash = 0;
+					gchar *cmdline = g_strconcat("xdg-open", " \"", filepath, "\"", NULL);
 					g_spawn_command_line_async(cmdline, NULL);
 					g_free(cmdline);
                     g_free(filepath);
@@ -1112,8 +1121,12 @@ static void on_openfiles_document_action(GtkMenuItem *menuitem, gpointer user_da
 				g_spawn_command_line_async(cmdline, NULL);
 				g_free(cmdline);
 				g_free(filepath);
-#else 
+#elif __APPLE__
 				gchar *cmdline = g_strconcat("open", " \"", project->base_path, "\"", NULL);
+				g_spawn_command_line_async(cmdline, NULL);
+				g_free(cmdline);
+#else
+				gchar *cmdline = g_strconcat("xdg-open", " \"", project->base_path, "\"", NULL);
 				g_spawn_command_line_async(cmdline, NULL);
 				g_free(cmdline);
 #endif

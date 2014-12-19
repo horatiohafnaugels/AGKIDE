@@ -920,7 +920,6 @@ void build_load_prefs(GKeyFile *config)
         g_free(path);
     }
 #elif __APPLE__
-    //path = g_strdup(GEANY_DATADIR);
     char szRoot[ 1024 ];
     uint32_t size = 1024;
     if ( _NSGetExecutablePath(szRoot, &size) == 0 )
@@ -931,8 +930,16 @@ void build_load_prefs(GKeyFile *config)
         utils_tidy_path( build_prefs.agk_compiler_path );
     }
 #else
-    // todo linux
-    build_prefs.agk_compiler_path = g_strdup(GEANY_DATADIR);
+    if (build_prefs.agk_compiler_path == NULL || editor_prefs.IDE_version != AGK_VERSION_INT )
+	{
+		gchar szExePath[1024];
+		for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+		readlink( "/proc/self/exe", szExePath, 1024 );
+		gchar* szSlash = strrchr( szExePath, '/' );
+		if ( szSlash ) *szSlash = 0;
+        build_prefs.agk_compiler_path = g_build_filename(szExePath, "../../Compiler", NULL);
+		utils_tidy_path( build_prefs.agk_compiler_path );
+    }
 #endif
 		
 
