@@ -566,6 +566,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		if ( strlen(app_name) > 30 ) { SHOW_ERR("App name must be less than 30 characters"); goto android_dialog_clean_up; }
 		for( i = 0; i < strlen(app_name); i++ )
 		{
+			/*
 			if ( (app_name[i] < 97 || app_name[i] > 122)
 			  && (app_name[i] < 65 || app_name[i] > 90) 
 			  && (app_name[i] < 48 || app_name[i] > 57) 
@@ -574,6 +575,13 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			  && app_name[i] != 95 ) 
 			{ 
 				SHOW_ERR("App name contains invalid characters, must be A-Z, 0-9, dash, spaces, and undersore only"); 
+				goto android_dialog_clean_up; 
+			}
+			*/
+			//switch to black list
+			if ( app_name[i] == 34 || app_name[i] == 60 || app_name[i] == 62 || app_name[i] == 39 )
+			{
+				SHOW_ERR("App name contains invalid characters, it must not contain quotes or < > characters."); 
 				goto android_dialog_clean_up; 
 			}
 		}
@@ -978,10 +986,17 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
-		if ( status != 0 && status < 256 )
+		if ( status != 0 )
 		{
-			SHOW_ERR1( "Package tool returned error code: %d", status );
-			goto android_dialog_cleanup2;
+			if ( status < 256 )
+			{
+				SHOW_ERR1( "Package tool returned error code: %d", status );
+				goto android_dialog_cleanup2;
+			}
+			else
+			{
+				SHOW_ERR1( "Package tool returned error code: %d, attempting to continue", status );
+			}
 		}
 
 		while (gtk_events_pending())
@@ -1106,9 +1121,16 @@ android_dialog_continue:
 		
 		if ( status != 0 && status < 256 )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Zip align tool returned error: %s", str_out );
-			else SHOW_ERR1( "Zip align tool returned error code: %d", status );
-			goto android_dialog_cleanup2;
+			if ( status < 256 )
+			{
+				if ( str_out && *str_out ) SHOW_ERR1( "Zip align tool returned error: %s", str_out );
+				else SHOW_ERR1( "Zip align tool returned error code: %d", status );
+				goto android_dialog_cleanup2;
+			}
+			else
+			{
+				SHOW_ERR1( "Zip align tool returned error code: %d, attempting to continue", status );
+			}
 		}
 
 		while (gtk_events_pending())
@@ -1427,11 +1449,18 @@ keystore_dialog_continue:
 			goto keystore_dialog_cleanup2;
 		}
 		
-		if ( status != 0 && status < 256 )
+		if ( status != 0 )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "keytool program returned error: %s", str_out );
-			else SHOW_ERR1( "keytool program returned error code: %d", status );
-			goto keystore_dialog_cleanup2;
+			if ( status < 256 )
+			{
+				if ( str_out && *str_out ) SHOW_ERR1( "keytool program returned error: %s", str_out );
+				else SHOW_ERR1( "keytool program returned error code: %d", status );
+				goto keystore_dialog_cleanup2;
+			}
+			else
+			{
+				SHOW_ERR1( "keytool program returned error code: %d, attempting to continue", status );
+			}
 		}
 
 		gtk_widget_hide(GTK_WIDGET(dialog));
@@ -1521,6 +1550,16 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
 		gchar *app_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		// splash screens
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
+		gchar *app_splash1 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2");
+		gchar *app_splash2 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
+		gchar *app_splash3 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 		gchar *facebook_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
@@ -1537,6 +1576,17 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		gchar *version_number = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 		if ( !*version_number ) SETPTR( version_number, g_strdup("1.0.0") );
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_build_number_entry");
+		gchar *build_number = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		if ( !*build_number ) SETPTR( build_number, g_strdup("1.0") );
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
+		gchar *app_device = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int device_type = 0;
+		if ( strcmp(app_device,"iPhone Only") == 0 ) device_type = 1;
+		else if ( strcmp(app_device,"iPad Only") == 0 ) device_type = 2;
+		g_free(app_device);
+
 		// output
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry");
 		gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -1551,6 +1601,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		if ( strlen(app_name) > 30 ) { SHOW_ERR("App name must be less than 30 characters"); goto ios_dialog_clean_up; }
 		for( i = 0; i < strlen(app_name); i++ )
 		{
+			/*
 			if ( (app_name[i] < 97 || app_name[i] > 122)
 			  && (app_name[i] < 65 || app_name[i] > 90) 
 			  && (app_name[i] < 48 || app_name[i] > 57) 
@@ -1558,6 +1609,19 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			  && app_name[i] != 95 ) 
 			{ 
 				SHOW_ERR("App name contains invalid characters, must be A-Z 0-9 spaces and undersore only"); 
+				goto ios_dialog_clean_up; 
+			}
+			*/
+			//switch to black list
+			if ( app_name[i] == 34 || app_name[i] == 60 
+			  || app_name[i] == 62 || app_name[i] == 39
+			  || app_name[i] == 42 || app_name[i] == 46
+			  || app_name[i] == 47 || app_name[i] == 92
+			  || app_name[i] == 58 || app_name[i] == 59
+			  || app_name[i] == 124 || app_name[i] == 61
+			  || app_name[i] == 44 )
+			{
+				SHOW_ERR("App name contains invalid characters, it must not contain quotes or any of the following < > * . / \ : ; | = ,"); 
 				goto ios_dialog_clean_up; 
 			}
 		}
@@ -1568,6 +1632,25 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		{
 			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto ios_dialog_clean_up; }
 			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto ios_dialog_clean_up; }
+		}
+
+		// check splash screens
+		if ( app_splash1 && *app_splash1 )
+		{
+			if ( !strrchr( app_splash1, '.' ) || utils_str_casecmp( strrchr( app_splash1, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (640x960) must be a PNG file"); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash1, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (640x960) location"); goto ios_dialog_clean_up; }
+		}
+
+		if ( app_splash2 && *app_splash2 )
+		{
+			if ( !strrchr( app_splash2, '.' ) || utils_str_casecmp( strrchr( app_splash2, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (640x1136) must be a PNG file"); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash2, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (640x1136) location"); goto ios_dialog_clean_up; }
+		}
+
+		if ( app_splash3 && *app_splash3 )
+		{
+			if ( !strrchr( app_splash3, '.' ) || utils_str_casecmp( strrchr( app_splash3, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (1536x2048) must be a PNG file"); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash3, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (1536x2048) location"); goto ios_dialog_clean_up; }
 		}
 
 		// check profile
@@ -1605,6 +1688,9 @@ ios_dialog_clean_up:
 		if ( app_name ) g_free(app_name);
 		if ( profile ) g_free(profile);
 		if ( app_icon ) g_free(app_icon);
+		if ( app_splash1 ) g_free(app_splash1);
+		if ( app_splash2 ) g_free(app_splash2);
+		if ( app_splash3 ) g_free(app_splash3);
 		if ( facebook_id ) g_free(facebook_id);
 		if ( version_number ) g_free(version_number);
 		if ( output_file ) g_free(output_file);
@@ -1663,10 +1749,12 @@ ios_dialog_continue:
 		gchar *temp_filename1 = NULL;
 		gchar *temp_filename2 = NULL;
 		gchar *version_string = NULL;
+		gchar *build_string = NULL;
 		gchar *bundle_id2 = NULL; // don't free, pointer to sub string
 		gchar *image_filename = NULL;
 		GdkPixbuf *icon_scaled_image = NULL;
 		GdkPixbuf *icon_image = NULL;
+		GdkPixbuf *splash_image = NULL;
 		gchar *user_name = NULL;
 		gchar *group_name = NULL;
 		mz_zip_archive zip_archive;
@@ -1756,8 +1844,12 @@ ios_dialog_continue:
 		certificate = strstr( contents+100, "<key>com.apple.developer.team-identifier</key>" );
 		if ( !certificate )
 		{
-			SHOW_ERR( "Failed to read team ID from provisioning profile" );
-			goto ios_dialog_cleanup2;
+			certificate = strstr( contents+100, "<key>TeamIdentifier</key>" );
+			if ( !certificate )
+			{
+				SHOW_ERR( "Failed to read team ID from provisioning profile" );
+				goto ios_dialog_cleanup2;
+			}
 		}
 
 		certificate = strstr( certificate, "<string>" );
@@ -1972,8 +2064,12 @@ ios_dialog_continue:
 			case 3: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationPortraitUpsideDown" ); break;
 		}
 		version_string = g_strconcat( "<string>", version_number, "</string>", NULL );
+		build_string = g_strconcat( "<string>", build_number, "</string>", NULL );
         utils_str_replace_all( &contents, "<string>1.0.0</string>", version_string );
-		utils_str_replace_all( &contents, "<string>1.0</string>", version_string );
+		utils_str_replace_all( &contents, "<string>1.0</string>", build_string );
+
+		if ( device_type == 1 ) utils_str_replace_all( &contents, "\t\t<integer>2</integer>\n", "" );
+		else if ( device_type == 2 ) utils_str_replace_all( &contents, "\t\t<integer>1</integer>\n", "" );
 
 		if ( !g_file_set_contents( temp_filename1, contents, strlen(contents), NULL ) )
 		{
@@ -2027,6 +2123,19 @@ ios_dialog_continue:
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( "Failed to save 152x152 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 180x180
+			image_filename = g_build_path( "/", app_folder, "icon-180.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 180, 180, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 180x180 icon: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -2121,13 +2230,221 @@ ios_dialog_continue:
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
-			}
-							
+			}	
 			gdk_pixbuf_unref( icon_scaled_image );
-			icon_scaled_image = NULL;
-
 			g_free( image_filename );
+
+			icon_scaled_image = NULL;
 			image_filename = NULL;
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// resize splash screens
+		// iPhone 3GS and 4
+		if ( app_splash1 && *app_splash1 )
+		{
+			splash_image = gdk_pixbuf_new_from_file( app_splash1, &error );
+			if ( !splash_image || error )
+			{
+				SHOW_ERR1( "Failed to load splash screen (640x960): %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+
+			int width = gdk_pixbuf_get_width( splash_image );
+			int height = gdk_pixbuf_get_height( splash_image );
+			float aspect = width / (float) height;
+			if ( aspect > 0.7f || aspect < 0.63f )
+			{
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING,  "Splash screen (640x960) should have an aspect ratio near 0.66 (e.g. 320x480 or 640x960) otherwise it will look stretched when scaled. Export will continue." );
+			}
+
+			// scale it and save it
+			// 320x480 Default.png
+			image_filename = g_build_path( "/", app_folder, "Default.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 320, 480, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 640x960 Default@2x.png
+			image_filename = g_build_path( "/", app_folder, "Default@2x.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 640, 960, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default@2x.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			icon_scaled_image = NULL;
+			image_filename = NULL;
+
+			gdk_pixbuf_unref( splash_image );
+			splash_image = NULL;
+		}
+
+		// iPhone 5 and 6
+		if ( app_splash2 && *app_splash2 )
+		{
+			splash_image = gdk_pixbuf_new_from_file( app_splash2, &error );
+			if ( !splash_image || error )
+			{
+				SHOW_ERR1( "Failed to load splash screen (640x1136): %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+
+			int width = gdk_pixbuf_get_width( splash_image );
+			int height = gdk_pixbuf_get_height( splash_image );
+			float aspect = width / (float) height;
+			if ( aspect > 0.59f || aspect < 0.53f )
+			{
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Splash screen (640x1136) should have an aspect ratio near 0.56 (e.g. 640x1136 or 1080x1920) otherwise it will look stretched when scaled. Export will continue." );
+			}
+
+			// scale it and save it
+			// 640x1136 Default-568h@2x.png
+			image_filename = g_build_path( "/", app_folder, "Default-568h@2x.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 640, 1136, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-568h@2x.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 750x1334 Default-667h@2x.png
+			image_filename = g_build_path( "/", app_folder, "Default-667h@2x.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 750, 1334, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-667h@2x.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 1242x2208 Default-736h@3x.png
+			image_filename = g_build_path( "/", app_folder, "Default-736h@3x.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1242, 2208, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-736h@3x.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			icon_scaled_image = NULL;
+			image_filename = NULL;
+
+			gdk_pixbuf_unref( splash_image );
+			splash_image = NULL;
+		}
+
+		// iPad
+		if ( app_splash3 && *app_splash3 )
+		{
+			splash_image = gdk_pixbuf_new_from_file( app_splash3, &error );
+			if ( !splash_image || error )
+			{
+				SHOW_ERR1( "Failed to load splash screen (1536x2048): %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+
+			int width = gdk_pixbuf_get_width( splash_image );
+			int height = gdk_pixbuf_get_height( splash_image );
+			float aspect = width / (float) height;
+			if ( aspect > 0.78f || aspect < 0.72f )
+			{
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Splash screen (1536x2048) should have an aspect ratio near 0.75 (e.g. 768x1024 or 1536x2048) otherwise it will look stretched when scaled. Export will continue." );
+			}
+
+			// scale it and save it
+			// 768x1024 Default-Portrait~ipadx.png
+			image_filename = g_build_path( "/", app_folder, "Default-Portrait~ipad.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 768, 1024, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-Portrait~ipad.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 1536x2048 Default-Portrait@2x~ipad.png
+			image_filename = g_build_path( "/", app_folder, "Default-Portrait@2x~ipad.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1536, 2048, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-Portrait@2x~ipad.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 1024x768 Default-Landscape~ipad.png
+			image_filename = g_build_path( "/", app_folder, "Default-Landscape~ipad.png", NULL );
+			GdkPixbuf *temp_image = gdk_pixbuf_scale_simple( splash_image, 768, 1024, GDK_INTERP_HYPER );
+			icon_scaled_image = gdk_pixbuf_rotate_simple( temp_image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE );
+			gdk_pixbuf_unref( temp_image );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-Landscape~ipad.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 2048x1536 Default-Landscape@2x~ipad.png
+			image_filename = g_build_path( "/", app_folder, "Default-Landscape@2x~ipad.png", NULL );
+			temp_image = gdk_pixbuf_scale_simple( splash_image, 1536, 2048, GDK_INTERP_HYPER );
+			icon_scaled_image = gdk_pixbuf_rotate_simple( temp_image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE );
+			gdk_pixbuf_unref( temp_image );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-Landscape@2x~ipad.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			icon_scaled_image = NULL;
+			image_filename = NULL;
+
+			gdk_pixbuf_unref( splash_image );
+			splash_image = NULL;
 		}
 
 		while (gtk_events_pending())
@@ -2348,17 +2665,20 @@ ios_dialog_cleanup2:
 		if ( temp_filename1 ) g_free(temp_filename1);
 		if ( temp_filename2 ) g_free(temp_filename2);
 		if ( version_string ) g_free(version_string);
+		if ( build_string ) g_free(build_string);
 		if ( image_filename ) g_free(image_filename);
 		if ( user_name ) g_free(user_name);
 		if ( group_name ) g_free(group_name);
 		if ( icon_scaled_image ) gdk_pixbuf_unref(icon_scaled_image);
 		if ( icon_image ) gdk_pixbuf_unref(icon_image);
+		if ( splash_image ) gdk_pixbuf_unref(splash_image);
 		
 		if ( app_name ) g_free(app_name);
 		if ( profile ) g_free(profile);
 		if ( app_icon ) g_free(app_icon);
 		if ( facebook_id ) g_free(facebook_id);
 		if ( version_number ) g_free(version_number);
+		if ( build_number ) g_free(build_number);
 		if ( output_file ) g_free(output_file);
 	}
 
@@ -2383,10 +2703,18 @@ void project_export_ipa()
 		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry")));
 		
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry")));
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_path2"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2")));
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_path3"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3")));
+		
 		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")));
 
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo")), 0 );
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo")), 0 );
 	}
 
 	if ( app->project != last_proj || app->project == 0 )
