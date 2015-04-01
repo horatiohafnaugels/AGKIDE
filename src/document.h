@@ -72,7 +72,6 @@ GeanyFilePrefs;
 
 extern GeanyFilePrefs file_prefs;
 
-
 /**
  *  Structure for representing an open tab with all its properties.
  **/

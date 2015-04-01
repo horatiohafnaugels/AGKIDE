@@ -305,6 +305,8 @@ gboolean utils_remove_folder_recursive ( const gchar* src );
 
 gboolean utils_add_folder_to_zip ( mz_zip_archive *pZip, const gchar* src, const gchar* dst, gboolean recursive, gboolean selective_compress );
 
+gchar* utils_create_relative_path( const gchar* base_path, const gchar* path );
+
 G_END_DECLS
 
 #endif

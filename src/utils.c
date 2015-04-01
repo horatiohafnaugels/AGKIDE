@@ -2510,3 +2510,46 @@ gboolean utils_add_folder_to_zip ( mz_zip_archive *pZip, const gchar* src, const
 	
 	return TRUE;
 }
+
+gchar* utils_create_relative_path( const gchar* base_path, const gchar* path )
+{
+	if ( !base_path || !path ) return g_strdup("");
+	if ( !*base_path || !*path) return g_strdup("");
+
+	// paths must start the same to make a realtive path
+	if ( *base_path != *path ) return g_strdup(path);
+
+	// advance to the point where the paths differ
+	int counter = 0;
+	int lastSlash = 0;
+	while( *(base_path+counter) && *(path+counter) && *(base_path+counter) == *(path+counter) )
+	{
+		if ( *(base_path+counter) == '/' || *(base_path+counter) == '\\' ) lastSlash = counter+1;
+		counter++;
+	}
+
+	// if base path stops here then the relative path is just the rest of the main path
+	if ( !*(base_path+counter) ) 
+	{
+		if ( *(path+counter) == '/' || *(path+counter) == '\\' ) return g_strdup( path+counter+1 );
+		else if ( *(path+counter-1) == '/' || *(path+counter-1) == '\\' ) return g_strdup( path+counter );
+		else return g_strconcat( "../", path+lastSlash, NULL );
+	}
+
+	gchar temp[1024];
+	temp[0] = 0;
+
+	while( *(base_path+counter) )
+	{
+		if ( (*(base_path+counter) == '/' || *(base_path+counter) == '\\') && *(base_path+counter+1) )
+		{
+			strcat( temp, "../" );
+		}
+		counter++;
+	}
+
+	strcat( temp, "../" );
+
+	strcat( temp, path+lastSlash );
+	return g_strdup( temp );
+}

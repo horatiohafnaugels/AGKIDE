@@ -68,6 +68,7 @@ MessageWindow msgwindow;
 static void prepare_msg_tree_view(void);
 static void prepare_status_tree_view(void);
 static void prepare_compiler_tree_view(void);
+static void prepare_debug_tree_view(void);
 static GtkWidget *create_message_popup_menu(gint type);
 static gboolean on_msgwin_button_press_event(GtkWidget *widget, GdkEventButton *event,
 																			gpointer user_data);
@@ -99,12 +100,14 @@ void msgwin_init(void)
 	msgwindow.tree_status = ui_lookup_widget(main_widgets.window, "treeview3");
 	msgwindow.tree_msg = ui_lookup_widget(main_widgets.window, "treeview4");
 	msgwindow.tree_compiler = ui_lookup_widget(main_widgets.window, "treeview5");
+	msgwindow.tree_debug_log = ui_lookup_widget(main_widgets.window, "treeview1");
 	msgwindow.scribble = ui_lookup_widget(main_widgets.window, "textview_scribble");
 	msgwindow.messages_dir = NULL;
 
 	prepare_status_tree_view();
 	prepare_msg_tree_view();
 	prepare_compiler_tree_view();
+	prepare_debug_tree_view();
 	msgwindow.popup_status_menu = create_message_popup_menu(MSG_STATUS);
 	msgwindow.popup_msg_menu = create_message_popup_menu(MSG_MESSAGE);
 	msgwindow.popup_compiler_menu = create_message_popup_menu(MSG_COMPILER);
@@ -242,11 +245,38 @@ static void prepare_compiler_tree_view(void)
 	/*g_signal_connect(selection, "changed", G_CALLBACK(on_msg_tree_selection_changed), NULL);*/
 }
 
+static void prepare_debug_tree_view(void)
+{
+	GtkCellRenderer *renderer;
+	GtkTreeViewColumn *column;
+	GtkTreeSelection *selection;
+
+	msgwindow.store_debug_log = gtk_list_store_new(2, GDK_TYPE_COLOR, G_TYPE_STRING);
+	gtk_tree_view_set_model(GTK_TREE_VIEW(msgwindow.tree_debug_log), GTK_TREE_MODEL(msgwindow.store_debug_log));
+	g_object_unref(msgwindow.store_debug_log);
+
+	renderer = gtk_cell_renderer_text_new();
+	column = gtk_tree_view_column_new_with_attributes(NULL, renderer, "foreground-gdk", 0, "text", 1, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(msgwindow.tree_debug_log), column);
+
+	gtk_tree_view_set_enable_search(GTK_TREE_VIEW(msgwindow.tree_debug_log), FALSE);
+
+	ui_widget_modify_font_from_string(msgwindow.tree_debug_log, interface_prefs.msgwin_font);
+
+	/* selection handling */
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(msgwindow.tree_debug_log));
+	gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
+	/*g_signal_connect(selection, "changed", G_CALLBACK(on_msg_tree_selection_changed), NULL);*/
+}
+
 static const GdkColor color_error_dark = {0, 53000, 0, 0};
 static const GdkColor color_error_light = {0, 65535, 32768, 32768};
 
 static const GdkColor blue_dark = {0, 0, 0, 53000};
 static const GdkColor blue_light = {0, 30719, 45567, 65535};
+
+static const GdkColor color_black = {0, 0, 0, 0};
+static const GdkColor color_white = {0, 65535, 65535, 65535};
 
 static const GdkColor *get_color(gint msg_color)
 {
@@ -269,6 +299,7 @@ static const GdkColor *get_color(gint msg_color)
 			case COLOR_RED: return &color_error_dark;
 			case COLOR_DARK_RED: return &color_error_dark;
 			case COLOR_BLUE: return &blue_dark;
+			case COLOR_NORMAL: return &color_black;
 			default: return NULL;
 		}
 	}
@@ -279,6 +310,7 @@ static const GdkColor *get_color(gint msg_color)
 			case COLOR_RED: return &color_error_light;
 			case COLOR_DARK_RED: return &color_error_light;
 			case COLOR_BLUE: return &blue_light;
+			case COLOR_NORMAL: return &color_white;
 			default: return NULL;
 		}
 	}
@@ -337,6 +369,32 @@ void msgwin_compiler_add_string(gint msg_color, const gchar *msg)
 	if (utf8_msg != msg)
 		g_free(utf8_msg);
 }
+
+void msgwin_debug_add_string(gint msg_color, const gchar *msg)
+{
+
+
+	GtkTreeIter iter;
+	GtkTreePath *path;
+	const GdkColor *color = get_color(msg_color);
+	gchar *utf8_msg;
+
+	if (! g_utf8_validate(msg, -1, NULL))
+		utf8_msg = utils_get_utf8_from_locale(msg);
+	else
+		utf8_msg = (gchar *) msg;
+
+	gtk_list_store_append(msgwindow.store_debug_log, &iter);
+	gtk_list_store_set(msgwindow.store_debug_log, &iter, 0, color, 1, utf8_msg, -1);
+
+	path = gtk_tree_model_get_path( gtk_tree_view_get_model(GTK_TREE_VIEW(msgwindow.tree_debug_log)), &iter );
+	gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(msgwindow.tree_debug_log), path, NULL, TRUE, 0.5, 0.5);
+	gtk_tree_path_free(path);
+	
+	if (utf8_msg != msg)
+		g_free(utf8_msg);
+}
+
 
 
 void msgwin_show_hide(gboolean show)
@@ -1065,6 +1123,7 @@ void msgwin_switch_tab(gint tabnum, gboolean show)
 	{
 		case MSG_SCRATCH: widget = msgwindow.scribble; break;
 		case MSG_COMPILER: widget = msgwindow.tree_compiler; break;
+		case MSG_DEBUG: widget = msgwindow.tree_debug_log; break;
 		case MSG_STATUS: widget = msgwindow.tree_status; break;
 		case MSG_MESSAGE: widget = msgwindow.tree_msg; break;
 #ifdef HAVE_VTE
@@ -1104,6 +1163,10 @@ void msgwin_clear_tab(gint tabnum)
 		case MSG_COMPILER:
 			gtk_list_store_clear(msgwindow.store_compiler);
 			build_menu_update(NULL);	/* update next error items */
+			return;
+
+		case MSG_DEBUG:
+			gtk_list_store_clear(msgwindow.store_debug_log);
 			return;
 
 		case MSG_STATUS: store = msgwindow.store_status; break;

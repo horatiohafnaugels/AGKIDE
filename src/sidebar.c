@@ -63,12 +63,6 @@ doc_items = {NULL, NULL, NULL, NULL};
 
 enum
 {
-	TREEVIEW_OPENFILES = 0,
-	TREEVIEW_SYMBOL
-};
-
-enum
-{
 	OPENFILES_ACTION_OPEN = 0,
 	OPENFILES_ACTION_REMOVE,
 	OPENFILES_ACTION_ADD,
@@ -96,6 +90,10 @@ static void on_openfiles_document_action(GtkMenuItem *menuitem, gpointer user_da
 static gboolean sidebar_button_press_cb(GtkWidget *widget, GdkEventButton *event,
 		gpointer user_data);
 static gboolean sidebar_key_press_cb(GtkWidget *widget, GdkEventKey *event,
+		gpointer user_data);
+static gboolean debug_callstack_button_press_cb(GtkWidget *widget, GdkEventButton *event,
+		gpointer user_data);
+static gboolean debug_callstack_key_press_cb(GtkWidget *widget, GdkEventKey *event,
 		gpointer user_data);
 static void on_list_document_activate(GtkCheckMenuItem *item, gpointer user_data);
 static void on_list_symbol_activate(GtkCheckMenuItem *item, gpointer user_data);
@@ -270,6 +268,194 @@ static gint documents_sort_func(GtkTreeModel *model, GtkTreeIter *iter_a,
 	return cmp;
 }
 
+static gint callstack_sort_func(GtkTreeModel *model, GtkTreeIter *iter_a, GtkTreeIter *iter_b, gpointer data)
+{
+	gint id_a, id_b;
+
+	gtk_tree_model_get(model, iter_a, 0, &id_a, -1);
+	gtk_tree_model_get(model, iter_b, 0, &id_b, -1);
+
+	if ( id_a < id_b ) return -1;
+	else if ( id_a > id_b ) return 1;
+	return 0;
+}
+
+void debug_variable_edited (GtkCellRendererText *cell, gchar *path_string, gchar *new_text, gpointer user_data)
+{
+	GtkTreeIter iter;
+	if ( !gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store_debug_variables), &iter, path_string) )
+		return;
+
+	// colons will mess up the message passing, so remove them
+	gchar *ptr = new_text;
+	while ( *ptr )
+	{
+		if ( *ptr == ':' ) *ptr = '-';
+		ptr++;
+	}
+	
+	gchar *varname;
+	gtk_tree_model_get(store_debug_variables, &iter, 0, &varname, -1);
+
+	// if the variable hasn't changed, do nothing
+	if ( g_strcasecmp(new_text, varname) == 0 )
+	{
+		g_free(varname);
+		return;
+	}
+
+	// remove the old variable from the debugger
+	if ( debug_pid && *varname )
+	{
+		gchar szFinal[1024];
+		sprintf( szFinal, "delete watch %s\n", varname );
+		write(gdb_in.fd, szFinal, strlen(szFinal) );
+	}
+
+	// if the new variable name is empty delete the row
+	if ( !new_text || !*new_text )
+	{
+		gtk_tree_store_remove( store_debug_variables, &iter );
+	}
+	else
+	{
+		// change the data store value to match
+		gtk_tree_store_set(store_debug_variables, &iter, 0, new_text, 1, "", -1);
+
+		// tell the debugger about the new variable
+		if ( debug_pid )
+		{
+			gchar szFinal[1024];
+			sprintf( szFinal, "watch %s\n", new_text );
+			write(gdb_in.fd, szFinal, strlen(szFinal) );
+		}
+
+		// if row was blank then add a new blank row
+		if ( !*varname )
+		{
+			gtk_tree_store_append(store_debug_variables, &iter, NULL);
+			gtk_tree_store_set(store_debug_variables, &iter, 0, "", 1, "", -1);
+		}
+	}
+
+	g_free(varname);
+}
+
+static void prepare_debug_tab(void)
+{
+	GtkCellRenderer *text_renderer;
+	GtkCellRenderer *text_renderer2;
+	GtkTreeViewColumn *column;
+	GtkTreeSelection *selection;
+	GtkTreeSortable *sortable;
+
+	tv.debug_callstack = ui_lookup_widget(main_widgets.window, "debug_callstack");
+	
+	store_debug_callstack = gtk_tree_store_new(4, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
+	gtk_tree_view_set_model(GTK_TREE_VIEW(tv.debug_callstack), GTK_TREE_MODEL(store_debug_callstack));
+	gtk_tree_view_set_show_expanders( GTK_TREE_VIEW(tv.debug_callstack), FALSE );
+
+	/* set policy settings for the scolledwindow around the treeview again, because glade
+	 * doesn't keep the settings */
+	gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW(ui_lookup_widget(main_widgets.window, "scrolledwindow12")), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+	text_renderer = gtk_cell_renderer_text_new();
+	g_object_set(text_renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+	column = gtk_tree_view_column_new();
+	gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
+	gtk_tree_view_column_set_attributes(column, text_renderer, "text", 1, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tv.debug_callstack), column);
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tv.debug_callstack), FALSE);
+
+	gtk_tree_view_set_search_column(GTK_TREE_VIEW(tv.debug_callstack), 1);
+
+	/* sort by frame ID */
+	sortable = GTK_TREE_SORTABLE(GTK_TREE_MODEL(store_debug_callstack));
+	gtk_tree_sortable_set_sort_func(sortable, 0, callstack_sort_func, NULL, NULL);
+	gtk_tree_sortable_set_sort_column_id(sortable, 0, GTK_SORT_ASCENDING);
+
+	ui_widget_modify_font_from_string(tv.debug_callstack, interface_prefs.tagbar_font);
+
+	/* tooltips */
+	gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(tv.debug_callstack), 1);
+
+	/* selection handling */
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tv.debug_callstack));
+	gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
+	g_object_unref(store_debug_callstack);
+
+	g_signal_connect(GTK_TREE_VIEW(tv.debug_callstack), "button-press-event", G_CALLBACK(debug_callstack_button_press_cb), NULL);
+	g_signal_connect(GTK_TREE_VIEW(tv.debug_callstack), "key-press-event", G_CALLBACK(debug_callstack_key_press_cb), NULL);
+
+
+	// variable watch window
+	tv.debug_variables = ui_lookup_widget(main_widgets.window, "debug_variable_watch");
+
+	store_debug_variables = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+	gtk_tree_view_set_model(GTK_TREE_VIEW(tv.debug_variables), GTK_TREE_MODEL(store_debug_variables));
+	gtk_tree_view_set_show_expanders( GTK_TREE_VIEW(tv.debug_variables), FALSE );
+
+	/* set policy settings for the scolledwindow around the treeview again, because glade
+	 * doesn't keep the settings */
+	gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW(ui_lookup_widget(main_widgets.window, "scrolledwindow11")), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+	// column 1
+	text_renderer = gtk_cell_renderer_text_new();
+	gtk_cell_renderer_set_padding( text_renderer, 5, 0 );
+	g_object_set(text_renderer, "editable", TRUE, NULL);
+	column = gtk_tree_view_column_new();
+	gtk_tree_view_column_pack_start(column, text_renderer, FALSE);
+	gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+	gtk_tree_view_column_set_attributes(column, text_renderer, "text", 0, NULL);
+	gtk_tree_view_column_set_title(column, "Variable");
+	gtk_tree_view_column_set_alignment(column, 0.5);
+	gtk_tree_view_column_set_min_width(column, 75);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tv.debug_variables), column);
+
+	g_signal_connect(text_renderer, "edited", G_CALLBACK(debug_variable_edited), NULL);
+
+	// column 2
+	text_renderer2 = gtk_cell_renderer_text_new();
+	gtk_cell_renderer_set_padding( text_renderer2, 5, 0 );
+	g_object_set(text_renderer2, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+	column = gtk_tree_view_column_new();
+	gtk_tree_view_column_pack_start(column, text_renderer2, TRUE);
+	gtk_tree_view_column_set_attributes(column, text_renderer2, "text", 1, NULL);
+	gtk_tree_view_column_set_title(column, "Value");
+	gtk_tree_view_column_set_alignment(column, 0.5);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tv.debug_variables), column);
+
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tv.debug_variables), TRUE);
+	gtk_tree_view_set_search_column(GTK_TREE_VIEW(tv.debug_variables), 0);
+
+	ui_widget_modify_font_from_string(tv.debug_variables, interface_prefs.tagbar_font);
+
+	/* tooltips */
+	gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(tv.debug_variables), 1);
+
+	/* selection handling */
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tv.debug_variables));
+	gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
+	g_object_unref(store_debug_variables);
+
+	// disable selection color
+	GtkStyle *style = gtk_widget_get_style(tv.debug_variables);
+	gtk_widget_modify_base( tv.debug_variables, GTK_STATE_SELECTED, &(style->base[GTK_STATE_INSENSITIVE]) );
+	//gtk_widget_modify_base( tv.debug_variables, GTK_STATE_INSENSITIVE, &(style->base[GTK_STATE_INSENSITIVE]) );
+	//gtk_widget_modify_base( tv.debug_variables, GTK_STATE_ACTIVE, &(style->base[GTK_STATE_NORMAL]) );
+
+	gtk_widget_modify_text( tv.debug_variables, GTK_STATE_SELECTED, &(style->text[GTK_STATE_NORMAL]) );
+	gtk_widget_modify_text( tv.debug_variables, GTK_STATE_INSENSITIVE, &(style->text[GTK_STATE_NORMAL]) );
+	//gtk_widget_modify_text( tv.debug_variables, GTK_STATE_ACTIVE, &(style->text[GTK_STATE_NORMAL]) );
+
+	static GtkTreeIter file;
+	gtk_tree_store_append(store_debug_variables, &file, NULL);
+
+	gtk_tree_store_set(store_debug_variables, &file,
+		0, "",
+		1, "", 
+		-1);
+}
 
 /* does some preparing things to the open files list widget */
 static void prepare_openfiles(void)
@@ -1342,6 +1528,120 @@ static gboolean sidebar_button_press_cb(GtkWidget *widget, GdkEventButton *event
 	return handled;
 }
 
+static gboolean debug_callstack_key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+	may_steal_focus = FALSE;
+	if (ui_is_keyval_enter_or_return(event->keyval) || event->keyval == GDK_space)
+	{
+		GtkWidgetClass *widget_class = GTK_WIDGET_GET_CLASS(widget);
+		GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+		may_steal_focus = TRUE;
+
+		/* force the TreeView handler to run before us for it to do its job (selection & stuff).
+		 * doing so will prevent further handlers to be run in most cases, but the only one is our
+		 * own, so guess it's fine. */
+		if (widget_class->key_press_event)
+			widget_class->key_press_event(widget, event);
+
+		if (widget == tv.debug_callstack) /* tag and doc list have separate handlers */
+		{
+			GtkTreeIter iter;
+			GtkTreeModel *model;
+
+			if (gtk_tree_selection_get_selected(selection, &model, &iter))
+			{
+				gchar *filename;
+				int line;
+				int frame;
+
+				gtk_tree_model_get(model, &iter, 0, &frame, -1);
+				gtk_tree_model_get(model, &iter, 2, &filename, -1);
+				gtk_tree_model_get(model, &iter, 3, &line, -1);
+
+				GeanyDocument *doc = document_find_by_real_path( filename );
+				if ( !DOC_VALID(doc) )
+				{
+					doc = document_open_file( filename, FALSE, NULL, NULL );
+				}
+
+				gint page = document_get_notebook_page(doc);
+				gtk_notebook_set_current_page( GTK_NOTEBOOK(main_widgets.notebook), page );
+				editor_goto_line( doc->editor, line-1, 0 );
+
+				if ( debug_pid )
+				{
+					gchar szFrame[ 50 ];
+					sprintf( szFrame, "set frame %d\n", frame );
+					write(gdb_in.fd, szFrame, strlen(szFrame) );
+				}
+
+				g_free(filename);
+			}
+		}
+
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean debug_callstack_button_press_cb(GtkWidget *widget, GdkEventButton *event, G_GNUC_UNUSED gpointer user_data)
+{
+	GtkTreeSelection *selection;
+	GtkWidgetClass *widget_class = GTK_WIDGET_GET_CLASS(widget);
+	gboolean handled = FALSE;
+
+	/* force the TreeView handler to run before us for it to do its job (selection & stuff).
+	 * doing so will prevent further handlers to be run in most cases, but the only one is our own,
+	 * so guess it's fine. */
+	if (widget_class->button_press_event)
+		handled = widget_class->button_press_event(widget, event);
+
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+	may_steal_focus = TRUE;
+
+	if (event->type == GDK_2BUTTON_PRESS || event->button == 1)
+	{	
+		if (widget == tv.debug_callstack) /* tag and doc list have separate handlers */
+		{
+			GtkTreeIter iter;
+			GtkTreeModel *model;
+
+			if (gtk_tree_selection_get_selected(selection, &model, &iter))
+			{
+				gchar *filename;
+				int line;
+				int frame;
+
+				gtk_tree_model_get(model, &iter, 0, &frame, -1);
+				gtk_tree_model_get(model, &iter, 2, &filename, -1);
+				gtk_tree_model_get(model, &iter, 3, &line, -1);
+
+				GeanyDocument *doc = document_find_by_real_path( filename );
+				if ( !DOC_VALID(doc) )
+				{
+					doc = document_open_file( filename, FALSE, NULL, NULL );
+				}
+
+				gint page = document_get_notebook_page(doc);
+				gtk_notebook_set_current_page( GTK_NOTEBOOK(main_widgets.notebook), page );
+				editor_goto_line( doc->editor, line-1, 0 );
+
+				if ( debug_pid )
+				{
+					gchar szFrame[ 50 ];
+					sprintf( szFrame, "set frame %d\n", frame );
+					write(gdb_in.fd, szFrame, strlen(szFrame) );
+				}
+
+				g_free(filename);
+
+				handled = TRUE;
+			}
+		}
+	}
+
+	return handled;
+}
 
 static void documents_menu_update(GtkTreeSelection *selection)
 {
@@ -1384,6 +1684,7 @@ static void on_load_settings(void)
 {
 	tag_window = ui_lookup_widget(main_widgets.window, "scrolledwindow2");
 
+	prepare_debug_tab();
 	prepare_openfiles();
 	/* note: ui_prefs.sidebar_page is reapplied after plugins are loaded */
 	stash_group_display(stash_group, NULL);
@@ -1463,7 +1764,6 @@ void sidebar_focus_symbols_tab(void)
 		gtk_widget_grab_focus(gtk_bin_get_child(GTK_BIN(symbol_list_scrollwin)));
 	}
 }
-
 
 static void sidebar_tabs_show_hide(GtkNotebook *notebook, GtkWidget *child,
 								   guint page_num, gpointer data)

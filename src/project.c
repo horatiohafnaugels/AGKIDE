@@ -588,7 +588,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		
 		// check package name
 		if ( !package_name || !*package_name ) { SHOW_ERR("You must enter a package name"); goto android_dialog_clean_up; }
-		if ( strlen(package_name) > 50 ) { SHOW_ERR("Package name must be less than 50 characters"); goto android_dialog_clean_up; }
+		if ( strlen(package_name) > 100 ) { SHOW_ERR("Package name must be less than 100 characters"); goto android_dialog_clean_up; }
 		if ( strchr(package_name,'.') == NULL ) { SHOW_ERR("Package name must contain at least one dot character"); goto android_dialog_clean_up; }
 		if ( package_name[0] == '.' || package_name[strlen(package_name)-1] == '.' ) { SHOW_ERR("Package name must not begin or end with a dot"); goto android_dialog_clean_up; }
 
@@ -1587,6 +1587,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		else if ( strcmp(app_device,"iPad Only") == 0 ) device_type = 2;
 		g_free(app_device);
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
+		int uses_ads = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
 		// output
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry");
 		gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -1619,9 +1622,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			  || app_name[i] == 47 || app_name[i] == 92
 			  || app_name[i] == 58 || app_name[i] == 59
 			  || app_name[i] == 124 || app_name[i] == 61
-			  || app_name[i] == 44 )
+			  || app_name[i] == 44 || app_name[i] == 38 )
 			{
-				SHOW_ERR("App name contains invalid characters, it must not contain quotes or any of the following < > * . / \ : ; | = ,"); 
+				SHOW_ERR("App name contains invalid characters, it must not contain quotes or any of the following < > * . / \ : ; | = , &"); 
 				goto ios_dialog_clean_up; 
 			}
 		}
@@ -1727,6 +1730,9 @@ ios_dialog_continue:
 		gchar* src_folder = g_build_path( "/", app->datadir, "ios", "source", "AGK 2 Player.app", NULL );
 		utils_str_replace_char( src_folder, '\\', '/' );
 
+		gchar* no_ads_binary = g_build_path( "/", app->datadir, "ios", "source", "AGK 2 Player No Ads", NULL );
+		utils_str_replace_char( no_ads_binary, '\\', '/' );
+
 		gchar *output_file_zip = g_strdup( output_file );
 		gchar *ext = strrchr( output_file_zip, '.' );
 		if ( ext ) *ext = 0;
@@ -1766,10 +1772,17 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 
+		if ( uses_ads )
+		{
+			gchar *binary_path = g_build_filename( app_folder, "AGK 2 Player", NULL );
+			utils_copy_file( no_ads_binary, binary_path, TRUE, NULL );
+			g_free( binary_path );
+		}
+		
 		// rename executable
 		g_chdir( app_folder );
 		g_rename( "AGK 2 Player", app_name );
-
+		
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
@@ -2023,7 +2036,10 @@ ios_dialog_continue:
 		strcat( newcontents, bundle_id );
 		strcat( newcontents, "</string>\n	<key>com.apple.developer.team-identifier</key>\n	<string>" );
 		strcat( newcontents, team_id );
-		strcat( newcontents, "</string>\n	<key>keychain-access-groups</key>\n	<array>\n		<string>" );
+		strcat( newcontents, "</string>\n	<key>beta-reports-active</key>\n	<true/>\n" );
+		strcat( newcontents, "	<key>aps-environment</key>\n	<string>production</string>\n" );
+		strcat( newcontents, "	<key>get-task-allow</key>\n	<false/>\n" );
+		strcat( newcontents, "	<key>keychain-access-groups</key>\n	<array>\n		<string>" );
 		strcat( newcontents, bundle_id );
 		strcat( newcontents, "</string>\n	</array>\n</dict>\n</plist>" );
 
@@ -2650,6 +2666,7 @@ ios_dialog_cleanup2:
 		if ( ios_folder ) g_free(ios_folder);
 		if ( tmp_folder ) g_free(tmp_folder);
 		if ( src_folder ) g_free(src_folder);
+		if ( no_ads_binary ) g_free(no_ads_binary);
 
 		if ( error ) g_error_free(error);
 		if ( str_out ) g_free(str_out);

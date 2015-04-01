@@ -93,6 +93,7 @@ static gboolean cb_func_switch_action(guint key_id);
 static gboolean cb_func_clipboard_action(guint key_id);
 static gboolean cb_func_build_action(guint key_id);
 static gboolean cb_func_build_action2(guint key_id);
+static gboolean cb_func_build_action3(guint key_id);
 static gboolean cb_func_document_action(guint key_id);
 static gboolean cb_func_view_action(guint key_id);
 
@@ -244,6 +245,7 @@ static void init_default_kb(void)
 	ADD_KB_GROUP(GEANY_KEY_GROUP_DOCUMENT, _("Document"), cb_func_document_action);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_PROJECT, _("Project"), cb_func_project_action);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_BUILD, _("Build"), cb_func_build_action2);
+	ADD_KB_GROUP(GEANY_KEY_GROUP_DEBUG, _("Debug"), cb_func_build_action3);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_TOOLS, _("Tools"), NULL);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_HELP, _("Help"), NULL);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_FOCUS, _("Focus"), cb_func_switch_action);
@@ -598,7 +600,7 @@ static void init_default_kb(void)
 	add_kb(group, GEANY_KEYS_BUILD_BROADCAST, NULL,
 		GDK_F6, 0, "build_broadcast", _("Broadcast"), "build_broadcast1");
 	add_kb(group, GEANY_KEYS_BUILD_DEBUG, NULL,
-		0, 0, "build_debug", _("Debug"), "build_debug1");
+		GDK_F8, 0, "build_debug", _("Debug"), "build_debug1");
 	//add_kb(group, GEANY_KEYS_BUILD_LINK, NULL,
 	//	GDK_F9, 0, "build_link", _("Build"), NULL);
 	//add_kb(group, GEANY_KEYS_BUILD_MAKE, NULL,
@@ -614,6 +616,17 @@ static void init_default_kb(void)
 	//	0, 0, "build_previouserror", _("Previous error"), NULL);
 	add_kb(group, GEANY_KEYS_BUILD_OPTIONS, NULL,
 		0, 0, "build_options", _("Build options"), "build_options1");
+
+	group = keybindings_get_core_group(GEANY_KEY_GROUP_DEBUG);
+
+	add_kb(group, GEANY_KEYS_DEBUG_PAUSE, NULL,
+		GDK_F9, 0, "debug_pause", _("Pause/Continue"), "debug_pause");
+	add_kb(group, GEANY_KEYS_DEBUG_STEP, NULL,
+		GDK_F10, 0, "debug_step", _("Step"), "debug_step");
+	add_kb(group, GEANY_KEYS_DEBUG_OVER, NULL,
+		0, 0, "debug_stepover", _("Step Over"), "debug_stepover");
+	add_kb(group, GEANY_KEYS_DEBUG_OUT, NULL,
+		0, 0, "debug_stepout", _("Step Out"), "debug_stepout");
 
 	group = keybindings_get_core_group(GEANY_KEY_GROUP_TOOLS);
 
@@ -1636,6 +1649,44 @@ static gboolean cb_func_build_action2(guint key_id)
 	return TRUE;
 }
 
+static gboolean cb_func_build_action3(guint key_id)
+{
+	GtkWidget *item;
+	BuildMenuItems *menu_items;
+	GeanyDocument *doc = document_get_current();
+
+	if (app->project == NULL && doc == NULL)
+		return TRUE;
+
+	if (!gtk_widget_is_sensitive(ui_lookup_widget(main_widgets.window, "menu_debug")))
+		return TRUE;
+
+	/* TODO make it a table??*/
+	switch (key_id)
+	{
+		case GEANY_KEYS_DEBUG_PAUSE:
+			on_debug_pause_activate(0,0);
+			break;
+		case GEANY_KEYS_DEBUG_STEP:
+			on_debug_step_activate(0,0);
+			break;
+		case GEANY_KEYS_DEBUG_OVER:
+			on_debug_stepover_activate(0,0);
+			break;
+		case GEANY_KEYS_DEBUG_OUT:
+			on_debug_stepout_activate(0,0);
+			break;
+		default:
+			break;
+	}
+	/* Note: For Build menu items it's OK (at the moment) to assume they are in the correct
+	 * sensitive state, but some other menus don't update the sensitive status until
+	 * they are redrawn. */
+	//if (item && gtk_widget_is_sensitive(item))
+	//	gtk_menu_item_activate(GTK_MENU_ITEM(item));
+	return TRUE;
+}
+
 static gboolean read_current_word(GeanyDocument *doc, gboolean sci_word)
 {
 	g_return_val_if_fail(DOC_VALID(doc), FALSE);
@@ -1969,12 +2020,13 @@ static gboolean cb_func_goto_action(guint key_id)
 			return TRUE;
 		case GEANY_KEYS_GOTO_TOGGLEMARKER:
 		{
-			sci_toggle_marker_at_line(doc->editor->sci, cur_line, 1);
+			//sci_toggle_marker_at_line(doc->editor->sci, cur_line, 0);
+			on_debug_breakpoint_activate(0,cur_line);
 			return TRUE;
 		}
 		case GEANY_KEYS_GOTO_NEXTMARKER:
 		{
-			gint mline = sci_marker_next(doc->editor->sci, cur_line + 1, 1 << 1, TRUE);
+			gint mline = sci_marker_next(doc->editor->sci, cur_line + 1, 1 << 0, TRUE);
 
 			if (mline != -1)
 			{
@@ -1985,7 +2037,7 @@ static gboolean cb_func_goto_action(guint key_id)
 		}
 		case GEANY_KEYS_GOTO_PREVIOUSMARKER:
 		{
-			gint mline = sci_marker_previous(doc->editor->sci, cur_line - 1, 1 << 1, TRUE);
+			gint mline = sci_marker_previous(doc->editor->sci, cur_line - 1, 1 << 0, TRUE);
 
 			if (mline != -1)
 			{

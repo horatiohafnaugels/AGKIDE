@@ -98,6 +98,7 @@ enum GeanyKeyGroupID
 	GEANY_KEY_GROUP_NOTEBOOK,		/**< Group. */
 	GEANY_KEY_GROUP_DOCUMENT,		/**< Group. */
 	GEANY_KEY_GROUP_BUILD,			/**< Group. */
+	GEANY_KEY_GROUP_DEBUG,			/**< Group. */
 	GEANY_KEY_GROUP_TOOLS,			/**< Group. */
 	GEANY_KEY_GROUP_HELP,			/**< Group. */
 	GEANY_KEY_GROUP_COUNT	/* must not be used by plugins */
@@ -143,6 +144,10 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_BUILD_RUN,						/**< Keybinding. */
 	GEANY_KEYS_BUILD_BROADCAST,					/**< Keybinding. */
 	GEANY_KEYS_BUILD_DEBUG,						/**< Keybinding. */
+	GEANY_KEYS_DEBUG_PAUSE,						/**< Keybinding. */
+	GEANY_KEYS_DEBUG_STEP,						/**< Keybinding. */
+	GEANY_KEYS_DEBUG_OVER,						/**< Keybinding. */
+	GEANY_KEYS_DEBUG_OUT,						/**< Keybinding. */
 	GEANY_KEYS_HELP_HELP,						/**< Keybinding. */
 	GEANY_KEYS_SETTINGS_PLUGINPREFERENCES,		/**< Keybinding. */
 	GEANY_KEYS_VIEW_ZOOMRESET,					/**< Keybinding. */

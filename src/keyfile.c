@@ -544,9 +544,9 @@ void configuration_save_project_files(GKeyFile *config, GeanyProject *project)
 
 static void save_install_prefs(GKeyFile *config)
 {
-	g_key_file_set_string(config, "AGKInstall", "projects_folder", install_prefs.projects_folder);
+	g_key_file_set_string(config, "AGKInstall", "projects_folder", FALLBACK(install_prefs.projects_folder,""));
 	g_key_file_set_integer(config, "AGKInstall", "projects_update", install_prefs.update_projects_mode);
-	g_key_file_set_string(config, "AGKInstall", "libraries_folder", install_prefs.tier2_folder);
+	g_key_file_set_string(config, "AGKInstall", "libraries_folder", FALLBACK(install_prefs.tier2_folder,""));
 	g_key_file_set_integer(config, "AGKInstall", "libraries_update", install_prefs.update_tier2_mode);
 }
 

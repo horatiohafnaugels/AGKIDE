@@ -673,17 +673,18 @@ static void styleset_common(ScintillaObject *sci, guint ft_id)
 	SSM(sci, SCI_INDICSETALPHA, GEANY_INDICATOR_SEARCH, 60);
 
 	/* define marker symbols
-	 * 0 -> line marker */
-	SSM(sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
-	SSM(sci, SCI_MARKERSETFORE, 0, invert(common_style_set.styling[GCS_MARKER_LINE].foreground));
-	SSM(sci, SCI_MARKERSETBACK, 0, invert(common_style_set.styling[GCS_MARKER_LINE].background));
-	SSM(sci, SCI_MARKERSETALPHA, 0, common_style_set.styling[GCS_MARKER_TRANSLUCENCY].foreground);
+	// swapped these so line markers appear in front of user markers
+	/* 0 -> user marker */
+	SSM(sci, SCI_MARKERDEFINE, 0, SC_MARK_CIRCLE);
+	SSM(sci, SCI_MARKERSETFORE, 0, 0x1611a9 /*invert(common_style_set.styling[GCS_MARKER_MARK].foreground)*/);
+	SSM(sci, SCI_MARKERSETBACK, 0, 0x4a4aec /*invert(common_style_set.styling[GCS_MARKER_MARK].background)*/);
+	SSM(sci, SCI_MARKERSETALPHA, 0, common_style_set.styling[GCS_MARKER_TRANSLUCENCY].background);
 
-	/* 1 -> user marker */
-	SSM(sci, SCI_MARKERDEFINE, 1, SC_MARK_PLUS);
-	SSM(sci, SCI_MARKERSETFORE, 1, invert(common_style_set.styling[GCS_MARKER_MARK].foreground));
-	SSM(sci, SCI_MARKERSETBACK, 1, invert(common_style_set.styling[GCS_MARKER_MARK].background));
-	SSM(sci, SCI_MARKERSETALPHA, 1, common_style_set.styling[GCS_MARKER_TRANSLUCENCY].background);
+	/* 1 -> line marker */
+	SSM(sci, SCI_MARKERDEFINE, 1, SC_MARK_SHORTARROW);
+	SSM(sci, SCI_MARKERSETFORE, 1, invert(common_style_set.styling[GCS_MARKER_LINE].foreground));
+	SSM(sci, SCI_MARKERSETBACK, 1, invert(common_style_set.styling[GCS_MARKER_LINE].background));
+	SSM(sci, SCI_MARKERSETALPHA, 1, common_style_set.styling[GCS_MARKER_TRANSLUCENCY].foreground);
 
 	/* 2 -> folding marker, other folding settings */
 	SSM(sci, SCI_SETMARGINTYPEN, 2, SC_MARGIN_SYMBOL);

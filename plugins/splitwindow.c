@@ -118,7 +118,7 @@ static void on_sci_notify(ScintillaObject *sci, gint param,
 			if (nt->margin == 1)
 			{
 				gboolean set;
-				gint marker = 1;
+				gint marker = 0;
 
 				line = sci_get_line_from_position(sci, nt->position);
 				set = sci_is_marker_set_at_line(sci, line, marker);

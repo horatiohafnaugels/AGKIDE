@@ -2113,6 +2113,42 @@ G_MODULE_EXPORT void on_menu_build3_activate(GtkMenuItem *menuitem, gpointer use
 	gtk_menu_item_set_label(GTK_MENU_ITEM(item_debug), debug_text );
 }
 
+G_MODULE_EXPORT void on_menu_debug_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	static GtkWidget *item_pause = NULL;
+	static GtkWidget *item_step = NULL;
+	static GtkWidget *item_stepover = NULL;
+	static GtkWidget *item_stepout = NULL;
+	
+	item_pause = ui_lookup_widget(main_widgets.window, "debug_pause");
+	item_step = ui_lookup_widget(main_widgets.window, "debug_step");
+	item_stepover = ui_lookup_widget(main_widgets.window, "debug_stepover");
+	item_stepout = ui_lookup_widget(main_widgets.window, "debug_stepout");
+
+	gboolean debug_running = (debug_pid > (GPid) 0);
+
+	gtk_widget_set_sensitive(item_pause, debug_running);
+	gtk_widget_set_sensitive(item_step, debug_running);
+	gtk_widget_set_sensitive(item_stepover, debug_running);
+	gtk_widget_set_sensitive(item_stepout, debug_running);
+		
+	gchar pause_text[20];
+	strcpy( pause_text, "_Pause" );
+	if ( debug_running && g_debug_app_paused )
+	{
+		strcpy( pause_text, "_Continue" );
+	}
+
+	// run icon
+	GtkWidget *image;
+	if ( debug_running && g_debug_app_paused ) image = gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY, GTK_ICON_SIZE_MENU);
+	else image = gtk_image_new_from_stock(GTK_STOCK_MEDIA_PAUSE, GTK_ICON_SIZE_MENU);
+
+	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item_pause), image);
+
+	gtk_menu_item_set_label(GTK_MENU_ITEM(item_pause), pause_text );
+}
+
 
 G_MODULE_EXPORT void on_menu_open_selected_file1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
@@ -2185,8 +2221,8 @@ G_MODULE_EXPORT void on_remove_markers1_activate(GtkMenuItem *menuitem, gpointer
 	GeanyDocument *doc = document_get_current();
 	g_return_if_fail(doc != NULL);
 
-	sci_marker_delete_all(doc->editor->sci, 0);	/* delete the yellow tag marker */
-	sci_marker_delete_all(doc->editor->sci, 1);	/* delete user markers */
+	sci_marker_delete_all(doc->editor->sci, 1);	/* delete the yellow tag marker */
+	//sci_marker_delete_all(doc->editor->sci, 0);	/* delete user markers */
 	editor_indicator_clear(doc->editor, GEANY_INDICATOR_SEARCH);
 }
 
@@ -2761,7 +2797,7 @@ G_MODULE_EXPORT gboolean on_scrolledwindow1_focus_in_event(GtkContainer *contain
 	}
 	else
 	{
-		hide_message_bar();
+		if ( debug_pid == 0 ) hide_message_bar();
 	}
 
 	return FALSE;
@@ -2775,4 +2811,104 @@ G_MODULE_EXPORT void on_vpaned2_position_changed(GObject *object, GParamSpec *ps
 	gint new_pos = height - gtk_paned_get_position(GTK_PANED(ui_lookup_widget(main_widgets.window, "vpaned2")));
 	if ( new_pos < 42 ) return;
 	old_message_pos = new_pos;
+}
+
+G_MODULE_EXPORT void on_debug_delete_breakpoints_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	gint i;
+	foreach_document(i)
+	{
+		sci_marker_delete_all(documents[i]->editor->sci, 0);
+	}
+
+	if ( debug_pid )
+	{
+		write(gdb_in.fd, "delete all breakpoints\n", strlen("delete all breakpoints\n") );
+	}
+}
+
+G_MODULE_EXPORT void on_debug_breakpoint_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	GeanyDocument *doc = document_get_current();
+	int lineNum = (int) user_data;
+	if ( menuitem != 0 ) lineNum = sci_get_current_line(doc->editor->sci);
+	gint marker = sci_is_marker_set_at_line( doc->editor->sci, lineNum, 0 );
+	sci_toggle_marker_at_line(doc->editor->sci, lineNum, 0);
+
+	// update broadcaster
+	if ( debug_pid )
+	{
+		if ( marker )
+		{
+			// remove
+			gchar* relative_path = utils_create_relative_path( app->project->base_path, doc->real_path );
+			if ( strlen(relative_path) < 235 )
+			{
+				gchar szBreakpoint[ 256 ];
+				sprintf( szBreakpoint, "delete breakpoint %s:%d\n", relative_path, lineNum+1 );
+				write(gdb_in.fd, szBreakpoint, strlen(szBreakpoint) );
+			}
+			g_free(relative_path);
+		}
+		else
+		{
+			// add
+			gchar* relative_path = utils_create_relative_path( app->project->base_path, doc->real_path );
+			if ( strlen(relative_path) < 235 )
+			{
+				gchar szBreakpoint[ 256 ];
+				sprintf( szBreakpoint, "breakpoint %s:%d\n", relative_path, lineNum+1 );
+				write(gdb_in.fd, szBreakpoint, strlen(szBreakpoint) );
+			}
+			g_free(relative_path);
+		}
+	}
+}
+
+G_MODULE_EXPORT void on_debug_stepout_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	if ( debug_pid )
+	{
+		gtk_tree_store_clear(store_debug_callstack);
+		write(gdb_in.fd, "stepout\n", strlen("stepout\n") );
+	}
+}
+
+G_MODULE_EXPORT void on_debug_stepover_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	if ( debug_pid )
+	{
+		gtk_tree_store_clear(store_debug_callstack);
+		write(gdb_in.fd, "stepover\n", strlen("stepover\n") );
+	}
+}
+
+G_MODULE_EXPORT void on_debug_step_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	if ( debug_pid )
+	{
+		gtk_tree_store_clear(store_debug_callstack);
+		write(gdb_in.fd, "step\n", strlen("step\n") );
+	}
+}
+
+G_MODULE_EXPORT void on_debug_pause_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	if ( g_debug_app_paused )
+	{
+		gint i;
+		foreach_document(i)
+		{
+			sci_marker_delete_all(documents[i]->editor->sci, 1);
+		}
+
+		gtk_tree_store_clear(store_debug_callstack);
+		g_debug_app_paused = 0;
+		write(gdb_in.fd, "continue\n", strlen("continue\n") );
+	}
+	else
+	{
+		g_debug_app_paused = 1;
+		write(gdb_in.fd, "pause\n", strlen("pause\n") );
+	}
 }

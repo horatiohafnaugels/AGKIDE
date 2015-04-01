@@ -30,6 +30,8 @@ typedef struct SidebarTreeviews
 	GtkWidget		*tree_openfiles;
 	GtkWidget		*default_tag_tree;
 	GtkWidget		*popup_taglist;
+	GtkWidget		*debug_callstack;
+	GtkWidget		*debug_variables;
 }
 SidebarTreeviews;
 
@@ -43,6 +45,16 @@ enum
 	SYMBOLS_COLUMN_TOOLTIP,
 	SYMBOLS_N_COLUMNS
 };
+
+enum
+{
+	TREEVIEW_OPENFILES = 0,
+	TREEVIEW_SYMBOL,
+	TREEVIEW_DEBUG
+};
+
+GtkTreeStore *store_debug_callstack;
+GtkTreeStore *store_debug_variables;
 
 struct GeanyProject;
 

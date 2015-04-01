@@ -472,7 +472,8 @@ static void on_margin_click(GeanyEditor *editor, SCNotification *nt)
 		gint line = sci_get_line_from_position(editor->sci, nt->position);
 
 		/*sci_marker_delete_all(editor->sci, 1);*/
-		sci_toggle_marker_at_line(editor->sci, line, 1);	/* toggle the marker */
+		//sci_toggle_marker_at_line(editor->sci, line, 0);	/* toggle the marker */
+		on_debug_breakpoint_activate(0,line);
 	}
 	/* left click on the folding margin to toggle folding state of current line */
 	else if (nt->margin == 2 && editor_prefs.folding)
@@ -4076,7 +4077,7 @@ void editor_display_current_line(GeanyEditor *editor, gfloat percent_of_view)
 void editor_indicator_clear_errors(GeanyEditor *editor)
 {
 	editor_indicator_clear(editor, GEANY_INDICATOR_ERROR);
-	sci_marker_delete_all(editor->sci, 0);	/* remove the yellow error line marker */
+	sci_marker_delete_all(editor->sci, 1);	/* remove the yellow error line marker */
 }
 
 
@@ -4602,8 +4603,8 @@ gboolean editor_goto_pos(GeanyEditor *editor, gint pos, gboolean mark)
 		gint line = sci_get_line_from_position(editor->sci, pos);
 
 		/* mark the tag with the yellow arrow */
-		sci_marker_delete_all(editor->sci, 0);
-		sci_set_marker_at_line(editor->sci, line, 0);
+		sci_marker_delete_all(editor->sci, 1);
+		sci_set_marker_at_line(editor->sci, line, 1);
 	}
 
 	sci_goto_pos(editor->sci, pos, TRUE);

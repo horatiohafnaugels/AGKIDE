@@ -32,7 +32,8 @@ enum MsgColors
 	COLOR_RED,		/**< Color red */
 	COLOR_DARK_RED,	/**< Color dark red */
 	COLOR_BLACK,	/**< Color black */
-	COLOR_BLUE		/**< Color blue */
+	COLOR_BLUE,		/**< Color blue */
+	COLOR_NORMAL
 };
 
 /** Indices of the notebooks in the messages window. */
@@ -43,6 +44,7 @@ typedef enum
 	MSG_COMPILER,	/**< Index of the compiler tab */
 	MSG_MESSAGE,	/**< Index of the messages tab */
 	MSG_SCRATCH,	/**< Index of the scratch tab */
+	MSG_DEBUG,
 	MSG_VTE			/**< Index of the VTE tab */
 } MessageWindowTabNum;
 
@@ -53,7 +55,9 @@ typedef struct
 	GtkListStore	*store_status;
 	GtkListStore	*store_msg;
 	GtkListStore	*store_compiler;
+	GtkListStore	*store_debug_log;
 	GtkWidget		*tree_compiler;
+	GtkWidget		*tree_debug_log;
 	GtkWidget		*tree_status;
 	GtkWidget		*tree_msg;
 	GtkWidget		*scribble;

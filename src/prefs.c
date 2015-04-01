@@ -1392,6 +1392,7 @@ static void on_prefs_font_choosed(GtkFontButton *widget, gpointer user_data)
 				break;
 			SETPTR(interface_prefs.msgwin_font, g_strdup(fontbtn));
 			ui_widget_modify_font_from_string(msgwindow.tree_compiler, interface_prefs.msgwin_font);
+			ui_widget_modify_font_from_string(msgwindow.tree_debug_log, interface_prefs.msgwin_font);
 			ui_widget_modify_font_from_string(msgwindow.tree_msg, interface_prefs.msgwin_font);
 			ui_widget_modify_font_from_string(msgwindow.tree_status, interface_prefs.msgwin_font);
 			ui_widget_modify_font_from_string(msgwindow.scribble, interface_prefs.msgwin_font);

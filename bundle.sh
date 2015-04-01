@@ -2,6 +2,8 @@
 
 cd /Users/paulj/Documents/SVN/AGKTrunk/apps/interpreter_ios
 ./export.sh
+cd /Users/paulj/Documents/SVN/AGKTrunk/apps/interpreter_ios_noads
+./export.sh
 cd /Users/paulj/Documents/SVN/AGKTrunk/IDE/Geany-1.24.1
 /usr/bin/make install
 cp ../../CompilerNew/build/Release/AGKCompiler /Users/paulj/Projects/Geany-Compiled/share/applications/AGKCompiler

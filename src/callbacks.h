@@ -696,3 +696,16 @@ void set_full_message_height( gint height );
 G_MODULE_EXPORT gboolean on_scrolledwindow1_focus_in_event(GtkContainer *container, GtkWidget *widget, gpointer user_data);
 
 G_MODULE_EXPORT void on_vpaned2_position_changed(GObject *object, GParamSpec *pspec, gpointer user_data);
+
+// debug callbacks
+G_MODULE_EXPORT void on_debug_delete_breakpoints_activate(GtkMenuItem *menuitem, gpointer user_data);
+
+G_MODULE_EXPORT void on_debug_breakpoint_activate(GtkMenuItem *menuitem, gpointer user_data);
+
+G_MODULE_EXPORT void on_debug_stepout_activate(GtkMenuItem *menuitem, gpointer user_data);
+
+G_MODULE_EXPORT void on_debug_stepover_activate(GtkMenuItem *menuitem, gpointer user_data);
+
+G_MODULE_EXPORT void on_debug_step_activate(GtkMenuItem *menuitem, gpointer user_data);
+
+G_MODULE_EXPORT void on_debug_pause_activate(GtkMenuItem *menuitem, gpointer user_data);

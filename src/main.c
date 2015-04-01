@@ -1414,6 +1414,10 @@ gint main(gint argc, gchar **argv)
 	win32_check_xinput();
 #endif
 
+	// disable F10 menu key so it can be used elsewhere
+	gtk_settings_set_string_property(gtk_settings_get_default(),
+			"gtk-menu-bar-accel", "<Shift><Control><Mod1><Mod2><Mod3><Mod4><Mod5>F10", "Geany");
+
 	gtk_main();
 	return 0;
 }

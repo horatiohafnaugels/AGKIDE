@@ -79,6 +79,8 @@ gboolean g_isXP = FALSE;
 struct BuildPrefs build_prefs;
 
 gint g_run_mode = 0;
+gint g_prev_tab1 = 0;
+gint g_debug_app_paused = 0;
 
 GeanyBuildInfo build_info = {GEANY_GBG_FT, 0, 0, NULL, GEANY_FILETYPES_NONE, NULL, 0};
 
@@ -132,6 +134,7 @@ static guint build_items_count = 9;
 static void build_exit_cb(GPid child_pid, gint status, gpointer user_data);
 static void agk_build_exit_cb(GPid child_pid, gint status, gpointer user_data);
 static gboolean build_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data);
+static gboolean debug_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data);
 
 static gboolean build_create_shellscript(const gchar *fname, const gchar *cmd, gboolean autoclose, GError **error);
 static GPid build_spawn_cmd(GeanyDocument *doc, const gchar *cmd, const gchar *dir);
@@ -147,6 +150,7 @@ static void on_build_previous_error(GtkWidget *menuitem, gpointer user_data);
 static void kill_process(GPid *pid);
 static void show_build_result_message(gboolean failure);
 static void process_build_output_line(const gchar *line, gint color);
+static void process_debug_output_line(const gchar *line, gint color);
 static void show_build_commands_dialog(void);
 static void on_build_menu_item(GtkWidget *w, gpointer user_data);
 
@@ -905,6 +909,7 @@ void build_save_prefs(GKeyFile *config)
 	g_key_file_set_integer(config, "buildAGK", "broadcast_port", build_prefs.agk_broadcast_port);
 	g_key_file_set_string(config, "buildAGK", "direct_ip", FALLBACK(build_prefs.agk_broadcast_ip, ""));
 	g_key_file_set_integer(config, "buildAGK", "steam_integration", build_prefs.agk_steam_integration);
+	g_key_file_set_string(config, "buildAGK", "debug_ip", FALLBACK(build_prefs.agk_debug_ip, ""));
 }
 
 void build_load_prefs(GKeyFile *config)
@@ -947,6 +952,7 @@ void build_load_prefs(GKeyFile *config)
 	build_prefs.agk_broadcast_port = utils_get_setting_integer(config, "buildAGK", "broadcast_port", 5689);
 	build_prefs.agk_broadcast_ip = utils_get_setting_string(config, "buildAGK", "direct_ip", "");
 	build_prefs.agk_steam_integration = utils_get_setting_integer(config, "buildAGK", "steam_integration", 1);
+	build_prefs.agk_debug_ip = utils_get_setting_string(config, "buildAGK", "debug_ip", "");
 }
 
 void build_setup_prefs(void)
@@ -956,6 +962,7 @@ void build_setup_prefs(void)
 	GtkWidget *broadcast_port_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_broadcast_port1");
 	GtkWidget *direct_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_direct_ip");
 	GtkWidget *steam_check = ui_lookup_widget(ui_widgets.prefs_dialog, "check_steam_integrate");
+	GtkWidget *debug_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_debug_ip");
 	static gboolean callback_setup = FALSE;
 
 	g_return_if_fail(build_prefs.agk_compiler_path != NULL);
@@ -967,6 +974,7 @@ void build_setup_prefs(void)
 	gtk_entry_set_text(GTK_ENTRY(broadcast_port_entry), port);
 	gtk_entry_set_text(GTK_ENTRY(direct_ip_entry), build_prefs.agk_broadcast_ip);
 	gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(steam_check), build_prefs.agk_steam_integration ? TRUE : FALSE );
+	gtk_entry_set_text(GTK_ENTRY(debug_ip_entry), build_prefs.agk_debug_ip);
 
 	if (! callback_setup)
 	{	/* connect the callback only once */
@@ -981,6 +989,7 @@ void build_apply_prefs(void)
 	GtkWidget *broadcast_port_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_broadcast_port1");
 	GtkWidget *direct_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_direct_ip");
 	GtkWidget *steam_check = ui_lookup_widget(ui_widgets.prefs_dialog, "check_steam_integrate");
+	GtkWidget *debug_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_debug_ip");
 	const gchar *str;
 
 	str = gtk_entry_get_text(GTK_ENTRY(compiler_path_entry));
@@ -991,6 +1000,9 @@ void build_apply_prefs(void)
 
 	str = gtk_entry_get_text(GTK_ENTRY(direct_ip_entry));
 	SETPTR(build_prefs.agk_broadcast_ip, g_strdup(str));
+
+	str = gtk_entry_get_text(GTK_ENTRY(debug_ip_entry));
+	SETPTR(build_prefs.agk_debug_ip, g_strdup(str));
 
 	build_prefs.agk_steam_integration = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(steam_check) );
 }
@@ -1201,14 +1213,14 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 #ifdef G_OS_WIN32
 	if ( strstr( build_prefs.agk_compiler_path, "Steam" ) > 0 && build_prefs.agk_steam_integration )
 	{
-		gchar *path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam_api.dll", NULL );
+		gchar *path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam/steam_api.dll", NULL );
 		gchar *path2 = g_strconcat( project->base_path, "steam_api.dll", NULL );
 		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )
 			utils_copy_file( path1, path2, TRUE, NULL );
 		g_free(path1);
 		g_free(path2);
 
-		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam_appid.txt", NULL );
+		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam/steam_appid.txt", NULL );
 		path2 = g_strconcat( project->base_path, "steam_appid.txt", NULL );
 		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )
 			utils_copy_file( path1, path2, TRUE, NULL );
@@ -1297,9 +1309,9 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 	}
 }
 
-static GPollFD gdb_in = { -1, G_IO_OUT | G_IO_ERR, 0 };
-static GPollFD gdb_out = { -1, G_IO_IN | G_IO_HUP | G_IO_ERR, 0 };
-static GPollFD gdb_err = { -1, G_IO_IN | G_IO_HUP | G_IO_ERR, 0 };
+GPollFD gdb_in = { -1, G_IO_OUT | G_IO_ERR, 0 };
+GPollFD gdb_out = { -1, G_IO_IN | G_IO_HUP | G_IO_ERR, 0 };
+GPollFD gdb_err = { -1, G_IO_IN | G_IO_HUP | G_IO_ERR, 0 };
 
 GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 {
@@ -1310,6 +1322,13 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 	{
 		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, broadcaster is already running");
 		ui_set_statusbar(TRUE, _("Failed to broadcast project, broadcaster is already running"));
+		return (GPid) 0;
+	}
+
+	if ( debug_pid ) 
+	{
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, debugger is currently running");
+		ui_set_statusbar(TRUE, _("Failed to broadcast project, debugger is currently running"));
 		return (GPid) 0;
 	}
 
@@ -1332,8 +1351,8 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 
 	if ( !g_file_test( main_path, G_FILE_TEST_EXISTS ) )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, broadcaster program found");
-		ui_set_statusbar(TRUE, _("Failed to broadcast project, broadcaster program found"));
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, broadcaster program not found");
+		ui_set_statusbar(TRUE, _("Failed to broadcast project, broadcaster program not found"));
 		return (GPid) 0;
 	}
 
@@ -1386,6 +1405,235 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 	g_free(main_path);
 	//g_free(working_dir);
 	return broadcast_pid;
+}
+
+GPid build_debug_project_spawn_cmd(GeanyProject *project)
+{
+	gchar *working_dir;
+	GError *error = NULL;
+
+	if ( broadcast_pid ) 
+	{
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project, broadcaster is already running");
+		ui_set_statusbar(TRUE, _("Failed to debug project, broadcaster is already running"));
+		return (GPid) 0;
+	}
+
+	if ( debug_pid ) 
+	{
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project, debugger is already running");
+		ui_set_statusbar(TRUE, _("Failed to debug project, debugger is already running"));
+		return (GPid) 0;
+	}
+
+	g_debug_app_paused = 0;
+
+	g_return_val_if_fail(project != NULL && project->is_valid, (GPid) 0);
+
+	//gchar *main_path = g_strdup( "C:\\Paul's\\VC Projects\\SVN Projects\\AGKTrunk\\Broadcaster\\AGKBroadcaster\\Debug\\AGKBroadcaster.exe" );
+#ifdef G_OS_WIN32
+	static const gchar *broadcaster = "AGKBroadcaster.exe";
+#elif __APPLE__
+	static const gchar *broadcaster = "AGKBroadcaster";
+#else
+	#ifdef __x86_64__
+		static const gchar *broadcaster = "AGKBroadcaster64";
+	#else
+		static const gchar *broadcaster = "AGKBroadcaster32";
+	#endif
+#endif
+
+	gchar *main_path = g_build_filename( build_prefs.agk_compiler_path, broadcaster, NULL );
+
+	if ( !g_file_test( main_path, G_FILE_TEST_EXISTS ) )
+	{
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project, debug broadcaster not found");
+		ui_set_statusbar(TRUE, _("Failed to broadcast project, debug broadcaster not found"));
+		return (GPid) 0;
+	}
+
+	// focus on side bar debug tab and debug log message window
+	g_prev_tab1 = gtk_notebook_get_current_page( GTK_NOTEBOOK(main_widgets.sidebar_notebook) );
+	gtk_notebook_set_current_page(GTK_NOTEBOOK(main_widgets.sidebar_notebook), TREEVIEW_DEBUG);
+	gtk_list_store_clear(msgwindow.store_debug_log);
+	gtk_notebook_set_current_page(GTK_NOTEBOOK(msgwindow.notebook), MSG_DEBUG);
+
+	//working_dir = g_strdup( project->base_path );
+	
+	gchar **argv = NULL;
+	
+	argv = g_new0(gchar *, 3);
+	argv[0] = g_strdup(main_path);
+	argv[1] = g_strdup("-nowindow");
+	argv[2] = NULL;
+
+	if (! g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &debug_pid, 
+								   &gdb_in.fd, &gdb_out.fd, &gdb_err.fd, &error))
+	{
+		geany_debug("g_spawn_async() failed: %s", error->message);
+		ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
+		g_error_free(error);
+		error = NULL;
+		debug_pid = (GPid) 0;
+	}
+
+	if (debug_pid != 0)
+	{
+		g_child_watch_add(debug_pid, (GChildWatchFunc) agk_run_exit_cb, (gpointer)&debug_pid);
+		update_build_menu3();
+		ui_progress_bar_start("Debugging");
+	}
+
+	utils_set_up_io_channel(gdb_out.fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL, TRUE, debug_iofunc, GINT_TO_POINTER(0));
+	utils_set_up_io_channel(gdb_err.fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL, TRUE, debug_iofunc, GINT_TO_POINTER(1));
+
+	if ( build_prefs.agk_debug_ip && *build_prefs.agk_debug_ip )
+	{
+		// debug on remote device
+		gchar *szMsg = g_strconcat( "Debugging on device ", build_prefs.agk_debug_ip, NULL );
+		msgwin_debug_add_string( COLOR_BLUE, szMsg );
+		g_free(szMsg);
+
+		gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnect ", build_prefs.agk_debug_ip, "\n", NULL );
+		write(gdb_in.fd, cmdline, strlen(cmdline) );
+		g_free(cmdline);
+	}
+	else
+	{
+		// set up local interpreter for debugging
+		msgwin_debug_add_string( COLOR_BLUE, "Debugging on local machine, to debug on a device set its IP address in the build options" );
+
+		gchar *path1 = 0;
+#ifdef G_OS_WIN32
+		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/Windows.exe", NULL );
+#elif __APPLE__
+		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/Mac.app/Contents/MacOS/AGK Player", NULL );
+#else
+		#ifdef __x86_64__
+			path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/LinuxPlayer64", NULL );
+		#else
+			path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/LinuxPlayer32", NULL );
+		#endif
+#endif
+		
+		if ( !g_file_test( path1, G_FILE_TEST_EXISTS ) )
+		{
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project locally, interpreter program not found");
+			ui_set_statusbar(TRUE, _("Failed to debug project locally, interpreter program not found"));
+			g_free(path1);
+			return (GPid) 0;
+		}
+
+		gchar **argv = NULL;
+		argv = g_new0(gchar *, 2);
+		argv[0] = g_strdup(path1);
+		argv[1] = NULL;
+
+		g_free(path1);
+
+		if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &debug_pid2, &error))
+		{
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project locally, interpreter failed to run");
+			geany_debug("g_spawn_async() failed: %s", error->message);
+			ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
+			g_error_free(error);
+			error = NULL;
+			debug_pid2 = (GPid) 0;
+			return (GPid) 0;
+		}
+
+		if (debug_pid != 0)
+		{
+			g_child_watch_add(debug_pid2, (GChildWatchFunc) agk_run_exit_cb, (gpointer)&debug_pid2);
+
+#ifdef __APPLE__
+            int loopcounter = 0;
+            while( debug_pid2 && loopcounter < 200 )
+            {
+                NSRunningApplication *app = [NSRunningApplication runningApplicationWithProcessIdentifier:debug_pid2];
+                if ( app )
+                {
+                    [ app activateWithOptions:NSApplicationActivateAllWindows ];
+                    break;
+                }
+                
+                loopcounter++;
+                g_usleep( 20 * 1000 ); // 20 milliseconds
+            }
+#endif
+		}
+		else
+		{
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project locally, interpreter failed to run");
+			ui_set_statusbar(TRUE, _("Failed to debug project locally, interpreter failed to run"));
+			return (GPid) 0;
+		}
+
+		// send broadcast commands
+		gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnect 127.0.0.1\n", NULL );
+		write(gdb_in.fd, cmdline, strlen(cmdline) );
+		g_free(cmdline);
+	}
+
+	// send breakpoints
+	guint i;
+	for (i = 0; i < project->project_files->len; i++)
+	{
+		if ( !project_files_index(project,i)->is_valid ) 
+			continue;
+
+		GeanyDocument *doc = document_find_by_real_path( project_files_index(project,i)->file_name );
+
+		if (DOC_VALID(doc))
+		{
+			gchar szBreakpoint[ 256 ];
+			gint lineNum = 0;
+			lineNum = sci_marker_next( doc->editor->sci, lineNum, 1 << 0, FALSE );
+			while( lineNum >= 0 )
+			{
+				gchar* relative_path = utils_create_relative_path( project->base_path, project_files_index(project,i)->file_name );
+				if ( strlen(relative_path) < 235 )
+				{
+					sprintf( szBreakpoint, "breakpoint %s:%d\n", relative_path, lineNum+1 );
+					write(gdb_in.fd, szBreakpoint, strlen(szBreakpoint) );
+				}
+				g_free(relative_path);
+				
+				lineNum = sci_marker_next( doc->editor->sci, lineNum+1, 1 << 0, FALSE );
+			}
+		}
+	}
+
+	// send watch variables
+	GtkTreeIter iter;
+	gchar szVarname[ 256 ];
+	if ( gtk_tree_model_get_iter_first( GTK_TREE_MODEL(store_debug_variables), &iter ) )
+	{
+		do
+		{
+			gchar *varname;
+			gtk_tree_model_get( GTK_TREE_MODEL(store_debug_variables), &iter, 0, &varname, -1 );
+			if ( *varname && strlen(varname) < 240 )
+			{
+				sprintf( szVarname, "watch %s\n", varname );
+				write(gdb_in.fd, szVarname, strlen(szVarname) );
+			}
+		} while( gtk_tree_model_iter_next(GTK_TREE_MODEL(store_debug_variables), &iter) );
+	}
+
+	// start debugger
+	write(gdb_in.fd, "debug\n", strlen("debug\n") );
+
+	/*
+	gchar output[ 256 ];
+	read(gdb_out.fd, output, 100 );
+	MessageBox( NULL, output, "info", 0 );
+	*/
+	
+	g_strfreev(argv);
+	g_free(main_path);
+	//g_free(working_dir);
+	return debug_pid;
 }
 
 /* Returns: NULL if there was an error, or the working directory the script was created in.
@@ -1635,6 +1883,156 @@ static void process_build_output_line(const gchar *str, gint color)
 	g_free(msg);
 }
 
+static void process_debug_output_line(const gchar *str, gint color)
+{
+	gchar *msg, *tmp;
+	gchar *filename;
+	gint line;
+
+	msg = g_strdup(str);
+
+	g_strchomp(msg);
+
+	if (EMPTY(msg))
+	{
+		g_free(msg);
+		return;
+	}
+
+	if ( strncmp( msg, "Error:", strlen("Error:") ) == 0 )
+		msgwin_debug_add_string( COLOR_RED, msg+strlen("Error:") );
+	else if ( strncmp( msg, "Warning:", strlen("Warning:") ) == 0 )
+		msgwin_debug_add_string( COLOR_RED, msg+strlen("Warning:") );
+	else if ( strncmp( msg, "Log:", strlen("Log:") ) == 0 )
+		msgwin_debug_add_string( COLOR_NORMAL, msg+strlen("Log:") );
+	else if ( strncmp( msg, "Break:", strlen("Break:") ) == 0 )
+	{
+		g_debug_app_paused = 1;
+		gchar* colon = strrchr( msg, ':' );
+		if ( colon )
+		{
+			int line = atoi(colon+1) - 1;
+			*colon = 0;
+			gchar *szInclude = g_build_filename( app->project->base_path, msg+strlen("Break:"), NULL );
+			utils_tidy_path( szInclude );
+			GeanyDocument *doc = document_find_by_real_path( szInclude );
+			if ( !DOC_VALID(doc) )
+			{
+				doc = document_open_file( szInclude, FALSE, NULL, NULL );
+			}
+			
+			if ( DOC_VALID(doc) )
+			{
+				sci_marker_delete_all(doc->editor->sci, 1);
+				sci_set_marker_at_line(doc->editor->sci, line, 1);
+				
+				gint page = document_get_notebook_page(doc);
+				gtk_notebook_set_current_page( GTK_NOTEBOOK(main_widgets.notebook), page );
+				editor_goto_line( doc->editor, line, 0 );
+			}
+			g_free(szInclude);
+		}
+	}
+	else if ( strncmp( msg, "Variable:", strlen("Variable:") ) == 0 )
+	{
+		// parse variable
+		gchar* szVarStart = msg + strlen("Variable:");
+		gchar* colon = strrchr( szVarStart, ':' );
+		if ( colon )
+		{
+			gchar *szValue = g_strdup(colon+1);
+			*colon = 0;
+			gchar* szVar = g_strdup(szVarStart);
+		
+			GtkTreeIter iter;
+			gchar szVarname[ 256 ];
+			if ( gtk_tree_model_get_iter_first( GTK_TREE_MODEL(store_debug_variables), &iter ) )
+			{
+				do
+				{
+					gchar *varname;
+					gtk_tree_model_get( GTK_TREE_MODEL(store_debug_variables), &iter, 0, &varname, -1 );
+					if ( *varname && g_strcasecmp(varname, szVar) == 0 )
+					{
+						gtk_tree_store_set( store_debug_variables, &iter, 1, szValue, -1 );
+						g_free(varname);
+						break;
+					}
+					g_free(varname);
+				} while( gtk_tree_model_iter_next(GTK_TREE_MODEL(store_debug_variables), &iter) );
+			}
+
+			g_free(szVar);
+			g_free(szValue);
+		}
+	}
+	else if ( strncmp( msg, "Frame:", strlen("Frame:") ) == 0 )
+	{
+		// parse string back to front, line number is last
+		gchar* colon = strrchr( msg, ':' );
+		if ( colon )
+		{
+			int line = atoi(colon+1);
+			*colon = 0;
+
+			// now find include file
+			colon = strrchr( msg, ':' );
+			if ( colon )
+			{
+				gchar *szInclude = g_build_filename( app->project->base_path, colon+1, NULL );
+				gchar *szIncludeShort = g_path_get_basename( szInclude );
+				utils_tidy_path( szInclude );
+				*colon = 0;
+
+				// find function name
+				colon = strrchr( msg, ':' );
+				if ( colon )
+				{
+					gchar *szFunction = g_strdup(colon+1);
+					*colon = 0;
+
+					// frame point is last (first in the string)
+					colon = strrchr( msg, ':' );
+					if ( colon )
+					{
+						int frame = atoi(colon+1);
+
+						static GtkTreeIter file;
+						gtk_tree_store_append(store_debug_callstack, &file, NULL);
+
+						gchar szFinal[ 1024 ];
+						if ( frame == 0 )
+							sprintf( szFinal, "\"%s%s\" at %s:%d", szFunction, strcmp(szFunction,"<Main>") == 0 ? "" : "()", szIncludeShort, line );
+						else
+							sprintf( szFinal, "Called from \"%s%s\" at %s:%d", szFunction, strcmp(szFunction,"<Main>") == 0 ? "" : "()", szIncludeShort, line );
+
+						gtk_tree_store_set(store_debug_callstack, &file,
+							0, frame,
+							1, szFinal, 
+							2, szInclude, 
+							3, line,
+							-1);
+					}
+
+					g_free(szFunction);
+				}
+				g_free(szInclude);
+				g_free(szIncludeShort);
+			}
+		}
+	}
+	else if ( strncmp( msg, "AL lib:", strlen("AL lib:") ) == 0 )
+	{
+		// ignore this error, generated by broadcaster on Linux
+	}
+	else
+	{
+		msgwin_debug_add_string( COLOR_BLUE, msg );
+	}
+
+	g_free(msg);
+}
+
 
 //#ifndef SYNC_SPAWN
 static gboolean build_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data)
@@ -1644,15 +2042,56 @@ static gboolean build_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data)
 		gchar *msg;
 		GIOStatus st;
 
+		gint color = (GPOINTER_TO_INT(data)) ? COLOR_DARK_RED : COLOR_BLACK;
+
+		/*
 		while ((st = g_io_channel_read_line(ioc, &msg, NULL, NULL, NULL)) == G_IO_STATUS_NORMAL && msg)
 		{
-			gint color = (GPOINTER_TO_INT(data)) ? COLOR_DARK_RED : COLOR_BLACK;
-
 			process_build_output_line(msg, color);
  			g_free(msg);
 		}
+		*/
+
+		// only read once, otherwise the while loop will block (on Windows)
+		st = g_io_channel_read_line(ioc, &msg, NULL, NULL, NULL);
+		if ( msg )
+		{
+			if ( st == G_IO_STATUS_NORMAL && *msg )
+				process_build_output_line(msg, color);
+
+			g_free(msg);
+		}
+
 		if (st == G_IO_STATUS_ERROR || st == G_IO_STATUS_EOF) return FALSE;
 	}
+
+	if (cond & (G_IO_ERR | G_IO_HUP | G_IO_NVAL))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean debug_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data)
+{
+	if (cond & (G_IO_IN | G_IO_PRI))
+	{
+		gchar *msg;
+		GIOStatus st;
+
+		gint color = (GPOINTER_TO_INT(data)) ? COLOR_DARK_RED : COLOR_NORMAL;
+
+		st = g_io_channel_read_line(ioc, &msg, NULL, NULL, NULL);
+		if ( msg )
+		{
+			if ( st == G_IO_STATUS_NORMAL && *msg )
+				process_debug_output_line(msg, color);
+
+			g_free(msg);
+		}
+
+		if (st == G_IO_STATUS_ERROR || st == G_IO_STATUS_EOF) return FALSE;
+	}
+
 	if (cond & (G_IO_ERR | G_IO_HUP | G_IO_NVAL))
 		return FALSE;
 
@@ -1798,6 +2237,7 @@ static void agk_build_exit_cb(GPid child_pid, gint status, gpointer user_data)
 		//if ( build_prefs.agk_enable_broadcast ) build_broadcast_project_spawn_cmd(app->project);
 		if ( g_run_mode == 1 ) build_run_project_spawn_cmd(app->project);
 		else if ( g_run_mode == 2 ) build_broadcast_project_spawn_cmd(app->project);
+		else if ( g_run_mode == 3 ) build_debug_project_spawn_cmd(app->project);
 	}
 
 	build_pid = 0;
@@ -1823,8 +2263,24 @@ static void agk_run_exit_cb(GPid child_pid, gint status, gpointer user_data)
 	GPid *pid = user_data;
 
 	g_spawn_close_pid(child_pid);
+	if ( *pid == 0 ) return;
 
-	if ( pid == &broadcast_pid ) ui_progress_bar_stop();
+	if ( pid == &debug_pid || pid == &debug_pid2 )
+	{
+		gtk_tree_store_clear(store_debug_callstack);
+		gtk_notebook_set_current_page(GTK_NOTEBOOK(main_widgets.sidebar_notebook), g_prev_tab1);
+
+		gint i;
+		foreach_document(i)
+		{
+			sci_marker_delete_all(documents[i]->editor->sci, 1);
+		}
+
+		gtk_notebook_set_current_page(GTK_NOTEBOOK(msgwindow.notebook), MSG_DEBUG);
+		gtk_widget_grab_focus( ui_lookup_widget(main_widgets.window, "treeview1") );
+	}
+
+	if ( pid == &broadcast_pid || pid == &debug_pid || pid == &debug_pid2 ) ui_progress_bar_stop();
 	if ( pid == &local_pid && app->project )
 	{
 #ifdef G_OS_WIN32
@@ -1839,7 +2295,19 @@ static void agk_run_exit_cb(GPid child_pid, gint status, gpointer user_data)
 		g_free(path1);
 #endif
 	}
+
 	*pid = 0;
+
+	// if one part of the debug app closes, close the other part
+	if ( pid == &debug_pid )
+	{
+		if ( debug_pid2 ) kill_process(&debug_pid2);
+	}
+	else if ( pid == &debug_pid2 )
+	{
+		if ( debug_pid ) kill_process(&debug_pid);
+	}
+	
 	/* reset the stop button and menu item to the original meaning */
 	update_build_menu3();
 }
@@ -3611,5 +4079,20 @@ void build_broadcast_project( gint deviceID )
 // compiles, runs, and debugs the current project
 void build_debug_project( gint deviceID )
 {
-	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging not yet implemented");
+	//dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging not yet implemented");
+#ifdef AGK_FREE_VERSION
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging is disabled in the trial version");
+#else
+	if (debug_pid > (GPid) 0)
+	{
+		write(gdb_in.fd, "stop\ndisconnectall\nexit\n", strlen("stop\ndisconnectall\nexit\n") );
+		//kill_process(&broadcast_pid);
+		
+		update_build_menu3();
+		return;
+	}
+
+	//dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Run Project %s on device %d", app->project ? app->project->name : "NULL", deviceID);
+	if ( build_compile_project(3) == 0 ) return;
+#endif
 }

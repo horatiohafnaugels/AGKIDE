@@ -166,6 +166,7 @@ typedef struct BuildPrefs
 	gchar *agk_compiler_path; /* in UTF-8 */
 	gint agk_broadcast_port;
 	gchar *agk_broadcast_ip;
+	gchar *agk_debug_ip;
 	int agk_steam_integration;
 } BuildPrefs;
 
@@ -173,6 +174,13 @@ GPid build_pid;
 GPid local_pid;
 GPid broadcast_pid;
 GPid debug_pid;
+GPid debug_pid2; // local interpreter for local debugging, not used when remote debugging
+
+extern GPollFD gdb_in;
+extern GPollFD gdb_out;
+extern GPollFD gdb_err;
+
+extern gint g_debug_app_paused;
 
 extern struct BuildPrefs build_prefs;
 
