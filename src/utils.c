@@ -1789,7 +1789,62 @@ gboolean utils_spawn_sync(const gchar *dir, gchar **argv, gchar **env, GSpawnFla
 #ifdef G_OS_WIN32
 	result = win32_spawn(dir, argv, env, flags, std_out, std_err, exit_status, error);
 #else
+	// calling g_spawn_sync after previously calling g_spawn_async messes up the SIGCHLD signal and it will never return the correct exit status
 	result = g_spawn_sync(dir, argv, env, flags, NULL, NULL, std_out, std_err, exit_status, error);
+	
+	/*
+	// but this workaround freezes the app
+	GPid child_pid = 0;
+	gint stdout, stderr;
+	result = g_spawn_async_with_pipes(dir, argv, env, flags | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &child_pid, NULL, &stdout, &stderr, error);
+	if ( !result ) 
+	{
+		return FALSE;
+	}
+	else
+	{
+		if ( waitpid( child_pid, exit_status, 0 ) < 0 )
+		{
+			if ( errno == ECHILD )
+			{
+				g_set_error(error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED, "failed to get exit status");
+				g_spawn_close_pid(child_pid);
+				return FALSE;
+			}
+			else
+			{
+				g_set_error(error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED, "failed to wait for child process");
+				g_spawn_close_pid(child_pid);
+				return FALSE;
+			}
+		}
+		else
+		{
+			int flags = fcntl( stdout, F_GETFL, 0 );
+			fcntl( stdout, F_SETFL, flags | O_NONBLOCK );
+
+			*std_out = g_strdup("");
+
+			gchar buffer[ 256 ];
+			int result = read( stdout, buffer, 256 );
+			while( result > 0 )
+			{
+				SETPTR( *std_out, g_strconcat(*std_out,buffer) );
+			}
+
+			if ( result < 0 )
+			{
+				g_set_error(error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED, "failed to read stdout from child process");
+				g_spawn_close_pid(child_pid);
+				return FALSE;
+			}
+		}
+
+		g_spawn_close_pid(child_pid);
+	}
+	result = TRUE;
+	*/
+
 #endif
 
 	return result;

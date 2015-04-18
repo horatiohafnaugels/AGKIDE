@@ -280,7 +280,7 @@
                                   <object class="GtkEntry" id="android_app_icon_entry">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="tooltip_text" translatable="yes">should be at least 96x96 pixels, PNG only, can contain transparency</property>
+                                    <property name="tooltip_text" translatable="yes">should be at least 192x192 pixels, PNG only, can contain transparency</property>
                                     <property name="invisible_char">●</property>
                                     <property name="invisible_char_set">True</property>
                                     <property name="primary_icon_activatable">False</property>
@@ -580,9 +580,6 @@
                           <placeholder/>
                         </child>
                         <child>
-                          <placeholder/>
-                        </child>
-                        <child>
                           <object class="GtkCheckButton" id="android_permission_external_storage">
                             <property name="label" translatable="yes">Write External Storage</property>
                             <property name="visible">True</property>
@@ -681,6 +678,22 @@
                             <property name="right_attach">3</property>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="android_permission_expansion">
+                            <property name="label" translatable="yes">Expansion Files</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="tooltip_text" translatable="yes">Adds the Get Accounts and Google Licensing permissions used by the expansion file commands</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
                           </packing>
                         </child>
                       </object>
@@ -2450,7 +2463,7 @@ You can close this dialog and come back to it at any time from the Tools-&gt;Ins
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
-                                <property name="label" translatable="yes">Initial Orientation:</property>
+                                <property name="label" translatable="yes">Orientation:</property>
                               </object>
                               <packing>
                                 <property name="top_attach">6</property>
@@ -2470,10 +2483,8 @@ You can close this dialog and come back to it at any time from the Tools-&gt;Ins
                                     <property name="tooltip_text" translatable="yes">Sets the initial orientation when your app starts. To limit the device orientation you must use SetOrientationAllowed() in your code</property>
                                     <property name="active">0</property>
                                     <items>
-                                      <item translatable="yes">Landscape Left</item>
-                                      <item translatable="yes">Landscape Right</item>
+                                      <item translatable="yes">Landscape</item>
                                       <item translatable="yes">Portrait</item>
-                                      <item translatable="yes">Portrait Upside Down</item>
                                     </items>
                                   </object>
                                   <packing>
@@ -8168,6 +8179,12 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -8188,6 +8205,12 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

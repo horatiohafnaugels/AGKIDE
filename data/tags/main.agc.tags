@@ -1242,3 +1242,6 @@ SetCameraAspect||(Integer cameraID, Float aspect)|
 SetSpriteAdditionalImage||(Integer iSpriteIndex, Integer iImageIndex, Integer iStage)|
 IsSupportedDepthTexture|Integer|()|
 SetEditBoxCursorPosition||(Integer index, Integer pos)|
+SetExpansionFileKey||(String key)|
+SetTweenChainTime||(Integer chainID, Float time)|
+GetTweenChainEndTime|Float|(Integer chainID)|

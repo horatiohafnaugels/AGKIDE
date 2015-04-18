@@ -523,6 +523,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
 		int permission_push = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
+		int permission_expansion = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
 		// signing
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
 		gchar *keystore_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -680,14 +683,17 @@ android_dialog_continue:
 
 		// CHECKS COMPLETE, START EXPORT
 
+		const char* androidJar = "android13.jar";
+		if ( app_type == 0 ) androidJar = "android21.jar";
+
 #ifdef G_OS_WIN32
 		gchar* path_to_aapt = g_build_path( "/", app->datadir, "android", "aapt.exe", NULL );
-		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", "android13.jar", NULL );
+		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", androidJar, NULL );
 		gchar* path_to_jarsigner = g_build_path( "/", app->datadir, "android", "jre", "bin", "jarsigner.exe", NULL );
 		gchar* path_to_zipalign = g_build_path( "/", app->datadir, "android", "zipalign.exe", NULL );
 #else
         gchar* path_to_aapt = g_build_path( "/", app->datadir, "android", "aapt", NULL );
-		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", "android13.jar", NULL );
+		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", androidJar, NULL );
 		//gchar* path_to_jarsigner = g_build_path( "/", "/usr", "bin", "jarsigner", NULL );
         gchar* path_to_jarsigner = g_build_path( "/", app->datadir, "android", "jre", "bin", "jarsigner", NULL );
 		gchar* path_to_zipalign = g_build_path( "/", app->datadir, "android", "zipalign", NULL );
@@ -792,7 +798,8 @@ android_dialog_continue:
     <uses-sdk android:minSdkVersion=\"" );
 		strcat( newcontents, szSDK );
 		strcat( newcontents, "\" android:targetSdkVersion=\"" );
-		strcat( newcontents, szSDK );
+		//strcat( newcontents, szSDK );
+		strcat( newcontents, "19" );
 		strcat( newcontents, "\" />\n\n" );
 
 		if ( permission_external_storage ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"></uses-permission>\n" );
@@ -816,13 +823,26 @@ android_dialog_continue:
 			strcat( newcontents, package_name );
 			strcat( newcontents, ".permission.C2D_MESSAGE\" />\n" );
 		}
+		if ( permission_expansion && app_type == 0 ) 
+		{
+			strcat( newcontents, "    <uses-permission android:name=\"android.permission.GET_ACCOUNTS\"></uses-permission>\n" );
+			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
+		}
 
 		strcat( newcontents, contents );
 
 		switch( orientation )
 		{
 			case 6: strcat( newcontents, "screenOrientation=\"sensorLandscape" ); break;
-			case 7: strcat( newcontents, "screenOrientation=\"sensorPortait" ); break;
+			case 7: 
+			{
+				// Google compiles with API 21 which fixes a spelling mistake, Amazon and Ouya compile with API 13 which still has the mistake
+				if ( app_type == 0 )
+					strcat( newcontents, "screenOrientation=\"sensorPortrait" ); 
+				else
+					strcat( newcontents, "screenOrientation=\"sensorPortait" ); 
+				break;
+			}
 			default: strcat( newcontents, "screenOrientation=\"fullSensor" ); break;
 		}
 
@@ -865,6 +885,32 @@ android_dialog_continue:
 			}
 
 			// scale it and save it
+			// 192x192
+			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxxhdpi", "icon.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 192, 192, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 144x144
+			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxhdpi", "icon.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
 			// 96x96
 			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "icon.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
@@ -949,7 +995,7 @@ android_dialog_continue:
 			gtk_main_iteration();
 							
 		// package manifest and resources
-		argv = g_new0( gchar*, 17 );
+		argv = g_new0( gchar*, 23 );
 		argv[0] = g_strdup( path_to_aapt );
 		argv[1] = g_strdup("package");
 		argv[2] = g_strdup("-f");
@@ -961,13 +1007,15 @@ android_dialog_continue:
 		argv[8] = g_build_path( "/", tmp_folder, "res", NULL );
 		if ( app_type == 2 )
 		{
+			// ouya
 			argv[9] = g_strdup("-F");
 			argv[10] = g_strdup( output_file );
 			argv[11] = g_strdup("--auto-add-overlay");
 			argv[12] = NULL;
 		}
-		else
+		else if ( app_type == 1 )
 		{
+			// amazon
 			argv[9] = g_strdup("-S");
 			argv[10] = g_build_path( "/", tmp_folder, "resfacebook", NULL );
 			argv[11] = g_strdup("-S");
@@ -976,6 +1024,24 @@ android_dialog_continue:
 			argv[14] = g_strdup( output_file );
 			argv[15] = g_strdup("--auto-add-overlay");
 			argv[16] = NULL;
+		}
+		else
+		{
+			// google
+			argv[9] = g_strdup("-S");
+			argv[10] = g_build_path( "/", tmp_folder, "resfacebook", NULL );
+			argv[11] = g_strdup("-S");
+			argv[12] = g_build_path( "/", tmp_folder, "resgoogle", NULL );
+			argv[13] = g_strdup("-S");
+			argv[14] = g_build_path( "/", tmp_folder, "resexpansion", NULL );
+			argv[15] = g_strdup("-S");
+			argv[16] = g_build_path( "/", tmp_folder, "reszip", NULL );
+			argv[17] = g_strdup("-S");
+			argv[18] = g_build_path( "/", tmp_folder, "rescompat", NULL );
+			argv[19] = g_strdup("-F");
+			argv[20] = g_strdup( output_file );
+			argv[21] = g_strdup("--auto-add-overlay");
+			argv[22] = NULL;
 		}
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, NULL, NULL, &status, &error) )
@@ -986,6 +1052,8 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
+        /*
+        // if we have previously called g_spawn_async then g_spawn_sync will never return the correct exit status due to ECHILD being returned from waitpid()
 		if ( status != 0 )
 		{
 			if ( status < 256 )
@@ -998,6 +1066,7 @@ android_dialog_continue:
 				SHOW_ERR1( "Package tool returned error code: %d, attempting to continue", status );
 			}
 		}
+         */
 
 		while (gtk_events_pending())
 			gtk_main_iteration();
@@ -1083,18 +1152,10 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
-		if ( status != 0 && status < 256 )
+		if ( status != 0 && str_out && *str_out && strstr(str_out,"jar signed.") == 0 )
 		{
-			if ( status > 255 )
-			{
-				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "jarsigner returned unexpected status code %d, attempting to continue", status);
-			}
-			else
-			{
-				if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %s)", str_out );
-				else SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %d)", status );
-				goto android_dialog_cleanup2;
-			}
+			SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %s)", str_out );
+			goto android_dialog_cleanup2;
 		}
 
 		if ( str_out ) g_free(str_out);
@@ -1119,18 +1180,10 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
-		if ( status != 0 && status < 256 )
+		if ( status != 0 && str_out && *str_out )
 		{
-			if ( status < 256 )
-			{
-				if ( str_out && *str_out ) SHOW_ERR1( "Zip align tool returned error: %s", str_out );
-				else SHOW_ERR1( "Zip align tool returned error code: %d", status );
-				goto android_dialog_cleanup2;
-			}
-			else
-			{
-				SHOW_ERR1( "Zip align tool returned error code: %d, attempting to continue", status );
-			}
+			SHOW_ERR1( "Zip align tool returned error: %s", str_out );
+			goto android_dialog_cleanup2;
 		}
 
 		while (gtk_events_pending())
@@ -1449,18 +1502,10 @@ keystore_dialog_continue:
 			goto keystore_dialog_cleanup2;
 		}
 		
-		if ( status != 0 )
+        if ( status != 0 && str_out && *str_out )
 		{
-			if ( status < 256 )
-			{
-				if ( str_out && *str_out ) SHOW_ERR1( "keytool program returned error: %s", str_out );
-				else SHOW_ERR1( "keytool program returned error code: %d", status );
-				goto keystore_dialog_cleanup2;
-			}
-			else
-			{
-				SHOW_ERR1( "keytool program returned error code: %d, attempting to continue", status );
-			}
+			SHOW_ERR1( "keytool program returned error: %s", str_out );
+			goto keystore_dialog_cleanup2;
 		}
 
 		gtk_widget_hide(GTK_WIDGET(dialog));
@@ -1566,10 +1611,8 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		int orientation = 0;
-		if ( strcmp(app_orientation,"Landscape Left") == 0 ) orientation = 0;
-		else if ( strcmp(app_orientation,"Landscape Right") == 0 ) orientation = 1;
-		else if ( strcmp(app_orientation,"Portrait") == 0 ) orientation = 2;
-		else if ( strcmp(app_orientation,"Portrait Upside Down") == 0 ) orientation = 3;
+		if ( strcmp(app_orientation,"Landscape") == 0 ) orientation = 0;
+		else if ( strcmp(app_orientation,"Portrait") == 0 ) orientation = 1;
 		g_free(app_orientation);
 		
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
@@ -1624,7 +1667,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			  || app_name[i] == 124 || app_name[i] == 61
 			  || app_name[i] == 44 || app_name[i] == 38 )
 			{
-				SHOW_ERR("App name contains invalid characters, it must not contain quotes or any of the following < > * . / \ : ; | = , &"); 
+				SHOW_ERR("App name contains invalid characters, it must not contain quotes or any of the following < > * . / \\ : ; | = , &");
 				goto ios_dialog_clean_up; 
 			}
 		}
@@ -1852,6 +1895,25 @@ ios_dialog_continue:
 		bundle_id = g_new0( gchar, cert_length+1 );
 		strncpy( bundle_id, certificate, cert_length );
 		bundle_id[ cert_length ] = 0;
+        
+        // look for beta entitlement
+        int betaReports = 0;
+        if ( strstr(contents+100, "<key>beta-reports-active</key>") != 0 )
+        {
+            betaReports = 1;
+        }
+        
+        // look for push notification entitlement
+        int pushNotifications = 0;
+        gchar* pushStr = strstr(contents+100, "<key>aps-environment</key>");
+        if ( pushStr != 0 )
+        {
+            gchar* pushType = strstr( pushStr, "<string>" );
+            if ( strncmp( pushType, "<string>development</string>", strlen("<string>development</string>") ) == 0 )
+                pushNotifications = 1;
+            else 
+                pushNotifications = 2;
+        }
 		
 		// extract team ID, reuse variables
 		certificate = strstr( contents+100, "<key>com.apple.developer.team-identifier</key>" );
@@ -1917,7 +1979,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( (status != 0 && status < 256) || !str_out )
+		if ( status != 0 && strncmp(str_out,"SHA-1",strlen("SHA-1") != 0) )
 		{
 			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
 			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
@@ -2009,7 +2071,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( (status != 0 && status < 256) || !str_out )
+		if ( status != 0 && strncmp(str_out,"  1) ",strlen("  1) ") != 0) )
 		{
 			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
 			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
@@ -2036,8 +2098,17 @@ ios_dialog_continue:
 		strcat( newcontents, bundle_id );
 		strcat( newcontents, "</string>\n	<key>com.apple.developer.team-identifier</key>\n	<string>" );
 		strcat( newcontents, team_id );
-		strcat( newcontents, "</string>\n	<key>beta-reports-active</key>\n	<true/>\n" );
-		strcat( newcontents, "	<key>aps-environment</key>\n	<string>production</string>\n" );
+		
+		if ( betaReports )
+			strcat( newcontents, "</string>\n	<key>beta-reports-active</key>\n	<true/>\n" );
+		else
+			strcat( newcontents, "</string>\n" );
+
+		if ( pushNotifications == 1 )
+			strcat( newcontents, "	<key>aps-environment</key>\n	<string>development</string>\n" );
+		else if ( pushNotifications == 2 )
+			strcat( newcontents, "	<key>aps-environment</key>\n	<string>production</string>\n" );
+
 		strcat( newcontents, "	<key>get-task-allow</key>\n	<false/>\n" );
 		strcat( newcontents, "	<key>keychain-access-groups</key>\n	<array>\n		<string>" );
 		strcat( newcontents, bundle_id );
@@ -2074,10 +2145,20 @@ ios_dialog_continue:
 		if ( facebook_id && *facebook_id ) utils_str_replace_all( &contents, "358083327620324", facebook_id );
 		switch( orientation )
 		{
-			case 0: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft" ); break;
-			case 1: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeRight" ); break;
-			case 2: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationPortrait" ); break;
-			case 3: utils_str_replace_all( &contents, "UIInterfaceOrientationPortrait", "UIInterfaceOrientationPortraitUpsideDown" ); break;
+			case 0:
+            {
+                utils_str_replace_all( &contents, "<string>UIInterfaceOrientationPortrait</string>", "" );
+                utils_str_replace_all( &contents, "<string>UIInterfaceOrientationPortraitUpsideDown</string>", "" );
+                utils_str_replace_all( &contents, "${InitialInterfaceOrientation}", "UIInterfaceOrientationLandscapeLeft" );
+                break;
+            }
+			case 1:
+            {
+                utils_str_replace_all( &contents, "<string>UIInterfaceOrientationLandscapeLeft</string>", "" );
+                utils_str_replace_all( &contents, "<string>UIInterfaceOrientationLandscapeRight</string>", "" );
+                utils_str_replace_all( &contents, "${InitialInterfaceOrientation}", "UIInterfaceOrientationPortrait" );
+                break;
+            }
 		}
 		version_string = g_strconcat( "<string>", version_number, "</string>", NULL );
 		build_string = g_strconcat( "<string>", build_number, "</string>", NULL );
@@ -2113,12 +2194,13 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( (status != 0 && status < 256) || !str_out )
+        /*
+		if ( status != 0 )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get user name (error: %s)", str_out );
-			else SHOW_ERR1( "Failed to get user name (error: %d)", status );
+			SHOW_ERR1( "Failed to get user name (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
+         */
 
 		// load icon file
 		if ( app_icon && *app_icon )
@@ -2494,10 +2576,9 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( (status != 0 && status < 256) || !str_out )
+		if ( !str_out || !*str_out )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get user name (error: %s)", str_out );
-			else SHOW_ERR1( "Failed to get user name (error: %d)", status );
+			SHOW_ERR1( "Failed to get user name (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -2523,10 +2604,9 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( (status != 0 && status < 256) || !str_out )
+		if ( !str_out || !*str_out )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to get group name (error: %s)", str_out );
-			else SHOW_ERR1( "Failed to get group name (error: %d)", status );
+			SHOW_ERR1( "Failed to get group name (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -2553,12 +2633,14 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
+        /*
 		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file ownership (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to set file ownership (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
+         */
 
 		g_free(str_out);
 		str_out = 0;
@@ -2580,12 +2662,14 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
+        /*
 		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file permissions (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to set file permissions (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
+         */
 
 		g_free(str_out);
 		str_out = 0;
@@ -2612,12 +2696,14 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
+        /*
 		if ( status != 0 && status < 256 )
 		{
 			if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign app (error: %s)", str_out );
 			else SHOW_ERR1( "Failed to sign app (error: %d)", status );
 			goto ios_dialog_cleanup2;
 		}
+         */
 
 		// create IPA zip file
 		if ( !mz_zip_writer_init_file( &zip_archive, output_file_zip, 0 ) )

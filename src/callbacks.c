@@ -797,6 +797,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion"), TRUE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
@@ -807,6 +808,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
@@ -817,6 +819,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), TRUE );
@@ -2842,11 +2845,14 @@ G_MODULE_EXPORT void on_debug_breakpoint_activate(GtkMenuItem *menuitem, gpointe
 		{
 			// remove
 			gchar* relative_path = utils_create_relative_path( app->project->base_path, doc->real_path );
-			if ( strlen(relative_path) < 235 )
+			if ( !strchr( relative_path, ':' ) && *relative_path != '/' )
 			{
-				gchar szBreakpoint[ 256 ];
-				sprintf( szBreakpoint, "delete breakpoint %s:%d\n", relative_path, lineNum+1 );
-				write(gdb_in.fd, szBreakpoint, strlen(szBreakpoint) );
+				if ( strlen(relative_path) < 235 )
+				{
+					gchar szBreakpoint[ 256 ];
+					sprintf( szBreakpoint, "delete breakpoint %s:%d\n", relative_path, lineNum+1 );
+					write(gdb_in.fd, szBreakpoint, strlen(szBreakpoint) );
+				}
 			}
 			g_free(relative_path);
 		}
@@ -2854,11 +2860,18 @@ G_MODULE_EXPORT void on_debug_breakpoint_activate(GtkMenuItem *menuitem, gpointe
 		{
 			// add
 			gchar* relative_path = utils_create_relative_path( app->project->base_path, doc->real_path );
-			if ( strlen(relative_path) < 235 )
+			if ( strchr( relative_path, ':' ) || *relative_path == '/' )
 			{
-				gchar szBreakpoint[ 256 ];
-				sprintf( szBreakpoint, "breakpoint %s:%d\n", relative_path, lineNum+1 );
-				write(gdb_in.fd, szBreakpoint, strlen(szBreakpoint) );
+				msgwin_debug_add_string( 3, "That file is not part of the project being debugged" );
+			}
+			else
+			{
+				if ( strlen(relative_path) < 235 )
+				{
+					gchar szBreakpoint[ 256 ];
+					sprintf( szBreakpoint, "breakpoint %s:%d\n", relative_path, lineNum+1 );
+					write(gdb_in.fd, szBreakpoint, strlen(szBreakpoint) );
+				}
 			}
 			g_free(relative_path);
 		}

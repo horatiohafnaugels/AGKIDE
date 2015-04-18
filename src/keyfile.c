@@ -412,6 +412,7 @@ void configuration_save_session_files(GKeyFile *config, GeanyProject *project)
 			g_snprintf(entry, sizeof(entry), "FILE_NAME_%d", j);
 
 			gchar* relative_path = utils_get_relative_path( project->base_path, doc->real_path );
+			utils_str_replace_char(  relative_path, '\\', '/' );
 			
 			gchar* utf8_filename = utils_get_utf8_from_locale(relative_path);
 			gchar* escaped_filename = g_uri_escape_string(utf8_filename, NULL, TRUE);
@@ -496,6 +497,7 @@ void configuration_save_project_files(GKeyFile *config, GeanyProject *project)
 			g_snprintf(entry, sizeof(entry), "FILE_%d", j);
 
 			gchar* relative_path = utils_get_relative_path( project->base_path, file->file_name );
+			utils_str_replace_char(  relative_path, '\\', '/' );
 			
 			gchar* utf8_filename = utils_get_utf8_from_locale(relative_path);
 			gchar* escaped_filename = g_uri_escape_string(utf8_filename, NULL, TRUE);
