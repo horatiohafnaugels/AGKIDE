@@ -1245,3 +1245,9 @@ SetEditBoxCursorPosition||(Integer index, Integer pos)|
 SetExpansionFileKey||(String key)|
 SetTweenChainTime||(Integer chainID, Float time)|
 GetTweenChainEndTime|Float|(Integer chainID)|
+GetSpriteScaleX|Float|(Integer iSpriteIndex)|
+GetSpriteScaleY|Float|(Integer iSpriteIndex)|
+LoadSkeleton2DFromSpriterFile||(Integer iSkeleton, String filename, Float scale, Integer atlasImage)|
+LoadSkeleton2DFromSpriterFile|Integer|(String filename, Float scale, Integer atlasImage)|
+WriteString2||(Integer iFileID, String str)|
+ReadString2|String|(Integer iFileID)|

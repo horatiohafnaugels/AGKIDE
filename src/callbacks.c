@@ -382,7 +382,7 @@ G_MODULE_EXPORT void on_cut1_activate(GtkMenuItem *menuitem, gpointer user_data)
 G_MODULE_EXPORT void on_copy1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
     GtkWindow *topwindow = 0;
-    
+
     GList *pGtkWindowList = gtk_window_list_toplevels();
     GList *pNode;
     for (pNode = pGtkWindowList; pNode != NULL; pNode = pNode->next)
@@ -402,15 +402,51 @@ G_MODULE_EXPORT void on_copy1_activate(GtkMenuItem *menuitem, gpointer user_data
 
 	if (GTK_IS_EDITABLE(focusw))
 		gtk_editable_copy_clipboard(GTK_EDITABLE(focusw));
-	else
-	if (IS_SCINTILLA(focusw) && doc != NULL)
+	else if (IS_SCINTILLA(focusw) && doc != NULL)
 		sci_copy(doc->editor->sci);
-	else
-	if (GTK_IS_TEXT_VIEW(focusw))
+	else if (GTK_IS_TEXT_VIEW(focusw))
 	{
-		GtkTextBuffer *buffer = gtk_text_view_get_buffer(
-			GTK_TEXT_VIEW(focusw));
+		GtkTextBuffer *buffer = gtk_text_view_get_buffer( GTK_TEXT_VIEW(focusw) );
 		gtk_text_buffer_copy_clipboard(buffer, gtk_clipboard_get(GDK_NONE));
+	}
+	else
+	{
+		if ( focusw == msgwindow.tree_debug_log )
+		{
+			GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(msgwindow.tree_debug_log));
+			GtkTreeModel *model;
+			GtkTreeIter iter;
+
+			if (gtk_tree_selection_get_selected(selection, &model, &iter))
+			{
+				gchar *string;
+
+				gtk_tree_model_get(model, &iter, 1, &string, -1);
+				if (!EMPTY(string))
+				{
+					gtk_clipboard_set_text(gtk_clipboard_get(gdk_atom_intern("CLIPBOARD", FALSE)), string, -1);
+				}
+				g_free(string);
+			}
+		}
+		else if ( focusw == tv.debug_variables )
+		{
+			GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tv.debug_variables));
+			GtkTreeModel *model;
+			GtkTreeIter iter;
+
+			if (gtk_tree_selection_get_selected(selection, &model, &iter))
+			{
+				gchar *string;
+
+				gtk_tree_model_get(model, &iter, 1, &string, -1);
+				if (!EMPTY(string))
+				{
+					gtk_clipboard_set_text(gtk_clipboard_get(gdk_atom_intern("CLIPBOARD", FALSE)), string, -1);
+				}
+				g_free(string);
+			}
+		}
 	}
 }
 

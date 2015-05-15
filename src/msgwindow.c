@@ -111,6 +111,7 @@ void msgwin_init(void)
 	msgwindow.popup_status_menu = create_message_popup_menu(MSG_STATUS);
 	msgwindow.popup_msg_menu = create_message_popup_menu(MSG_MESSAGE);
 	msgwindow.popup_compiler_menu = create_message_popup_menu(MSG_COMPILER);
+	msgwindow.popup_debug_menu = create_message_popup_menu(MSG_DEBUG);
 
 	ui_widget_modify_font_from_string(msgwindow.scribble, interface_prefs.msgwin_font);
 	g_signal_connect(msgwindow.scribble, "populate-popup", G_CALLBACK(on_scribble_populate), NULL);
@@ -262,6 +263,9 @@ static void prepare_debug_tree_view(void)
 	gtk_tree_view_set_enable_search(GTK_TREE_VIEW(msgwindow.tree_debug_log), FALSE);
 
 	ui_widget_modify_font_from_string(msgwindow.tree_debug_log, interface_prefs.msgwin_font);
+
+	g_signal_connect(msgwindow.tree_debug_log, "button-release-event",
+					G_CALLBACK(on_msgwin_button_press_event), GINT_TO_POINTER(MSG_DEBUG));
 
 	/* selection handling */
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(msgwindow.tree_debug_log));
@@ -546,6 +550,10 @@ on_compiler_treeview_copy_activate(GtkMenuItem *menuitem, gpointer user_data)
 		case MSG_MESSAGE:
 		tv = msgwindow.tree_msg;
 		str_idx = 3;
+		break;
+
+		case MSG_DEBUG:
+		tv = msgwindow.tree_debug_log;
 		break;
 	}
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tv));
@@ -1096,6 +1104,12 @@ static gboolean on_msgwin_button_press_event(GtkWidget *widget, GdkEventButton *
 			case MSG_COMPILER:
 			{
 				gtk_menu_popup(GTK_MENU(msgwindow.popup_compiler_menu), NULL, NULL, NULL, NULL,
+																	event->button, event->time);
+				break;
+			}
+			case MSG_DEBUG:
+			{
+				gtk_menu_popup(GTK_MENU(msgwindow.popup_debug_menu), NULL, NULL, NULL, NULL,
 																	event->button, event->time);
 				break;
 			}

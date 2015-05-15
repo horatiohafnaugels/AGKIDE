@@ -64,6 +64,7 @@ typedef struct
 	GtkWidget		*popup_status_menu;
 	GtkWidget		*popup_msg_menu;
 	GtkWidget		*popup_compiler_menu;
+	GtkWidget		*popup_debug_menu;
 	GtkWidget		*notebook;
 	gchar			*messages_dir;
 } MessageWindow;

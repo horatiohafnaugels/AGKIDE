@@ -1524,6 +1524,8 @@ void main_quit(void)
 					gtk_widget_destroy(msgwindow.popup_msg_menu);
 	if (msgwindow.popup_compiler_menu && GTK_IS_WIDGET(msgwindow.popup_compiler_menu))
 					gtk_widget_destroy(msgwindow.popup_compiler_menu);
+	if (msgwindow.popup_debug_menu && GTK_IS_WIDGET(msgwindow.popup_debug_menu))
+					gtk_widget_destroy(msgwindow.popup_debug_menu);
 
 	g_object_unref(geany_object);
 	geany_object = NULL;

@@ -135,6 +135,7 @@ static void build_exit_cb(GPid child_pid, gint status, gpointer user_data);
 static void agk_build_exit_cb(GPid child_pid, gint status, gpointer user_data);
 static gboolean build_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data);
 static gboolean debug_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data);
+static gboolean broadcast_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data);
 
 static gboolean build_create_shellscript(const gchar *fname, const gchar *cmd, gboolean autoclose, GError **error);
 static GPid build_spawn_cmd(GeanyDocument *doc, const gchar *cmd, const gchar *dir);
@@ -1382,6 +1383,9 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 		ui_progress_bar_start("Broadcasting");
 	}
 
+	utils_set_up_io_channel(gdb_out.fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL, TRUE, broadcast_iofunc, GINT_TO_POINTER(0));
+	utils_set_up_io_channel(gdb_err.fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL, TRUE, broadcast_iofunc, GINT_TO_POINTER(1));
+
 	if ( build_prefs.agk_broadcast_ip && *build_prefs.agk_broadcast_ip )
 	{
 		gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnect ", build_prefs.agk_broadcast_ip, "\nconnectall\nrun\n", NULL );
@@ -2086,6 +2090,32 @@ static gboolean debug_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data)
 			if ( st == G_IO_STATUS_NORMAL && *msg )
 				process_debug_output_line(msg, color);
 
+			g_free(msg);
+		}
+
+		if (st == G_IO_STATUS_ERROR || st == G_IO_STATUS_EOF) return FALSE;
+	}
+
+	if (cond & (G_IO_ERR | G_IO_HUP | G_IO_NVAL))
+		return FALSE;
+
+	return TRUE;
+}
+
+// discard broadcast error messages, user will have to debug to get them
+static gboolean broadcast_iofunc(GIOChannel *ioc, GIOCondition cond, gpointer data)
+{
+	if (cond & (G_IO_IN | G_IO_PRI))
+	{
+		gchar *msg;
+		GIOStatus st;
+
+		gint color = (GPOINTER_TO_INT(data)) ? COLOR_DARK_RED : COLOR_NORMAL;
+
+		st = g_io_channel_read_line(ioc, &msg, NULL, NULL, NULL);
+		if ( msg )
+		{
+			// discard broadcast error messages, user will have to debug to get them
 			g_free(msg);
 		}
 

@@ -2316,7 +2316,8 @@ You can close this dialog and come back to it at any time from the Tools-&gt;Ins
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xalign">0</property>
-                            <property name="label" translatable="yes">This will build an IPA from your media and bytecode that will run on any iOS device running iOS 5.1.1 or greater. You must have the correct developer or distribution certificate and corresponding private key in your keychain for the provisioning profile you are using. It can also be used to produce an IPA suitable for the uploading if you use an AppStore provisioning profile, you will need to install Application Loader, or install XCode and use its Application Loader, to submit the actual IPA to iTunes Connect.</property>
+                            <property name="label" translatable="yes">This will build an IPA from your media and bytecode that will run on any iOS device running iOS 5.1.1 or greater. You must have the correct distribution certificate and corresponding private key in your keychain for the provisioning profile you are using. It can also be used to produce an IPA suitable for the uploading if you use an AppStore provisioning profile, you will need to install Application Loader, or install XCode and use its Application Loader, to submit the actual IPA to iTunes Connect.
+Note that only AdHoc and App Store provisioning profiles will work with this exporter.</property>
                             <property name="wrap">True</property>
                           </object>
                           <packing>
@@ -8185,6 +8186,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -8205,6 +8209,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

@@ -58,6 +58,12 @@ clean:
 # mkdir output is ignored in case dir exists
 # 'copy' seems to only accept / in the destination
 install:
+ifndef MSYS
+	IF EXIST "$(DESTDIR)/data/" rmdir /s /q "$(DESTDIR)/data"
+	IF EXIST "$(DESTDIR)/lib/" rmdir /s /q "$(DESTDIR)/lib"
+	IF EXIST "$(DESTDIR)/bin/" rmdir /s /q "$(DESTDIR)/bin"
+	IF EXIST "$(DESTDIR)/share/" rmdir /s /q "$(DESTDIR)/share"
+endif
 	-$(MKDIR) "$(DESTDIR)"
 	-$(MKDIR) "$(DESTDIR)/bin"
 	$(CP) AGK.exe "$(DESTDIR)/bin"

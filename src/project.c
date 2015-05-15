@@ -798,8 +798,10 @@ android_dialog_continue:
     <uses-sdk android:minSdkVersion=\"" );
 		strcat( newcontents, szSDK );
 		strcat( newcontents, "\" android:targetSdkVersion=\"" );
-		//strcat( newcontents, szSDK );
-		strcat( newcontents, "19" );
+		if ( app_type != 0 )
+			strcat( newcontents, szSDK );
+		else
+			strcat( newcontents, "19" );
 		strcat( newcontents, "\" />\n\n" );
 
 		if ( permission_external_storage ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"></uses-permission>\n" );
@@ -885,31 +887,34 @@ android_dialog_continue:
 			}
 
 			// scale it and save it
-			// 192x192
-			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxxhdpi", "icon.png", NULL );
-			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 192, 192, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( app_type == 1 )
 			{
-				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto android_dialog_cleanup2;
-			}
-			gdk_pixbuf_unref( icon_scaled_image );
-			g_free( image_filename );
+				// 192x192
+				image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxxhdpi", "icon.png", NULL );
+				icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 192, 192, GDK_INTERP_HYPER );
+				if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+				{
+					SHOW_ERR1( "Failed to save xxxhdpi icon: %s", error->message );
+					g_error_free(error);
+					error = NULL;
+					goto android_dialog_cleanup2;
+				}
+				gdk_pixbuf_unref( icon_scaled_image );
+				g_free( image_filename );
 
-			// 144x144
-			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxhdpi", "icon.png", NULL );
-			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-			{
-				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto android_dialog_cleanup2;
+				// 144x144
+				image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxhdpi", "icon.png", NULL );
+				icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
+				if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+				{
+					SHOW_ERR1( "Failed to save xxhdpi icon: %s", error->message );
+					g_error_free(error);
+					error = NULL;
+					goto android_dialog_cleanup2;
+				}
+				gdk_pixbuf_unref( icon_scaled_image );
+				g_free( image_filename );
 			}
-			gdk_pixbuf_unref( icon_scaled_image );
-			g_free( image_filename );
 
 			// 96x96
 			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "icon.png", NULL );
