@@ -887,7 +887,7 @@ android_dialog_continue:
 			}
 
 			// scale it and save it
-			if ( app_type == 1 )
+			if ( app_type == 0 )
 			{
 				// 192x192
 				image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxxhdpi", "icon.png", NULL );
@@ -1800,6 +1800,7 @@ ios_dialog_continue:
 		gint status = 0;
 		GError *error = NULL;
 		gchar *entitlements_file = NULL;
+		gchar *expanded_entitlements_file = NULL;
 		gchar *temp_filename1 = NULL;
 		gchar *temp_filename2 = NULL;
 		gchar *version_string = NULL;
@@ -1820,7 +1821,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 
-		if ( uses_ads )
+		if ( !uses_ads )
 		{
 			gchar *binary_path = g_build_filename( app_folder, "AGK 2 Player", NULL );
 			utils_copy_file( no_ads_binary, binary_path, TRUE, NULL );
@@ -2124,6 +2125,26 @@ ios_dialog_continue:
 		if ( !g_file_set_contents( entitlements_file, newcontents, strlen(newcontents), &error ) )
 		{
 			SHOW_ERR1( "Failed to write entitlements file: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+
+		// write archived expanded entitlements file
+		strcpy( newcontents, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n\
+<plist version=\"1.0\">\n<dict>\n	<key>application-identifier</key>\n	<string>" );
+		strcat( newcontents, bundle_id );
+		
+		strcat( newcontents, "</string>\n	<key>keychain-access-groups</key>\n	<array>\n		<string>" );
+		strcat( newcontents, bundle_id );
+		strcat( newcontents, "</string>\n	</array>\n</dict>\n</plist>" );
+
+		expanded_entitlements_file = g_build_filename( app_folder, "archived-expanded-entitlements.xcent", NULL );
+
+		if ( !g_file_set_contents( expanded_entitlements_file, newcontents, strlen(newcontents), &error ) )
+		{
+			SHOW_ERR1( "Failed to write expanded entitlements file: %s", error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -2686,12 +2707,12 @@ ios_dialog_continue:
 		argv[1] = g_strdup("--force");
 		argv[2] = g_strdup("--sign");
 		argv[3] = g_strdup(cert_hash);
-		argv[4] = g_strdup("--resource-rules");
-		argv[5] = g_strconcat( app_folder, "/ResourceRules.plist", NULL );
-		argv[6] = g_strdup("--entitlements");
-		argv[7] = g_strdup(entitlements_file);
-		argv[8] = g_strdup(app_folder);
-		argv[9] = NULL;
+		//argv[4] = g_strdup("--resource-rules"); // Apple stopped using resource rules?
+		//argv[5] = g_strconcat( app_folder, "/ResourceRules.plist", NULL );
+		argv[4] = g_strdup("--entitlements");
+		argv[5] = g_strdup(entitlements_file);
+		argv[6] = g_strdup(app_folder);
+		argv[7] = NULL;
         
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
@@ -2770,6 +2791,7 @@ ios_dialog_cleanup2:
 		if ( cert_temp ) g_free(cert_temp);
 
 		if ( entitlements_file ) g_free(entitlements_file);
+		if ( expanded_entitlements_file ) g_free(expanded_entitlements_file);
 		if ( temp_filename1 ) g_free(temp_filename1);
 		if ( temp_filename2 ) g_free(temp_filename2);
 		if ( version_string ) g_free(version_string);
