@@ -595,8 +595,15 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		if ( strchr(package_name,'.') == NULL ) { SHOW_ERR("Package name must contain at least one dot character"); goto android_dialog_clean_up; }
 		if ( package_name[0] == '.' || package_name[strlen(package_name)-1] == '.' ) { SHOW_ERR("Package name must not begin or end with a dot"); goto android_dialog_clean_up; }
 
+		gchar last = 0;
 		for( i = 0; i < strlen(package_name); i++ )
 		{
+			if ( last == '.' && (package_name[i] < 65 || package_name[i] > 90) && (package_name[i] < 97 || package_name[i] > 122) )
+			{
+				SHOW_ERR("Package name invalid, a dot must be followed by a letter");
+				goto android_dialog_clean_up; 
+			}
+
 			if ( (package_name[i] < 97 || package_name[i] > 122)
 			  && (package_name[i] < 65 || package_name[i] > 90) 
 			  && (package_name[i] < 48 || package_name[i] > 57) 
@@ -606,6 +613,8 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 				SHOW_ERR("Package name contains invalid characters, must be A-Z 0-9 . and undersore only"); 
 				goto android_dialog_clean_up; 
 			}
+
+			last = package_name[i];
 		}
 
 		// check icon
@@ -1056,8 +1065,8 @@ android_dialog_continue:
 			error = NULL;
 			goto android_dialog_cleanup2;
 		}
-		
-        /*
+
+		/*
         // if we have previously called g_spawn_async then g_spawn_sync will never return the correct exit status due to ECHILD being returned from waitpid()
 		if ( status != 0 )
 		{
@@ -1071,7 +1080,22 @@ android_dialog_continue:
 				SHOW_ERR1( "Package tool returned error code: %d, attempting to continue", status );
 			}
 		}
-         */
+        */
+
+		// check the file was created instead
+		if ( !g_file_test( output_file, G_FILE_TEST_EXISTS ) )
+		{
+			if ( error ) 
+			{
+				SHOW_ERR1( "Failed to run packaging tool: %s", error->message );
+				g_error_free(error);
+			}
+			else
+			{
+				SHOW_ERR1( "Package tool returned error code: %d", status );
+			}
+			goto android_dialog_cleanup2;
+		}
 
 		while (gtk_events_pending())
 			gtk_main_iteration();

@@ -475,6 +475,10 @@ on_menu_project1_activate			  (GtkMenuItem	 *menuitem,
 										gpointer		 user_data);
 
 G_MODULE_EXPORT void
+on_menu_dlc_activate			    (GtkMenuItem	 *menuitem,
+										gpointer		 user_data);
+
+G_MODULE_EXPORT void
 on_menu_open_selected_file1_activate   (GtkMenuItem	 *menuitem,
 										gpointer		 user_data);
 

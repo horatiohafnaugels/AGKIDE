@@ -871,7 +871,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
-                                <property name="label" translatable="yes">Version Number:</property>
+                                <property name="label" translatable="yes">Version Name:</property>
                               </object>
                               <packing>
                                 <property name="top_attach">2</property>
@@ -919,7 +919,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
-                                <property name="label" translatable="yes">Build Number:</property>
+                                <property name="label" translatable="yes">Version Number:</property>
                               </object>
                               <packing>
                                 <property name="top_attach">3</property>
@@ -1311,10 +1311,28 @@
     <property name="stock">gtk-go-up</property>
     <property name="icon-size">1</property>
   </object>
+  <object class="GtkImage" id="image18">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-media-next</property>
+    <property name="icon-size">1</property>
+  </object>
+  <object class="GtkImage" id="image19">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-down</property>
+    <property name="icon-size">1</property>
+  </object>
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-select-color</property>
+    <property name="icon-size">1</property>
+  </object>
+  <object class="GtkImage" id="image20">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-up</property>
     <property name="icon-size">1</property>
   </object>
   <object class="GtkImage" id="image3">
@@ -8189,6 +8207,15 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -8209,6 +8236,15 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -11352,7 +11388,6 @@ To generate a keystore file you need to submit some information about you or you
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">D_ebug</property>
                     <property name="use_underline">True</property>
-                    <signal name="activate" handler="on_menu_debug_activate" swapped="no"/>
                     <child type="submenu">
                       <object class="GtkMenu" id="menu5">
                         <property name="visible">True</property>
@@ -11576,6 +11611,19 @@ To generate a keystore file you need to submit some information about you or you
                             <signal name="activate" handler="on_menu_tools_install_files_activate" swapped="no"/>
                           </object>
                         </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkMenuItem" id="menu_dlc">
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">D_LC</property>
+                    <property name="use_underline">True</property>
+                    <child type="submenu">
+                      <object class="GtkMenu" id="menu6">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
                       </object>
                     </child>
                   </object>

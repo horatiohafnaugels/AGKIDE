@@ -131,6 +131,7 @@ DeleteSprite||(Integer iSpriteIndex)|
 DeleteAllSprites||()|
 SetSpriteImage||(Integer iSpriteIndex, Integer iImageIndex)|
 SetSpriteImage||(Integer iSpriteIndex, Integer iImageIndex, Integer bUpdateShape)|
+SetSpriteAdditionalImage||(Integer iSpriteIndex, Integer iImageIndex, Integer iStage)|
 SetSpriteUV||(Integer iSpriteIndex, Float u1, Float v1, Float u2, Float v2, Float u3, Float v3, Float u4, Float v4)|
 ResetSpriteUV||(Integer iSpriteIndex)|
 SetSpritePosition||(Integer iSpriteIndex, Float fX, Float fY)|
@@ -148,10 +149,14 @@ GetSpriteX|Float|(Integer iSpriteIndex)|
 GetSpriteY|Float|(Integer iSpriteIndex)|
 GetSpriteXByOffset|Float|(Integer iSpriteIndex)|
 GetSpriteYByOffset|Float|(Integer iSpriteIndex)|
+GetSpriteOffsetX|Float|(Integer iSpriteIndex)|
+GetSpriteOffsetY|Float|(Integer iSpriteIndex)|
 GetSpriteWidth|Float|(Integer iSpriteIndex)|
 GetSpriteAngle|Float|(Integer iSpriteIndex)|
 GetSpriteAngleRad|Float|(Integer iSpriteIndex)|
 GetSpriteHeight|Float|(Integer iSpriteIndex)|
+GetSpriteScaleX|Float|(Integer iSpriteIndex)|
+GetSpriteScaleY|Float|(Integer iSpriteIndex)|
 GetSpriteHitTest|Integer|(Integer iSpriteIndex, Float x, Float y)|
 GetSpriteHit|Integer|(Float x, Float y)|
 GetSpriteHitGroup|Integer|(Integer group, Float x, Float y)|
@@ -448,11 +453,14 @@ GetSkeleton2DExists|Integer|(Integer iSkeleton)|
 DeleteSkeleton2D||(Integer iSkeleton)|
 LoadSkeleton2DFromSpineFile||(Integer iSkeleton, String filename, Float scale, Integer atlasImage, Integer loadAnim)|
 LoadSkeleton2DFromSpineFile|Integer|(String filename, Float scale, Integer atlasImage, Integer loadAnim)|
+LoadSkeleton2DFromSpriterFile||(Integer iSkeleton, String filename, Float scale, Integer atlasImage)|
+LoadSkeleton2DFromSpriterFile|Integer|(String filename, Float scale, Integer atlasImage)|
 SetSkeleton2DPosition||(Integer iSkeleton, Float x, Float y)|
 SetSkeleton2DRotation||(Integer iSkeleton, Float r)|
 SetSkeleton2DFlip||(Integer iSkeleton, Integer flipH, Integer flipV)|
 SetSkeleton2DDepth||(Integer iSkeleton, Integer depth)|
 FixSkeleton2DToScreen||(Integer iSkeleton, Integer mode)|
+SetSkeleton2DVisible||(Integer iSkeleton, Integer mode)|
 GetSkeleton2DX|Float|(Integer iSkeleton)|
 GetSkeleton2DY|Float|(Integer iSkeleton)|
 GetSkeleton2DAngle|Float|(Integer iSkeleton)|
@@ -487,11 +495,35 @@ TweenBounce|Integer|()|
 TweenOvershoot|Integer|()|
 DeleteTween||(Integer tweenID)|
 GetTweenExists|Integer|(Integer tweenID)|
+CreateTweenCustom||(Integer tweenID, Float duration)|
+CreateTweenCustom|Integer|(Float duration)|
+GetTweenCustomExists|Integer|(Integer tweenID)|
+SetTweenCustomFloat1||(Integer tweenID, Float begin, Float end, Integer interpolation)|
+SetTweenCustomFloat2||(Integer tweenID, Float begin, Float end, Integer interpolation)|
+SetTweenCustomFloat3||(Integer tweenID, Float begin, Float end, Integer interpolation)|
+SetTweenCustomFloat4||(Integer tweenID, Float begin, Float end, Integer interpolation)|
+SetTweenCustomInteger1||(Integer tweenID, Integer begin, Integer end, Integer interpolation)|
+SetTweenCustomInteger2||(Integer tweenID, Integer begin, Integer end, Integer interpolation)|
+SetTweenCustomInteger3||(Integer tweenID, Integer begin, Integer end, Integer interpolation)|
+SetTweenCustomInteger4||(Integer tweenID, Integer begin, Integer end, Integer interpolation)|
+GetTweenCustomFloat1|Float|(Integer tweenID)|
+GetTweenCustomFloat2|Float|(Integer tweenID)|
+GetTweenCustomFloat3|Float|(Integer tweenID)|
+GetTweenCustomFloat4|Float|(Integer tweenID)|
+GetTweenCustomInteger1|Integer|(Integer tweenID)|
+GetTweenCustomInteger2|Integer|(Integer tweenID)|
+GetTweenCustomInteger3|Integer|(Integer tweenID)|
+GetTweenCustomInteger4|Integer|(Integer tweenID)|
+PlayTweenCustom||(Integer tweenID, Float delay)|
+StopTweenCustom||(Integer tweenID)|
+GetTweenCustomPlaying|Integer|(Integer tweenID)|
 CreateTweenSprite||(Integer tweenID, Float duration)|
 CreateTweenSprite|Integer|(Float duration)|
 GetTweenSpriteExists|Integer|(Integer tweenID)|
 SetTweenSpriteX||(Integer tweenID, Float beginX, Float endX, Integer interpolation)|
 SetTweenSpriteY||(Integer tweenID, Float beginY, Float endY, Integer interpolation)|
+SetTweenSpriteXByOffset||(Integer tweenID, Float beginX, Float endX, Integer interpolation)|
+SetTweenSpriteYByOffset||(Integer tweenID, Float beginY, Float endY, Integer interpolation)|
 SetTweenSpriteAngle||(Integer tweenID, Float beginA, Float endA, Integer interpolation)|
 SetTweenSpriteSizeX||(Integer tweenID, Float beginSX, Float endSX, Integer interpolation)|
 SetTweenSpriteSizeY||(Integer tweenID, Float beginSY, Float endSY, Integer interpolation)|
@@ -567,6 +599,7 @@ CreateTweenChain||(Integer chainID)|
 CreateTweenChain|Integer|()|
 DeleteTweenChain||(Integer chainID)|
 ClearTweenChain||(Integer chainID)|
+AddTweenChainCustom||(Integer chainID, Integer tweenID, Float delay)|
 AddTweenChainSprite||(Integer chainID, Integer tweenID, Integer spriteID, Float delay)|
 AddTweenChainText||(Integer chainID, Integer tweenID, Integer textID, Float delay)|
 AddTweenChainChar||(Integer chainID, Integer tweenID, Integer textID, Integer charID, Float delay)|
@@ -576,7 +609,15 @@ PlayTweenChain||(Integer chainID)|
 PauseTweenChain||(Integer chainID)|
 StopTweenChain||(Integer chainID)|
 GetTweenChainPlaying|Integer|(Integer chainID)|
+SetTweenChainTime||(Integer chainID, Float time)|
+GetTweenChainEndTime|Float|(Integer chainID)|
 UpdateAllTweens||(Float fTime)|
+UpdateTweenCustom||(Integer tweenID, Float fTime)|
+UpdateTweenSprite||(Integer tweenID, Integer spriteID, Float fTime)|
+UpdateTweenText||(Integer tweenID, Integer textID, Float fTime)|
+UpdateTweenChar||(Integer tweenID, Integer textID, Integer charID, Float fTime)|
+UpdateTweenObject||(Integer tweenID, Integer objectID, Float fTime)|
+UpdateTweenCamera||(Integer tweenID, Integer cameraID, Float fTime)|
 UpdateTweenChain||(Integer chainID, Float fTime)|
 GetRawTouchCount|Integer|(Integer bIncludeUnknown)|
 GetRawFirstTouchEvent|Integer|(Integer bIncludeUnknown)|
@@ -652,11 +693,13 @@ WriteByte||(Integer iFileID, Integer b)|
 WriteInteger||(Integer iFileID, Integer i)|
 WriteFloat||(Integer iFileID, Float f)|
 WriteString||(Integer iFileID, String str)|
+WriteString2||(Integer iFileID, String str)|
 WriteLine||(Integer iFileID, String str)|
 ReadByte|Integer|(Integer iFileID)|
 ReadInteger|Integer|(Integer iFileID)|
 ReadFloat|Float|(Integer iFileID)|
 ReadString|String|(Integer iFileID)|
+ReadString2|String|(Integer iFileID)|
 ReadLine|String|(Integer iFileID)|
 Str|String|(Integer valueInt)|
 Str|String|(Float valueFloat)|
@@ -675,8 +718,22 @@ Chr|String|(Integer asciivalue)|
 Lower|String|(String strin)|
 Upper|String|(String strin)|
 Spaces|String|(Integer length)|
-CountStringTokens|Integer|(String str, String delimit)|
-GetStringToken|String|(String str, String delimit, Integer token)|
+FindStringCount|Integer|(String str, String findStr)|
+FindStringCount|Integer|(String str, String findStr, Integer ignoreCase, Integer start)|
+FindString|Integer|(String str, String findStr)|
+FindString|Integer|(String str, String findStr, Integer ignoreCase, Integer start)|
+FindStringReverse|Integer|(String str, String findStr)|
+FindStringReverse|Integer|(String str, String findStr, Integer ignoreCase, Integer start)|
+CompareString|Integer|(String str, String str2)|
+CompareString|Integer|(String str, String str2, Integer ignoreCase, Integer maxChars)|
+ReplaceString|String|(String str, String find, String replace, Integer qty)|
+StripString|String|(String str, String chars)|
+TrimString|String|(String str, String chars)|
+TruncateString|String|(String str, String character)|
+CountStringTokens|Integer|(String str, String delimiters)|
+GetStringToken|String|(String str, String delimiters, Integer token)|
+CountStringTokens2|Integer|(String str, String delimiter)|
+GetStringToken2|String|(String str, String delimiter, Integer token)|
 GetCurrentDir|String|()|
 GetFolder|String|()|
 SetFolder|Integer|(String str)|
@@ -876,6 +933,7 @@ SetEditBoxCursorColor||(Integer index, Integer red, Integer green, Integer blue)
 SetEditBoxFontImage||(Integer index, Integer image)|
 SetEditBoxExtendedFontImage||(Integer index, Integer image)|
 SetEditBoxTextSize||(Integer index, Float size)|
+SetEditBoxCursorPosition||(Integer index, Integer pos)|
 SetEditBoxFocus||(Integer index, Integer focus)|
 SetEditBoxActive||(Integer index, Integer active)|
 SetEditBoxVisible||(Integer index, Integer visible)|
@@ -900,6 +958,7 @@ GetEditBoxChanged|Integer|(Integer index)|
 GetEditBoxActive|Integer|(Integer index)|
 GetEditBoxVisible|Integer|(Integer index)|
 GetEditBoxLines|Integer|(Integer index)|
+GetEditBoxCursorPosition|Integer|(Integer index)|
 GetManagedSpriteDrawnCount|Integer|()|
 GetManagedSpriteCount|Integer|()|
 GetManagedSpriteSortedCount|Integer|()|
@@ -1013,9 +1072,28 @@ CreateSoundFromMemblock|Integer|(Integer memID)|
 CreateMemblockFromFile||(Integer memID, String filename)|
 CreateMemblockFromFile|Integer|(String filename)|
 CreateFileFromMemblock||(String filename, Integer memID)|
+CreateMemblockFromObjectMesh||(Integer memID, Integer objID, Integer meshIndex)|
+CreateMemblockFromObjectMesh|Integer|(Integer objID, Integer meshIndex)|
+CreateObjectFromMeshMemblock||(Integer objID, Integer memID)|
+CreateObjectFromMeshMemblock|Integer|(Integer memID)|
+SetObjectMeshFromMemblock||(Integer objID, Integer meshIndex, Integer memID)|
+AddObjectMeshFromMemblock||(Integer objID, Integer memID)|
+SetMeshMemblockVertexPosition||(Integer memID, Integer vertexIndex, Float x, Float y, Float z)|
+SetMeshMemblockVertexNormal||(Integer memID, Integer vertexIndex, Float x, Float y, Float z)|
+SetMeshMemblockVertexUV||(Integer memID, Integer vertexIndex, Float u, Float v)|
+GetMeshMemblockVertexX|Float|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexY|Float|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexZ|Float|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexNormalX|Float|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexNormalY|Float|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexNormalZ|Float|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexU|Float|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexV|Float|(Integer memID, Integer vertexIndex)|
 SetGlobal3DDepth||(Integer depth)|
 CreateObjectBox||(Integer objID, Float width, Float height, Float length)|
 CreateObjectBox|Integer|(Float width, Float height, Float length)|
+CreateObjectCapsule||(Integer objID, Float diameter, Float height, Integer axis)|
+CreateObjectCapsule|Integer|(Float diameter, Float height, Integer axis)|
 CreateObjectSphere||(Integer objID, Float diameter, Integer rows, Integer columns)|
 CreateObjectSphere|Integer|(Float diameter, Integer rows, Integer columns)|
 CreateObjectCone||(Integer objID, Float height, Float diameter, Integer segments)|
@@ -1026,21 +1104,71 @@ CreateObjectPlane||(Integer objID, Float width, Float height)|
 CreateObjectPlane|Integer|(Float width, Float height)|
 CreateObjectQuad||(Integer objID)|
 CreateObjectQuad|Integer|()|
+CreateObjectFromObjectMesh|Integer|(Integer fromObjID, Integer meshIndex)|
+CreateObjectFromObjectMesh||(Integer objID, Integer fromObjID, Integer meshIndex)|
 LoadObject|Integer|(String szFilename)|
 LoadObject|Integer|(String szFilename, Float height)|
 LoadObject||(Integer objID, String szFilename)|
 LoadObject||(Integer objID, String szFilename, Float height)|
+LoadObjectWithChildren|Integer|(String szFilename)|
+LoadObjectWithChildren||(Integer objID, String szFilename)|
+SaveObject||(Integer objID, String szFilename)|
 CloneObject|Integer|(Integer objID)|
 CloneObject||(Integer newobjID, Integer objID)|
 InstanceObject|Integer|(Integer objID)|
 InstanceObject||(Integer newobjID, Integer objID)|
 GetObjectExists|Integer|(Integer objID)|
 DeleteObject||(Integer objID)|
+DeleteObjectWithChildren||(Integer objID)|
 DeleteAllObjects||()|
+GetObjectNumChildren|Integer|(Integer objID)|
+GetObjectChildID|Integer|(Integer objID, Integer childIndex)|
+GetObjectNumBones|Integer|(Integer objID)|
+GetObjectBoneByName|Integer|(Integer objID, String name)|
+GetObjectNumMeshes|Integer|(Integer objID)|
+GetObjectMeshName|String|(Integer objID, Integer meshIndex)|
+SetObjectMeshImage||(Integer objID, Integer meshIndex, Integer imageID, Integer textureStage)|
+SetObjectMeshLightMap||(Integer objID, Integer meshIndex, Integer imageID)|
+FixObjectToObject||(Integer objID, Integer toObjID)|
+FixObjectToBone||(Integer objID, Integer toObjID, Integer toBoneIndex)|
+GetObjectNumAnimations|Integer|(Integer objID)|
+GetObjectAnimationName|String|(Integer objID, Integer index)|
+PlayObjectAnimation||(Integer objID, String animName, Float starttime, Float endtime, Integer loop, Float tweentime)|
+SetObjectAnimationFrame||(Integer objID, String animName, Float time, Float tweentime)|
+StopObjectAnimation||(Integer objID)|
+ResetObjectAnimation||(Integer objID)|
+SetObjectAnimationSpeed||(Integer objID, Float speed)|
+GetObjectIsAnimating|Integer|(Integer objID)|
+GetObjectIsTweening|Integer|(Integer objID)|
+GetObjectAnimationTime|Float|(Integer objID)|
+GetObjectAnimationDuration|Float|(Integer objID, String animName)|
+SetObjectBonePosition||(Integer objID, Integer boneIndex, Float x, Float y, Float z)|
+SetObjectBoneRotation||(Integer objID, Integer boneIndex, Float angx, Float angy, Float angz)|
+SetObjectBoneRotationQuat||(Integer objID, Integer boneIndex, Float w, Float x, Float y, Float z)|
+SetObjectBoneLookAt||(Integer objID, Integer boneIndex, Float x, Float y, Float z, Float roll)|
+SetObjectBoneCanAnimate||(Integer objID, Integer boneIndex, Integer animate)|
+RotateObjectBoneLocalX||(Integer objID, Integer boneIndex, Float amount)|
+RotateObjectBoneLocalY||(Integer objID, Integer boneIndex, Float amount)|
+RotateObjectBoneLocalZ||(Integer objID, Integer boneIndex, Float amount)|
+GetObjectBoneName|String|(Integer objID, Integer boneIndex)|
+GetObjectBoneX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneZ|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldZ|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneAngleX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneAngleY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneAngleZ|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneQuatW|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneQuatX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneQuatY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneQuatZ|Float|(Integer objID, Integer boneIndex)|
 SetObjectPosition||(Integer objID, Float x, Float y, Float z)|
 SetObjectRotation||(Integer objID, Float angx, Float angy, Float angz)|
 SetObjectRotationQuat||(Integer objID, Float w, Float x, Float y, Float z)|
 SetObjectScale||(Integer objID, Float x, Float y, Float z)|
+SetObjectScalePermanent||(Integer objID, Float x, Float y, Float z)|
 MoveObjectLocalX||(Integer objID, Float amount)|
 MoveObjectLocalY||(Integer objID, Float amount)|
 MoveObjectLocalZ||(Integer objID, Float amount)|
@@ -1060,22 +1188,40 @@ GetObjectQuatW|Float|(Integer objID)|
 GetObjectQuatX|Float|(Integer objID)|
 GetObjectQuatY|Float|(Integer objID)|
 GetObjectQuatZ|Float|(Integer objID)|
+GetObjectWorldX|Float|(Integer objID)|
+GetObjectWorldY|Float|(Integer objID)|
+GetObjectWorldZ|Float|(Integer objID)|
+GetObjectWorldAngleX|Float|(Integer objID)|
+GetObjectWorldAngleY|Float|(Integer objID)|
+GetObjectWorldAngleZ|Float|(Integer objID)|
+GetObjectWorldQuatW|Float|(Integer objID)|
+GetObjectWorldQuatX|Float|(Integer objID)|
+GetObjectWorldQuatY|Float|(Integer objID)|
+GetObjectWorldQuatZ|Float|(Integer objID)|
 SetObjectLookAt||(Integer objID, Float x, Float y, Float z, Float roll)|
+FixObjectPivot||(Integer objID)|
 SetObjectImage||(Integer objID, Integer imageID, Integer texStage)|
+SetObjectLightMap||(Integer objID, Integer imageID)|
 SetObjectShader||(Integer objID, Integer shaderID)|
 SetObjectColor||(Integer objID, Integer red, Integer green, Integer blue, Integer alpha)|
+SetObjectColorEmissive||(Integer objID, Integer red, Integer green, Integer blue)|
 SetObjectLightMode||(Integer objID, Integer mode)|
 SetObjectDepthReadMode||(Integer objID, Integer mode)|
 SetObjectDepthWrite||(Integer objID, Integer mode)|
+SetObjectDepthBias||(Integer objID, Float bias)|
 SetObjectTransparency||(Integer objID, Integer mode)|
 SetObjectCullMode||(Integer objID, Integer mode)|
 SetObjectVisible||(Integer objID, Integer mode)|
 GetObjectDepthReadMode|Integer|(Integer objID)|
 GetObjectDepthWrite|Integer|(Integer objID)|
+GetObjectDepthBias|Float|(Integer objID)|
 GetObjectTransparency|Integer|(Integer objID)|
 GetObjectCullMode|Integer|(Integer objID)|
 GetObjectVisible|Integer|(Integer objID)|
 GetObjectInScreen|Integer|(Integer objID)|
+SetObjectShaderConstantByName||(Integer objID, String szName, Float value1, Float value2, Float value3, Float value4)|
+SetObjectShaderConstantArrayByName||(Integer objID, String szName, Integer arrayIndex, Float value1, Float value2, Float value3, Float value4)|
+SetObjectShaderConstantDefault||(Integer objID, String szName)|
 DrawObject||(Integer objID)|
 GetScreenXFrom3D|Float|(Float x, Float y, Float z)|
 GetScreenYFrom3D|Float|(Float x, Float y, Float z)|
@@ -1108,6 +1254,7 @@ LoadFullScreenShader||(Integer shaderID, String szPixelFile)|
 LoadSpriteShader|Integer|(String szPixelFile)|
 LoadSpriteShader||(Integer shaderID, String szPixelFile)|
 SetShaderConstantByName||(Integer shaderID, String szName, Float value1, Float value2, Float value3, Float value4)|
+SetShaderConstantArrayByName||(Integer shaderID, String szName, Integer arrayIndex, Float value1, Float value2, Float value3, Float value4)|
 SetCameraPosition||(Integer cameraID, Float x, Float y, Float z)|
 SetCameraRotationQuat||(Integer cameraID, Float w, Float x, Float y, Float z)|
 SetCameraRotation||(Integer cameraID, Float angx, Float angy, Float angz)|
@@ -1132,21 +1279,188 @@ GetCameraQuatY|Float|(Integer cameraID)|
 GetCameraQuatZ|Float|(Integer cameraID)|
 SetCameraLookAt||(Integer cameraID, Float x, Float y, Float z, Float roll)|
 SetCameraRange||(Integer cameraID, Float fNear, Float fFar)|
+SetCameraAspect||(Integer cameraID, Float aspect)|
 SetCameraFOV||(Integer cameraID, Float fov)|
-CreateLightPoint||(Integer lightID, Float x, Float y, Float z, Float radius, Integer red, Integer green, Integer blue)|
-GetLightPointExists|Integer|(Integer lightID)|
-DeleteLightPoint||(Integer lightID)|
-ClearLightPoints||()|
-SetLightPointPosition||(Integer lightID, Float x, Float y, Float z)|
-SetLightPointColor||(Integer lightID, Integer red, Integer green, Integer blue)|
-SetLightPointRadius||(Integer lightID, Float radius)|
-CreateLightDirectional||(Integer lightID, Float vx, Float vy, Float vz, Integer red, Integer green, Integer blue)|
-GetLightDirectionalExists|Integer|(Integer lightID)|
-DeleteLightDirectional||(Integer lightID)|
-ClearLightDirectionals||()|
-SetLightDirectionalDirection||(Integer lightID, Float vx, Float vy, Float vz)|
-SetLightDirectionalColor||(Integer lightID, Integer red, Integer green, Integer blue)|
+GetCameraFOV|Float|(Integer cameraID)|
+CreatePointLight||(Integer lightID, Float x, Float y, Float z, Float radius, Integer red, Integer green, Integer blue)|
+GetPointLightExists|Integer|(Integer lightID)|
+DeletePointLight||(Integer lightID)|
+ClearPointLights||()|
+SetPointLightPosition||(Integer lightID, Float x, Float y, Float z)|
+SetPointLightColor||(Integer lightID, Integer red, Integer green, Integer blue)|
+SetPointLightRadius||(Integer lightID, Float radius)|
+SetPointLightMode||(Integer lightID, Integer mode)|
+SetSunDirection||(Float vx, Float vy, Float vz)|
+SetSunColor||(Integer red, Integer green, Integer blue)|
+SetSunActive||(Integer active)|
+SetAmbientColor||(Integer red, Integer green, Integer blue)|
+Create3DPhysicsWorld||()|
+Create3DPhysicsWorld||(Float scaleFactor)|
+Set3DPhysicsGravity||(Float x, Float y, Float z)|
+Set3DPhysicsGravity||(Integer vectorID)|
+Step3DPhysicsWorld||()|
+Reset3DPhysicsWorld||()|
+Delete3DPhysicsWorld||()|
+Debug3DPhysicsWorld||()|
+Get3DPhysicsTotalObjects|Integer|()|
+Get3DPhysicsActiveObjects|Integer|()|
+Get3DPhysicsTotalJoints|Integer|()|
+SetObjectShapeBox||(Integer objID)|
+SetObjectShapeBox||(Integer objID, Float sizeX, Float sizeY, Float sizeZ)|
+SetObjectShapeBox||(Integer objID, Integer vectorID)|
+SetObjectShapeSphere||(Integer objID)|
+SetObjectShapeSphere||(Integer objID, Float diameter)|
+SetObjectShapeCylinder||(Integer objID, Integer axis)|
+SetObjectShapeCylinder||(Integer objID, Integer axis, Float height, Float diameter)|
+SetObjectShapeCone||(Integer objID, Integer axis)|
+SetObjectShapeCone||(Integer objID, Integer axis, Float height, Float diameter)|
+SetObjectShapeCapsule||(Integer objID, Integer axis)|
+SetObjectShapeCapsule||(Integer objID, Integer axis, Float sizeX, Float sizeY, Float sizeZ)|
+SetObjectShapeCapsule||(Integer objID, Integer axis, Integer vectorID)|
+SetObjectShapeConvexHull||(Integer objID)|
+SetObjectShapeStaticPolygon||(Integer objID)|
+SetObjectShapeCompound||(Integer objID)|
+Create3DPhysicsDynamicBody||(Integer objID)|
+Create3DPhysicsStaticBody||(Integer objID)|
+Create3DPhysicsKinematicBody||(Integer objID)|
+Delete3DPhysicsBody||(Integer objID)|
+Create3DPhysicsStaticPlane|Integer|(Float normlX, Float normalY, Float normalZ, Float offsetPosition)|
+Set3DPhysicsStaticPlanePosition||(Integer planeID, Float posX, Float posY, Float posZ)|
+Set3DPhysicsStaticPlaneRotation||(Integer planeID, Float angX, Float angY, Float angZ)|
+Delete3DPhysicsStaticPlane||(Integer planeID)|
+SetObject3DPhysicsGroupAndMask||(Integer objID, Integer group, Integer mask)|
+GetObject3DPhysicsGroup|Integer|(Integer objID)|
+GetObject3DPhysicsMask|Integer|(Integer objID)|
+SetObject3DPhysicsMass||(Integer objID, Float mass)|
+GetObject3DPhysicsMass|Float|(Integer objID)|
+SetObject3DPhysicsCanSleep||(Integer objID, Integer canSleep)|
+SetObject3DPhysicsFriction||(Integer objID, Float friction)|
+GetObject3DPhysicsFriction|Float|(Integer objID)|
+SetObject3DPhysicsRollingFriction||(Integer objID, Float friction)|
+GetObject3DPhysicsRollingFriction|Float|(Integer objID)|
+SetObject3DPhysicsAnisotropicFriction||(Integer objID, Integer type)|
+SetObject3DPhysicsMaxLinearVelocity||(Integer objID, Float maxLinearVelocity)|
+SetObject3DPhysicsLinearVelocity||(Integer objID, Float dirX, Float dirY, Float dirZ, Float initialSpeed)|
+SetObject3DPhysicsLinearVelocity||(Integer objID, Integer vectorID, Float initialSpeed)|
+GetObject3DPhysicsLinearVelocityX|Float|(Integer objID)|
+GetObject3DPhysicsLinearVelocityY|Float|(Integer objID)|
+GetObject3DPhysicsLinearVelocityZ|Float|(Integer objID)|
+SetObject3DPhysicsAngularVelocity||(Integer objID, Float angX, Float angY, Float angZ, Float initialSpeed)|
+SetObject3DPhysicsAngularVelocity||(Integer objID, Integer vectorID, Float initialSpeed)|
+GetObject3DPhysicsAngularVelocityX|Float|(Integer objID)|
+GetObject3DPhysicsAngularVelocityY|Float|(Integer objID)|
+GetObject3DPhysicsAngularVelocityZ|Float|(Integer objID)|
+SetObject3DPhysicsDamping||(Integer objID, Float linearDamp, Float angularDamp)|
+GetObject3DPhysicsLinearDamp|Float|(Integer objID)|
+GetObject3DPhysicsAngularDamp|Float|(Integer objID)|
+SetObject3DPhysicsSleepingThreshold||(Integer objID, Float angular, Float linear)|
+GetObject3DPhysicsAngularSleepingThreshold|Float|(Integer objID)|
+GetObject3DPhysicsLinearSleepingThreshold|Float|(Integer objID)|
+SetObject3DPhysicsDeactivationTime||(Integer objID, Float time)|
+SetObject3DPhysicsRestitution||(Integer objID, Float friction)|
+GetObject3DPhysicsRestitution|Float|(Integer objID)|
+GetObject3DPhysicsFirstContact|Integer|(Integer objID)|
+GetObject3DPhysicsContactX|Float|()|
+GetObject3DPhysicsContactY|Float|()|
+GetObject3DPhysicsContactZ|Float|()|
+GetObject3DPhysicsContactVector|Integer|(Integer outPosVec3)|
+GetObject3DPhysicsContactObjectB|Integer|()|
+GetObject3DPhysicsNextContact|Integer|()|
+GetObjects3DPhysicsContactPositionVector|Integer|(Integer objA, Integer objB, Integer outPosVec3)|
+Create3DPhysicsPickJoint|Integer|(Integer objID, Integer positionVec3)|
+Update3DPhysicsPickJoint||(Integer jointID, Integer positionVec3)|
+Delete3DPhysicsPickJoint||(Integer jointID)|
+Create3DPhysicsHingeJoint|Integer|(Integer objA, Integer objB, Integer positionVec3, Integer rotationVec3, Integer disableCollisions)|
+Create3DPhysicsConeTwistJoint|Integer|(Integer objA, Integer objB, Integer positionVec3, Integer rotationVec3, Integer disableCollisions)|
+Create3DPhysicsSliderJoint|Integer|(Integer objA, Integer objB, Integer positionVec3, Integer rotationVec3)|
+Create3DPhysicsFixedJoint|Integer|(Integer objA, Integer objB, Integer positionVec3)|
+Create3DPhysics6DOFJoint|Integer|(Integer objA, Integer objB, Integer positionVec3, Float rotationVec3)|
+Set3DPhysicsJointSliderAngularLimits||(Integer jointID, Float lowerLimit, Float upperLimit)|
+Set3DPhysicsJointSliderLinearLimits||(Integer jointID, Float lowerLimit, Float upperLimit)|
+Set3DPhysicsJointConeTwistLimits||(Integer jointID, Float swingSpan1, Float swingSpan2, Float twistSpan)|
+Set3DPhysicsJointHingeLimits||(Integer jointID, Float minAng, Float maxAng)|
+Set3DPhysicsJointBreakingThreshold||(Integer jointID, Float breakThreshold)|
+Set3DPhysicsJointEnabled||(Integer jointID, Integer isEnabled)|
+Get3DPhysicsJointEnabled|Integer|(Integer jointID)|
+Get3DPhysicsJointPositionVector|Integer|(Integer jointID)|
+Get3DPhysicsJointRotationVector|Integer|(Integer jointID)|
+Delete3DPhysicsJoint||(Integer jointID)|
+Set3DPhysicsHingeJointMotorIsEnabled||(Integer jointID, Integer isEnabled)|
+Set3DPhysicsHingeJointMaxMotorImpluse||(Integer jointID, Float maxImpluse)|
+Set3DPhysicsHingeJointMotorVelocity||(Integer jointID, Float targetVelocity)|
+Set3DPhysicsTwistJointMotorIsEnabled||(Integer jointID, Integer isEnabled)|
+Set3DPhysicsTwistJointMaxMotorImpluse||(Integer jointID, Float maxImpluse)|
+Set3DPhysicsTwistJointMotorRotationTarget||(Integer jointID, Integer rotationVec3ID)|
+Set3DPhysicsSliderJointPoweredLinearMotorIsEnabled||(Integer jointID, Integer isEnabled)|
+Set3DPhysicsSliderJointMaxLinearMotorForce||(Integer jointID, Float maxLinearForce)|
+Set3DPhysicsSliderJointTargetLinearMotorVelocity||(Integer jointID, Float linearMotorVelocity)|
+AddObjectShapeBox||(Integer objID, Integer positionVec3, Integer rotationVec3, Integer sizeVec3)|
+AddObjectShapeSphere||(Integer objID, Integer positionVec3, Float diameter)|
+AddObjectShapeCapsule||(Integer objID, Integer positionVec3, Integer rotationVec3, Integer sizeVec3, Integer axis)|
+AddObjectShapeCone||(Integer objID, Integer positionVec3, Integer rotationVec3, Integer sizeVec3, Integer axis)|
+AddObjectShapeCylinder||(Integer objID, Integer positionVec3, Integer rotationVec3, Integer sizeVec3, Integer axis)|
+SaveObjectShape|Integer|(Integer objID, String fileName)|
+LoadObjectShape|Integer|(Integer objID, String fileName)|
+CreateVector3|Integer|()|
+CreateVector3|Integer|(Float x, Float y, Float z)|
+SetVector3||(Integer vectorID, Float x, Float y, Float z)|
+DeleteVector3||(Integer vectorID)|
+GetVector3X|Float|(Integer vectorID)|
+GetVector3Y|Float|(Integer vectorID)|
+GetVector3Z|Float|(Integer vectorID)|
+GetVector3Distance|Float|(Integer vectorU, Integer vectorV)|
+GetVector3Length|Float|(Integer vectorID)|
+GetVector3Dot|Float|(Integer vectorU, Integer vectorV)|
+GetVector3Cross||(Integer resultVec, Integer vectorU, Integer vectorV)|
+GetVector3Multiply||(Integer resultVec, Float multiplier)|
+GetVector3Add||(Integer resultVec, Integer addVec)|
+Create3DPhysicsRay|Integer|()|
+Delete3DPhysicsRay||(Integer rayID)|
+Ray3DPhysicsExist|Integer|(Integer rayID)|
+RayCast3DPhysics||(Integer rayID, Integer fromVec3ID, Integer toVec3ID, Integer allOrClosest)|
+RayCast3DPhysicsObject|Integer|(Integer objID, Integer rayID, Integer fromVec3ID, Integer toVec3ID, Integer allOrClosest)|
+Get3DPhysicsRayCastClosestObjectHit|Integer|(Integer rayID)|
+Get3DPhysicsRayCastFraction|Float|(Integer rayID)|
+Get3DPhysicsRayCastNormalVector||(Integer rayID, Integer returnVec3ID)|
+Get3DPhysicsRayCastNumHits|Integer|(Integer rayID)|
+SphereCast3DPhysics||(Integer rayID, Integer fromVec3ID, Integer toVec3ID, Float radius)|
+SphereCast3DPhysicsObject|Integer|(Integer objID, Integer rayID, Integer fromVec3ID, Integer toVec3ID, Float radius)|
+Create3DPhysicsRagDoll||(Integer objID, Float objTotalWeight)|
+Add3DPhysicsRagDollBone|Integer|(Integer startBoneID, Integer endBoneID, Float diameter, Integer collisionGroup, Integer collisionMask)|
+AssignTo3DPhysicsRagDollBoneObjectBone||(Integer ragdollBoneID, Integer objBoneID)|
+Add3DPhysicsRagDollHingeJoint||(Integer boneAID, Integer boneBID, Integer objBoneID, Integer jointRotationVec3, Float minLimit, Float maxLimit)|
+Add3DPhysicsRagDollTwistJoint||(Integer boneAID, Integer boneBID, Integer objBoneID, Integer jointRotationVec3, Integer limitsVec3)|
+Finalize3DPhysicsRagDoll||()|
+Delete3DPhysicsRagdoll||(Integer objID)|
+Get3DPhysicsRagdollExist|Integer|(Integer objID)|
+Get3DPhysicsRagdollFromBoneObject|Integer|(Integer objID)|
+Is3dPhysicsRagdollStatic|Integer|(Integer objID)|
+Set3DphysicsRagdollStatic||(Integer objID, Integer isStatic)|
+Set3DPhysicsRadollBonesVisible||(Integer objID, Integer isVisible)|
+Set3DPhysicsRagdollDamping||(Float linear, Float angular)|
+Set3DPhysicsRagdollSleepingThresholds||(Float linear, Float angular)|
+Set3DPhysicsRagdollDeactivationTime||(Float time)|
+Set3DPhysicsRagdollDeactivation||(Integer objID, Integer isDisabled)|
+Create3DPhysicsCharacterController||(Integer objID, Integer axis, Integer objOffsetVec3, Integer objOrientationVec3, Float crouchScale)|
+Delete3DPhysicsCharacterController||(Integer objID)|
+Get3DPhysicsCharacterControllerExists|Integer|(Integer objID)|
+Set3DPhysicsCharacterControllerGravity||(Integer objID, Float gravity)|
+Set3DPhysicsCharacterControllerFallSpeed||(Integer objID, Float fallSpeed)|
+Set3DPhysicsCharacterControllerJumpSpeed||(Integer objID, Float jumpSpeed)|
+Set3DPhysicsCharacterControllerMaxSlope||(Integer objID, Float maxSlopeDegress)|
+Set3DPhysicsCharacterControllerStepHeight||(Integer objID, Float stepHeight)|
+Get3DPhysicsCharacterControllerMaxSlope|Float|(Integer objID)|
+Get3DPhysicsCharacterControllerGravity|Float|(Integer objID)|
+Move3DPhysicsCharacterController||(Integer objID, Integer direction, Float velocity)|
+Rotate3DPhysicsCharacterController||(Integer objID, Float angle)|
+Jump3DPhysicsCharacterController||(Integer objID)|
+Crouch3DPhysicsCharacterController||(Integer objID)|
+Stand3DPhysicsCharacterController||(Integer objID)|
+Debug3DPhysicsCharacterController||(Integer objID, Integer isDebug)|
+Set3DPhysicsCharacterControllerPosition||(Integer objID, Float posX, Float posY, Float posZ)|
 SetWindowSize||(Integer width, Integer height, Integer fullscreen)|
+SetWindowAllowResize||(Integer mode)|
+MinimizeApp||()|
 SetScreenResolution||(Integer width, Integer height)|
 GetDeviceName|String|()|
 GetDeviceBaseName|String|()|
@@ -1154,11 +1468,13 @@ GetDeviceType|String|()|
 GetAppName|String|()|
 GetDeviceLanguage|String|()|
 SetSleepMode||(Integer mode)|
+SetExpansionFileKey||(String key)|
 SetExpansionFileVersion||(Integer version)|
 GetExpansionFileState|Integer|()|
 DownloadExpansionFile||()|
 GetExpansionFileProgress|Float|()|
 SetWindowTitle||(String szTitle)|
+IsSupportedDepthTexture|Integer|()|
 Sleep||(Integer milliseconds)|
 SetVSync||(Integer mode)|
 GetMaxDeviceWidth|Integer|()|
@@ -1186,6 +1502,7 @@ Abs|Float|(Float a)|
 Mod|Integer|(Integer a, Integer b)|
 FMod|Float|(Float a, Float b)|
 Pow|Float|(Float a, Float b)|
+Log|Float|(Float a)|
 LoadVideo|Integer|(String szFilename)|
 DeleteVideo||()|
 SetVideoDimensions||(Float x, Float y, Float width, Float height)|
@@ -1238,16 +1555,3 @@ GameCenterShowLeaderBoard||(String szBoardID)|
 GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplete)|
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
-SetCameraAspect||(Integer cameraID, Float aspect)|
-SetSpriteAdditionalImage||(Integer iSpriteIndex, Integer iImageIndex, Integer iStage)|
-IsSupportedDepthTexture|Integer|()|
-SetEditBoxCursorPosition||(Integer index, Integer pos)|
-SetExpansionFileKey||(String key)|
-SetTweenChainTime||(Integer chainID, Float time)|
-GetTweenChainEndTime|Float|(Integer chainID)|
-GetSpriteScaleX|Float|(Integer iSpriteIndex)|
-GetSpriteScaleY|Float|(Integer iSpriteIndex)|
-LoadSkeleton2DFromSpriterFile||(Integer iSkeleton, String filename, Float scale, Integer atlasImage)|
-LoadSkeleton2DFromSpriterFile|Integer|(String filename, Float scale, Integer atlasImage)|
-WriteString2||(Integer iFileID, String str)|
-ReadString2|String|(Integer iFileID)|

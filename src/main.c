@@ -1093,6 +1093,91 @@ void update_window_menu()
 #endif
 }
 
+void dlc_init()
+{
+	// check for DLC folders and update DLC menu item
+	GtkWidget *menu_dlc = ui_lookup_widget(main_widgets.window, "menu_dlc");
+	GtkMenu *menu_dlc_items = GTK_MENU(ui_lookup_widget(main_widgets.window, "menu6"));
+	if ( !menu_dlc || !menu_dlc_items )
+	{
+		return;
+	}
+	
+	// default is hidden with no items
+	gtk_widget_hide(menu_dlc);
+	gtk_container_foreach(GTK_CONTAINER(menu_dlc_items), (GtkCallback) gtk_widget_destroy, NULL);
+
+	// get DLC folder
+	gchar *pathDLC = 0;
+
+#ifdef G_OS_WIN32
+	gchar *path;
+	path = win32_get_installation_dir();
+    pathDLC = g_build_filename(path, "/../../DLC", NULL);
+	utils_tidy_path( pathDLC );
+    g_free(path);
+#elif __APPLE__
+    char szRoot[ 1024 ];
+    uint32_t size = 1024;
+    if ( _NSGetExecutablePath(szRoot, &size) == 0 )
+    {
+        gchar *slash = strrchr( szRoot, '/' );
+        if ( slash ) *slash = 0;
+        pathDLC = g_build_filename(szRoot, "../../DLC", NULL);
+        utils_tidy_path( pathDLC );
+    }
+#else
+	gchar szExePath[1024];
+	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+	readlink( "/proc/self/exe", szExePath, 1024 );
+	gchar* szSlash = strrchr( szExePath, '/' );
+	if ( szSlash ) *szSlash = 0;
+    pathDLC = g_build_filename(szExePath, "../../../DLC", NULL);
+	utils_tidy_path( pathDLC );
+#endif
+
+	// check DLC folder exists
+	if ( !pathDLC || !g_file_test(pathDLC, G_FILE_TEST_EXISTS) )
+		return;
+
+	const gchar *filename;
+	GDir *dir = g_dir_open(pathDLC, 0, NULL);
+	if (dir == NULL)
+	{
+		g_free(pathDLC);
+		return;
+	}
+
+	// for each folder add a menu item
+	int count = 0;
+	foreach_dir(filename, dir)
+	{
+		gchar* fullsrcpath = g_build_filename( pathDLC, filename, NULL );
+
+		if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_DIR ) )
+		{
+			// add menu item
+			GtkWidget *item = gtk_menu_item_new_with_label( filename );
+			gtk_widget_show(item);
+			gtk_container_add(GTK_CONTAINER(menu_dlc_items), item);
+			g_signal_connect(item, "activate", G_CALLBACK(on_menu_dlc_activate), 0);
+
+			count++;
+		}
+		
+		g_free(fullsrcpath);
+	}
+
+	// show the DLC menu
+	if ( count > 0 )
+	{
+		gtk_widget_show(menu_dlc);
+	}
+
+	g_dir_close(dir);
+	g_free(pathDLC);
+}
+
 gint main(gint argc, gchar **argv)
 {
 	GeanyDocument *doc;
@@ -1196,6 +1281,7 @@ gint main(gint argc, gchar **argv)
 
 	encodings_init();
 	editor_init();
+	dlc_init();
 
 	/* init stash groups before loading keyfile */
 	configuration_init();

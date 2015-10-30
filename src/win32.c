@@ -973,6 +973,11 @@ void win32_open_browser(const gchar *uri)
 	ShellExecute(NULL, "open", uri, NULL, NULL, SW_SHOWNORMAL);
 }
 
+void win32_open_file(const gchar *path)
+{
+	ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
+}
+
 
 /* Returns TRUE if the command, which child_pid refers to, returned with a successful exit code,
  * otherwise FALSE. */

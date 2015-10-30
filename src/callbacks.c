@@ -2050,6 +2050,95 @@ G_MODULE_EXPORT void on_menu_project1_activate(GtkMenuItem *menuitem, gpointer u
 	
 }
 
+G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	// get DLC folder
+	gchar *pathDLC = 0;
+
+#ifdef G_OS_WIN32
+	gchar *path;
+	path = win32_get_installation_dir();
+    pathDLC = g_build_filename(path, "\\..\\..\\DLC", NULL);
+	utils_tidy_path( pathDLC );
+    g_free(path);
+#elif __APPLE__
+    char szRoot[ 1024 ];
+    uint32_t size = 1024;
+    if ( _NSGetExecutablePath(szRoot, &size) == 0 )
+    {
+        gchar *slash = strrchr( szRoot, '/' );
+        if ( slash ) *slash = 0;
+        pathDLC = g_build_filename(szRoot, "../../DLC", NULL);
+        utils_tidy_path( pathDLC );
+    }
+#else
+	gchar szExePath[1024];
+	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+	readlink( "/proc/self/exe", szExePath, 1024 );
+	gchar* szSlash = strrchr( szExePath, '/' );
+	if ( szSlash ) *szSlash = 0;
+    pathDLC = g_build_filename(szExePath, "../../../DLC", NULL);
+	utils_tidy_path( pathDLC );
+#endif
+
+	// check DLC folder exists
+	if ( !pathDLC || !g_file_test(pathDLC, G_FILE_TEST_EXISTS) )
+		return;
+
+	// get menu item label to decide what to do
+	const gchar* item_name = gtk_menu_item_get_label( menuitem );
+
+	if ( strcmp(item_name, "Beginners Guide") == 0 )
+	{
+		// open Beginners Guide PDF
+#ifdef G_OS_WIN32
+		gchar *cmdline = g_strconcat("\"", pathDLC, "\\", item_name, "\\AppGameKit Official Beginners Guide.pdf", "\"", NULL);
+		win32_open_file( cmdline );
+		g_free(cmdline);
+#else
+		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/AppGameKit Official Beginners Guide.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#endif
+	}
+	else if ( strcmp(item_name, "User Guide") == 0 )
+	{
+		// open User Guide PDF
+#ifdef G_OS_WIN32
+		gchar *cmdline = g_strconcat("\"", pathDLC, "\\", item_name, "\\AppGameKit Official User Guide.pdf", "\"", NULL);
+		win32_open_file( cmdline );
+		g_free(cmdline);
+#else
+		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/AppGameKit Official User Guide.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#endif
+	}
+	else
+	{
+		// open DLC folder
+#ifdef G_OS_WIN32
+		gchar *filepath = g_strconcat( pathDLC, "\\", item_name, NULL);
+		gchar *cmdline = g_strconcat("explorer.exe", " \"", filepath, "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+		g_free(filepath);
+#elif __APPLE__ 
+		gchar *filepath = g_strconcat( pathDLC, "/", item_name, NULL);
+        gchar *cmdline = g_strconcat("open", " \"", filepath, "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+		g_free(filepath);
+#else
+		gchar *filepath = g_strconcat( pathDLC, "/", item_name, NULL);
+		gchar *cmdline = g_strconcat("xdg-open", " \"", filepath, "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+		g_free(filepath);
+#endif
+	}
+}
+
 G_MODULE_EXPORT void on_menu_build3_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 	static GtkWidget *item_compile = NULL;

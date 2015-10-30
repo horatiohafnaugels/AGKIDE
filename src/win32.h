@@ -45,6 +45,8 @@ gboolean win32_message_dialog(GtkWidget *parent, GtkMessageType type, const gcha
 
 void win32_open_browser(const gchar *uri);
 
+void win32_open_file(const gchar *path);
+
 gchar *win32_show_project_open_dialog(GtkWidget *parent, const gchar *title,
 								      const gchar *initial_dir, gboolean allow_new_file,
 								      const gchar* project_file_filter);
