@@ -22,12 +22,14 @@ Geany IDE setup
 
 Browse to the location of the IDE source code in the terminal and run the following command with the "../../" modified to point to your GTK installation created above (should be /Users/Me/gtk/) as far as I can tell these must be relative paths, absolute paths get a variable prepended to them
 
-$ export PKG_CONFIG_PATH="../../../../../gtk/source/gtk+-2.24.21:../../../../../gtk/source/pango-1.36.0:../../../../../gtk/source/glib-2.38.2:../../../../../gtk/source/cairo-1.12.16:../../../../../gtk/source/pixman-0.30.2:../../../../../gtk/source/libpng-1.5.13:../../../../../gtk/source/gdk-pixbuf-2.30.0:../../../../../gtk/source/atk-2.10.0"
+Note that if the packages have been updated since these instructions were written you may have to adjust the version numbers on these paths to match
+
+$ export PKG_CONFIG_PATH="../../../../../gtk/source/gtk+-2.24.28:../../../../../gtk/source/pango-1.36.8:../../../../../gtk/source/glib-2.44.1:../../../../../gtk/source/cairo-1.14.0:../../../../../gtk/source/pixman-0.32.6:../../../../../gtk/source/libpng-1.6.17:../../../../../gtk/source/gdk-pixbuf-2.30.8:../../../../../gtk/source/atk-2.16.0"
 
 now run
 
 $ export CFLAGS="-I$HOME/gtk/inst/include -x objective-c -mmacosx-version-min=10.7"
-$ export LIBS="-lgtkmacintegration -L/Users/paulj/gtk/inst/lib"
+$ export LIBS="-lgtkmacintegration-gtk2 -L/Users/paulj/gtk/inst/lib"
 
 and finally run this with the prefix path set to where you want the final IDE executable to be, for your first attempt I recommend using this path, the bundler uses it later
 
