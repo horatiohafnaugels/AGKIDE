@@ -1555,3 +1555,4 @@ GameCenterShowLeaderBoard||(String szBoardID)|
 GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplete)|
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
+SetHTTPVerifyCertificate||(Integer iHTTP, Integer mode)|
