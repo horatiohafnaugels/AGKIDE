@@ -2114,6 +2114,19 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
 		g_free(cmdline);
 #endif
 	}
+	else if ( strcmp(item_name, "Tutorial Guide") == 0 )
+	{
+		// open Tutorial Guide PDF
+#ifdef G_OS_WIN32
+		gchar *cmdline = g_strconcat("\"", pathDLC, "\\", item_name, "\\AppGameKit Official Tutorial Guide.pdf", "\"", NULL);
+		win32_open_file( cmdline );
+		g_free(cmdline);
+#else
+		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/AppGameKit Official Tutorial Guide.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#endif
+	}
 	else
 	{
 		// open DLC folder

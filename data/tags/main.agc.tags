@@ -1556,3 +1556,4 @@ GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplet
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
 SetHTTPVerifyCertificate||(Integer iHTTP, Integer mode)|
+SetObjectScreenCulling||(Integer objID, Integer mode)|
