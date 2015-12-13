@@ -109,6 +109,8 @@ void project_import(void);
 
 void project_export();
 
+GeanyProject* find_project_for_document( gchar* filename );
+
 gboolean project_close(GeanyProject *project, gboolean open_default);
 
 gboolean project_close_all();

@@ -675,7 +675,7 @@ gchar *utils_str_middle_truncate(const gchar *string, guint truncate_length)
 	n_chars = g_utf8_strlen(string, length);
 
 	/* Make sure the string is not already small enough. */
-	if (n_chars <= truncate_length)
+	if (n_chars <= truncate_length+1) // if only removing 2 chars then ellipses take up as much room as the chars, so don't bother
 		return g_strdup (string);
 
 	/* Find the 'middle' where the truncation will occur. */

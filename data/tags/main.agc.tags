@@ -1557,3 +1557,10 @@ GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
 SetHTTPVerifyCertificate||(Integer iHTTP, Integer mode)|
 SetObjectScreenCulling||(Integer objID, Integer mode)|
+SetObjectMeshShader||(Integer objID, Integer meshIndex, Integer shaderID)|
+GetObjectMeshVSSource|String|(Integer objID, Integer meshIndex)|
+GetObjectMeshPSSource|String|(Integer objID, Integer meshIndex)|
+Get3DPhysicsRayCastObjectHit|Integer|(Integer rayID, Float fractionIndex)|
+Get3DPhysicsRayCastContactPosition|Integer|(Integer rayID, Float fractionIndex, Integer outVec3ID)|
+Get3DPhysicsRayCastClosestContactPosition|Integer|(Integer rayID, Integer outVec3ID)|
+SetWindowPosition||(Integer x, Integer y)|

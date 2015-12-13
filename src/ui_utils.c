@@ -386,6 +386,12 @@ void ui_set_window_title(GeanyDocument *doc)
 		else
 		{
 			gchar *short_name = document_get_basename_for_display(doc, 30);
+			gchar *ptr = short_name;
+			while ( *ptr )
+			{
+				if ( *ptr == '\n' ) *ptr = ' ';
+				ptr++;
+			}
 			gchar *dirname = g_path_get_dirname(DOC_FILENAME(doc));
 
 			g_string_append(str, short_name);
@@ -396,12 +402,7 @@ void ui_set_window_title(GeanyDocument *doc)
 		}
 		g_string_append(str, " - ");
 	}
-	if (project)
-	{
-		g_string_append_c(str, '[');
-		g_string_append(str, project->name);
-		g_string_append(str, "] - ");
-	}
+	
 	g_string_append(str, "AGK");
 	if (cl_options.new_instance)
 	{
@@ -3080,6 +3081,11 @@ void ui_menu_add_document_items_sorted(GtkMenu *menu, GeanyDocument *active,
 		doc = g_ptr_array_index(sorted_documents, i);
 
 		base_name = g_path_get_basename(DOC_FILENAME(doc));
+		GeanyProject *project = find_project_for_document( DOC_FILENAME(doc) );
+		if ( project )
+		{
+			SETPTR( base_name, g_strconcat(base_name, " [", project->name, "]", NULL) );
+		}
 		menu_item = gtk_image_menu_item_new_with_label(base_name);
 		image = gtk_image_new_from_pixbuf(doc->file_type->icon);
 		gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item), image);

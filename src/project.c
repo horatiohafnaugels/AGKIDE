@@ -501,6 +501,12 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		gchar szSDK[ 20 ];
 		sprintf( szSDK, "%d", sdk );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
+		gchar *gamecircle_api_key = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
+		gchar *google_play_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
 		int permission_external_storage = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
@@ -671,6 +677,8 @@ android_dialog_clean_up:
 		if ( app_name ) g_free(app_name);
 		if ( package_name ) g_free(package_name);
 		if ( app_icon ) g_free(app_icon);
+		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
+		if ( google_play_app_id ) g_free(google_play_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -753,10 +761,11 @@ android_dialog_continue:
 		}
 
 		// decalrations
-		gchar newcontents[ 32000 ];
+		gchar *newcontents = g_new0( gchar, 150000 );
 		gchar* manifest_file = NULL;
 		gchar *contents = NULL;
 		gchar *contents2 = NULL;
+		gchar *contents3 = NULL;
 		gsize length = 0;
 		gchar* resources_file = NULL;
 		GError *error = NULL;
@@ -771,6 +780,7 @@ android_dialog_continue:
 		memset(&zip_archive, 0, sizeof(zip_archive));
 		gchar *zip_add_file = 0;
 		gchar *str_out = NULL;
+		gsize resLength = 0;
 
 		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
 		{
@@ -790,10 +800,6 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 
-		contents2 = strstr( contents, "screenOrientation=\"fullSensor\"" );
-		*contents2 = 0;
-		contents2 += strlen("screenOrientation=\"fullSensor");
-		
 		strcpy( newcontents, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
 <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n\
       android:versionCode=\"" );
@@ -840,23 +846,76 @@ android_dialog_continue:
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
 		}
 
-		strcat( newcontents, contents );
+		contents2 = contents;
+		contents3 = 0;
 
-		switch( orientation )
+		// the order of these relacements is important, they must occur in the same order as they occur in the file
+
+		// replace GameCircle API key
+		contents3 = strstr( contents2, "GAMECIRCLE_API_KEY" );
+		if ( contents3 )
 		{
-			case 6: strcat( newcontents, "screenOrientation=\"sensorLandscape" ); break;
-			case 7: 
-			{
-				// Google compiles with API 21 which fixes a spelling mistake, Amazon and Ouya compile with API 13 which still has the mistake
-				if ( app_type == 0 )
-					strcat( newcontents, "screenOrientation=\"sensorPortrait" ); 
-				else
-					strcat( newcontents, "screenOrientation=\"sensorPortait" ); 
-				break;
-			}
-			default: strcat( newcontents, "screenOrientation=\"fullSensor" ); break;
+			*contents3 = 0;
+			contents3 += strlen("GAMECIRCLE_API_KEY");
+
+			strcat( newcontents, contents2 );
+			strcat( newcontents, gamecircle_api_key );
+			contents2 = contents3;
 		}
 
+		// replace Google Play application ID
+		contents3 = strstr( contents2, "GOOGLE_PLAY_APPLICATION_ID" );
+		if ( contents3 )
+		{
+			*contents3 = 0;
+			contents3 += strlen("GOOGLE_PLAY_APPLICATION_ID");
+
+			strcat( newcontents, contents2 );
+			strcat( newcontents, "\\ " );
+			strcat( newcontents, google_play_app_id );
+			contents2 = contents3;
+		}
+
+		// replace orientation
+		contents3 = strstr( contents2, "screenOrientation=\"fullSensor\"" );
+		if ( contents3 )
+		{
+			*contents3 = 0;
+			contents3 += strlen("screenOrientation=\"fullSensor");
+
+			strcat( newcontents, contents2 );
+
+			switch( orientation )
+			{
+				case 6: strcat( newcontents, "screenOrientation=\"sensorLandscape" ); break;
+				case 7: 
+				{
+					// Google compiles with API 21 which fixes a spelling mistake, Amazon and Ouya compile with API 13 which still has the mistake
+					if ( app_type == 0 )
+						strcat( newcontents, "screenOrientation=\"sensorPortrait" ); 
+					else
+						strcat( newcontents, "screenOrientation=\"sensorPortait" ); 
+					break;
+				}
+				default: strcat( newcontents, "screenOrientation=\"fullSensor" ); break;
+			}
+
+			contents2 = contents3;
+		}
+
+		// replace package name
+		contents3 = strstr( contents2, "YOUR_PACKAGE_NAME_HERE" );
+		if ( contents3 )
+		{
+			*contents3 = 0;
+			contents3 += strlen("YOUR_PACKAGE_NAME_HERE");
+
+			strcat( newcontents, contents2 );
+			strcat( newcontents, package_name );
+			contents2 = contents3;
+		}
+
+		// write the rest of the manifest file
 		strcat( newcontents, contents2 );
 	
 		// write new Android Manifest.xml file
@@ -867,17 +926,46 @@ android_dialog_continue:
 			error = NULL;
 			goto android_dialog_cleanup2;
 		}
-				
-		// write resources file
-		strcpy( newcontents, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <string name=\"app_name\">" );
-		strcat( newcontents, app_name );
-		strcat( newcontents, "</string>\n    <string name=\"backtext\">Press back to return to the app</string>\n    <string name=\"waittext\">Please Wait...</string>\n</resources>\n" );
 
-		resources_file = g_build_path( "/", tmp_folder, "res", "values", "strings.xml", NULL );
+		if ( contents ) g_free(contents);
+		contents = 0;
+
+		// read resources file
+		resources_file = g_build_path( "/", tmp_folder, "resMerged", "values", "values.xml", NULL );
+		if ( !g_file_get_contents( resources_file, &contents, &resLength, &error ) )
+		{
+			SHOW_ERR1( "Failed to read resource values.xml file: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+
+		contents2 = strstr( contents, "<string name=\"app_name\">" );
+		if ( !contents2 )
+		{
+			SHOW_ERR( "Could not find app name entry in values.xml file" );
+			goto android_dialog_cleanup2;
+		}
+
+		contents2 += strlen("<string name=\"app_name\"");
+		*contents2 = 0;
+		contents2++;
+		contents2 = strstr( contents2, "</string>" );
+		if ( !contents2 )
+		{
+			SHOW_ERR( "Could not find end of app name entry in values.xml file" );
+			goto android_dialog_cleanup2;
+		}
+
+		// write resources file
+		strcpy( newcontents, contents );
+		strcat( newcontents, ">" );
+		strcat( newcontents, app_name );
+		strcat( newcontents, contents2 );		
 
 		if ( !g_file_set_contents( resources_file, newcontents, strlen(newcontents), &error ) )
 		{
-			SHOW_ERR1( "Failed to write resource strings.xml file: %s", error->message );
+			SHOW_ERR1( "Failed to write resource values.xml file: %s", error->message );
 			g_error_free(error);
 			error = NULL;
 			goto android_dialog_cleanup2;
@@ -1013,50 +1101,16 @@ android_dialog_continue:
 		argv[0] = g_strdup( path_to_aapt );
 		argv[1] = g_strdup("package");
 		argv[2] = g_strdup("-f");
-		argv[3] = g_strdup("-M");
-		argv[4] = g_build_path( "/", tmp_folder, "AndroidManifest.xml", NULL );
-		argv[5] = g_strdup("-I");
-		argv[6] = g_strdup( path_to_android_jar );
-		argv[7] = g_strdup("-S");
-		argv[8] = g_build_path( "/", tmp_folder, "res", NULL );
-		if ( app_type == 2 )
-		{
-			// ouya
-			argv[9] = g_strdup("-F");
-			argv[10] = g_strdup( output_file );
-			argv[11] = g_strdup("--auto-add-overlay");
-			argv[12] = NULL;
-		}
-		else if ( app_type == 1 )
-		{
-			// amazon
-			argv[9] = g_strdup("-S");
-			argv[10] = g_build_path( "/", tmp_folder, "resfacebook", NULL );
-			argv[11] = g_strdup("-S");
-			argv[12] = g_build_path( "/", tmp_folder, "resgoogle", NULL );
-			argv[13] = g_strdup("-F");
-			argv[14] = g_strdup( output_file );
-			argv[15] = g_strdup("--auto-add-overlay");
-			argv[16] = NULL;
-		}
-		else
-		{
-			// google
-			argv[9] = g_strdup("-S");
-			argv[10] = g_build_path( "/", tmp_folder, "resfacebook", NULL );
-			argv[11] = g_strdup("-S");
-			argv[12] = g_build_path( "/", tmp_folder, "resgoogle", NULL );
-			argv[13] = g_strdup("-S");
-			argv[14] = g_build_path( "/", tmp_folder, "resexpansion", NULL );
-			argv[15] = g_strdup("-S");
-			argv[16] = g_build_path( "/", tmp_folder, "reszip", NULL );
-			argv[17] = g_strdup("-S");
-			argv[18] = g_build_path( "/", tmp_folder, "rescompat", NULL );
-			argv[19] = g_strdup("-F");
-			argv[20] = g_strdup( output_file );
-			argv[21] = g_strdup("--auto-add-overlay");
-			argv[22] = NULL;
-		}
+		argv[3] = g_strdup("--no-crunch");
+		argv[4] = g_strdup("-M");
+		argv[5] = g_build_path( "/", tmp_folder, "AndroidManifest.xml", NULL );
+		argv[6] = g_strdup("-I");
+		argv[7] = g_strdup( path_to_android_jar );
+		argv[8] = g_strdup("-S");
+		argv[9] = g_build_path( "/", tmp_folder, "resMerged", NULL );
+		argv[10] = g_strdup("-F");
+		argv[11] = g_strdup( output_file );
+		argv[12] = NULL;
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, NULL, NULL, &status, &error) )
 		{
@@ -1234,6 +1288,7 @@ android_dialog_cleanup2:
 
 		if ( zip_add_file ) g_free(zip_add_file);
 		if ( manifest_file ) g_free(manifest_file);
+		if ( newcontents ) g_free(newcontents);
 		if ( contents ) g_free(contents);
 		if ( resources_file ) g_free(resources_file);
 		if ( error ) g_error_free(error);
@@ -1254,6 +1309,8 @@ android_dialog_cleanup2:
 		if ( package_name ) g_free(package_name);
 		if ( app_icon ) g_free(app_icon);
 		if ( ouya_icon ) g_free(ouya_icon);
+		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
+		if ( google_play_app_id ) g_free(google_play_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -2904,6 +2961,29 @@ static void update_ui(void)
 	ui_set_window_title(NULL);
 	build_menu_update(NULL);
 	sidebar_openfiles_update_all();
+}
+
+GeanyProject* find_project_for_document( gchar* filename )
+{
+	gint i, j;
+	for ( i = 0; i < projects_array->len; i++ )
+	{
+		if ( projects[i]->is_valid )
+		{
+			for( j = 0; j < projects[i]->project_files->len; j++ )
+			{
+				if ( project_files_index(projects[i],j)->is_valid )
+				{
+					if ( strcmp( project_files_index(projects[i],j)->file_name, filename ) == 0 )
+					{
+						return projects[i];
+					}
+				}
+			}
+		}
+	}
+
+	return 0;
 }
 
 gboolean project_close_all()

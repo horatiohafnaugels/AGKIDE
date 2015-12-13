@@ -837,6 +837,9 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), FALSE );
 	}
 	else if ( strcmp( text, "Amazon" ) == 0 )
 	{
@@ -848,6 +851,9 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), TRUE );
 	}
 	else if ( strcmp( text, "Ouya" ) == 0 )
 	{
@@ -859,6 +865,9 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), TRUE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), FALSE );
 	}
 }
 
@@ -2068,7 +2077,7 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
     {
         gchar *slash = strrchr( szRoot, '/' );
         if ( slash ) *slash = 0;
-        pathDLC = g_build_filename(szRoot, "../../DLC", NULL);
+        pathDLC = g_build_filename(szRoot, "../../../DLC", NULL);
         utils_tidy_path( pathDLC );
     }
 #else

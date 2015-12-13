@@ -1123,7 +1123,7 @@ void dlc_init()
     {
         gchar *slash = strrchr( szRoot, '/' );
         if ( slash ) *slash = 0;
-        pathDLC = g_build_filename(szRoot, "../../DLC", NULL);
+        pathDLC = g_build_filename(szRoot, "../../../DLC", NULL);
         utils_tidy_path( pathDLC );
     }
 #else
@@ -1135,7 +1135,7 @@ void dlc_init()
     pathDLC = g_build_filename(szExePath, "../../../DLC", NULL);
 	utils_tidy_path( pathDLC );
 #endif
-
+    
 	// check DLC folder exists
 	if ( !pathDLC || !g_file_test(pathDLC, G_FILE_TEST_EXISTS) )
 		return;

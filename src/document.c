@@ -306,6 +306,16 @@ gchar *document_get_basename_for_display(GeanyDocument *doc, gint length)
 
 	base_name = g_path_get_basename(DOC_FILENAME(doc));
 	short_name = utils_str_middle_truncate(base_name, (guint)length);
+	//if ( strcmp(base_name,"main.agc") == 0 )
+	{
+		GeanyProject *project = find_project_for_document( DOC_FILENAME(doc) );
+		if ( project )
+		{
+			gchar *short_project_name = utils_str_middle_truncate( project->name, 11 );
+			SETPTR(short_name, g_strconcat( short_name, "\n[", short_project_name, "]", NULL) );
+			g_free(short_project_name);
+		}
+	}
 
 	g_free(base_name);
 
