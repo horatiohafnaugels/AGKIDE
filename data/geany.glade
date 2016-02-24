@@ -1312,7 +1312,7 @@ For signed apps you must generate the Signature from your keystore file</propert
                                             <property name="can_focus">False</property>
                                             <child>
                                               <object class="GtkEntry" id="android_alias_entry">
-                                                <property name="width_request">150</property>
+                                                <property name="width_request">140</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="tooltip_text" translatable="yes">The name of the alias used when the keystore file was generated</property>
@@ -1346,7 +1346,7 @@ For signed apps you must generate the Signature from your keystore file</propert
                                             <property name="can_focus">False</property>
                                             <child>
                                               <object class="GtkEntry" id="android_alias_password_entry">
-                                                <property name="width_request">150</property>
+                                                <property name="width_request">140</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="tooltip_text" translatable="yes">The alias password used when the keystore file was generated</property>

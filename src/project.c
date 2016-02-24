@@ -987,7 +987,7 @@ android_dialog_continue:
 			if ( app_type == 0 )
 			{
 				// 192x192
-				image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxxhdpi", "icon.png", NULL );
+				image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxxhdpi", "icon.png", NULL );
 				icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 192, 192, GDK_INTERP_HYPER );
 				if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 				{
@@ -1000,7 +1000,7 @@ android_dialog_continue:
 				g_free( image_filename );
 
 				// 144x144
-				image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xxhdpi", "icon.png", NULL );
+				image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxhdpi", "icon.png", NULL );
 				icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
 				if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 				{
@@ -1013,8 +1013,13 @@ android_dialog_continue:
 				g_free( image_filename );
 			}
 
+			const gchar* szDrawable_xhdpi = (app_type == 2) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
+			const gchar* szDrawable_hdpi = (app_type == 2) ? "drawable-hdpi-v4" : "drawable-hdpi";
+			const gchar* szDrawable_mdpi = (app_type == 2) ? "drawable-mdpi-v4" : "drawable-mdpi";
+			const gchar* szDrawable_ldpi = (app_type == 2) ? "drawable-ldpi-v4" : "drawable-ldpi";
+
 			// 96x96
-			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_xhdpi, "icon.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -1027,7 +1032,7 @@ android_dialog_continue:
 			g_free( image_filename );
 
 			// 72x72
-			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-hdpi", "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_hdpi, "icon.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -1040,7 +1045,7 @@ android_dialog_continue:
 			g_free( image_filename );
 
 			// 48x48
-			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-mdpi", "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_mdpi, "icon.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -1053,7 +1058,7 @@ android_dialog_continue:
 			g_free( image_filename );
 
 			// 36x36
-			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-ldpi", "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_ldpi, "icon.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -1089,7 +1094,7 @@ android_dialog_continue:
 			}
 
 			// copy it to the res folder
-			image_filename = g_build_path( "/", tmp_folder, "res", "drawable-xhdpi", "ouya_icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xhdpi-v4", "ouya_icon.png", NULL );
 			utils_copy_file( ouya_icon, image_filename, TRUE, NULL );
 		}
 

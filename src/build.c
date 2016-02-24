@@ -1491,18 +1491,25 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 	utils_set_up_io_channel(gdb_out.fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL, TRUE, debug_iofunc, GINT_TO_POINTER(0));
 	utils_set_up_io_channel(gdb_err.fd, G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP | G_IO_NVAL, TRUE, debug_iofunc, GINT_TO_POINTER(1));
 
+	int debug_local = 1;
 	if ( build_prefs.agk_debug_ip && *build_prefs.agk_debug_ip )
 	{
-		// debug on remote device
-		gchar *szMsg = g_strconcat( "Debugging on device ", build_prefs.agk_debug_ip, NULL );
-		msgwin_debug_add_string( COLOR_BLUE, szMsg );
-		g_free(szMsg);
+		#ifdef AGK_FREE_VERSION
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging on remote devices is disabled in the trial version");
+		#else
+			debug_local = 0;
+			// debug on remote device
+			gchar *szMsg = g_strconcat( "Debugging on device ", build_prefs.agk_debug_ip, NULL );
+			msgwin_debug_add_string( COLOR_BLUE, szMsg );
+			g_free(szMsg);
 
-		gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnect ", build_prefs.agk_debug_ip, "\n", NULL );
-		write(gdb_in.fd, cmdline, strlen(cmdline) );
-		g_free(cmdline);
+			gchar *cmdline = g_strconcat( "setproject ", project->base_path, "\nconnect ", build_prefs.agk_debug_ip, "\n", NULL );
+			write(gdb_in.fd, cmdline, strlen(cmdline) );
+			g_free(cmdline);
+		#endif
 	}
-	else
+	
+	if ( debug_local == 1 )
 	{
 		// set up local interpreter for debugging
 		msgwin_debug_add_string( COLOR_BLUE, "Debugging on local machine, to debug on a device set its IP address in the build options" );
@@ -1945,6 +1952,7 @@ static void process_debug_output_line(const gchar *str, gint color)
 		if ( colon )
 		{
 			gchar *szValue = g_strdup(colon+1);
+			utils_str_replace_char( szValue, 0x01, ':' );
 			*colon = 0;
 			gchar* szVar = g_strdup(szVarStart);
 		
@@ -4109,10 +4117,6 @@ void build_broadcast_project( gint deviceID )
 // compiles, runs, and debugs the current project
 void build_debug_project( gint deviceID )
 {
-	//dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging not yet implemented");
-#ifdef AGK_FREE_VERSION
-	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging is disabled in the trial version");
-#else
 	if (debug_pid > (GPid) 0)
 	{
 		write(gdb_in.fd, "stop\ndisconnectall\nexit\n", strlen("stop\ndisconnectall\nexit\n") );
@@ -4124,5 +4128,4 @@ void build_debug_project( gint deviceID )
 
 	//dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Run Project %s on device %d", app->project ? app->project->name : "NULL", deviceID);
 	if ( build_compile_project(3) == 0 ) return;
-#endif
 }

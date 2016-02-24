@@ -1564,3 +1564,48 @@ Get3DPhysicsRayCastObjectHit|Integer|(Integer rayID, Float fractionIndex)|
 Get3DPhysicsRayCastContactPosition|Integer|(Integer rayID, Float fractionIndex, Integer outVec3ID)|
 Get3DPhysicsRayCastClosestContactPosition|Integer|(Integer rayID, Integer outVec3ID)|
 SetWindowPosition||(Integer x, Integer y)|
+CreateObjectFromHeightMap|Integer|(String szImageFile, Float width, Float height, Float length, Integer smoothing, Integer split)|
+CreateObjectFromHeightMap||(Integer objID, String szImageFile, Float width, Float height, Float length, Integer smoothing, Integer split)|
+SetObjectMeshUVOffset||(Integer objID, Integer meshIndex, Integer textureStage, Float offsetU, Float offsetV)|
+SetObjectMeshUVScale||(Integer objID, Integer meshIndex, Integer textureStage, Float scaleU, Float scaleV)|
+SetObjectUVOffset||(Integer objID, Integer textureStage, Float offsetU, Float offsetV)|
+SetObjectUVScale||(Integer objID, Integer textureStage, Float scaleU, Float scaleV)|
+SetObjectAlphaMask||(Integer objID, Integer mode)|
+SetObjectFogMode||(Integer objID, Integer mode)|
+SetFogMode||(Integer mode)|
+SetFogColor||(Integer red, Integer green, Integer blue)|
+SetFogSunColor||(Integer red, Integer green, Integer blue)|
+SetFogRange||(Float minDist, Float maxDist)|
+GetFogMode|Integer|()|
+SetAntialiasMode||(Integer mode)|
+GetObjectBoneWorldAngleX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldAngleY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldAngleZ|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatW|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatZ|Float|(Integer objID, Integer boneIndex)|
+SetSkyBoxVisible||(Integer active)|
+SetSkyBoxSkyColor||(Integer red, Integer green, Integer blue)|
+SetSkyBoxHorizonColor||(Integer red, Integer green, Integer blue)|
+SetSkyBoxSunColor||(Integer red, Integer green, Integer blue)|
+SetSkyBoxHorizonSize||(Float size, Float height)|
+SetSkyBoxSunVisible||(Integer visible)|
+SetSkyBoxSunSize||(Float sun, Float halo)|
+RestoreApp||()|
+SetObjectDepthRange||(Integer objID, Float zNear, Float zFar)|
+GetObjectHeightMapHeight|Float|(Integer objID, Float x, Float z)|
+SetAmazonAdDetails||(String szKey)|
+SetAmazonAdTesting||(Integer mode)|
+ShowFullscreenAdvertAdMob||()|
+ShowFullscreenAdvertChartboost||()|
+ShowFullscreenAdvertAmazon||()|
+GetFullscreenAdvertLoadedAdMob|Integer|()|
+GetFullscreenAdvertLoadedChartboost|Integer|()|
+GetFullscreenAdvertLoadedAmazon|Integer|()|
+SetLocalNotification||(Integer iID, Integer datetime, String szMessage)|
+CancelLocalNotification||(Integer iID)|
+GetLocalNotificationExists|Integer|(Integer iID)|
+GetLocalNotificationTime|Integer|(Integer iID)|
+GetLocalNotificationMessage|String|(Integer iID)|
+GetUnixTime|Integer|()|
