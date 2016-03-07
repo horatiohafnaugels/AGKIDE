@@ -141,6 +141,17 @@ G_MODULE_EXPORT gboolean on_exit_clicked(GtkWidget *widget, gpointer gdata)
 
 	main_status.quitting = TRUE;
 
+#ifdef AGK_TRIAL_POPUP
+	static int shown = 0;
+	if ( !shown )
+	{
+		shown = 1;
+		gint hidden = 0;
+		on_help_menu_item_register_activate( NULL, &hidden );
+		if ( hidden == 0 ) return TRUE;
+	}
+#endif
+
 	if (! check_no_unsaved())
 	{
 		if (document_account_for_unsaved())
@@ -161,7 +172,6 @@ G_MODULE_EXPORT gboolean on_exit_clicked(GtkWidget *widget, gpointer gdata)
 	main_status.quitting = FALSE;
 	return TRUE;
 }
-
 
 /*
  * GUI callbacks
@@ -1460,6 +1470,10 @@ G_MODULE_EXPORT void on_help1_activate(GtkMenuItem *menuitem, gpointer user_data
 	g_free(uri);
 }
 
+G_MODULE_EXPORT void on_trial_image_event_button_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+	utils_open_browser("https://www.thegamecreators.com/agk/trial/register?s=fv98dxs34a");
+}
 
 G_MODULE_EXPORT void on_help_shortcuts1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
@@ -1480,6 +1494,64 @@ G_MODULE_EXPORT void on_help_menu_item_tgc_activate(GtkMenuItem *item, gpointer 
 G_MODULE_EXPORT void on_help_menu_item_forum_activate(GtkMenuItem *item, gpointer user_data)
 {
 	utils_open_browser("http://forum.thegamecreators.com");
+}
+
+G_MODULE_EXPORT void on_help_menu_item_register_activate(GtkMenuItem *item, gpointer user_data)
+{
+	gchar *szContents = 0;
+	gsize length = 0;
+	gchar *trialfile = g_build_filename(app->configdir, "trial.conf", NULL);
+	if ( g_file_test(trialfile, G_FILE_TEST_EXISTS) )
+	{
+		g_file_get_contents( trialfile, &szContents, &length, NULL );
+		if ( item == NULL && strcmp( szContents, "1" ) != 0 ) 
+		{
+			if ( user_data ) *((gint*)user_data) = 1;
+			return;
+		}
+	}
+
+	if (ui_widgets.trial_dialog == NULL) 
+	{
+		ui_widgets.trial_dialog = create_trial_dialog();
+        gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.trial_dialog), GTK_WINDOW(main_widgets.window));
+        
+		g_signal_connect(ui_widgets.trial_dialog, "response", G_CALLBACK(on_trial_dialog_response), NULL);
+		g_signal_connect(ui_widgets.trial_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+	}
+
+	gint x, y, width, height;
+	gtk_window_get_position(GTK_WINDOW(main_widgets.window), &x, &y);
+	gtk_window_get_size(GTK_WINDOW(main_widgets.window), &width, &height);
+
+	gint x2 = width / 2 - 225 + x;
+	gint y2 = height / 2 - 60 + y;
+	
+	gtk_window_move( GTK_WINDOW(ui_widgets.trial_dialog), x2, y2 );
+
+	if ( szContents && strcmp( szContents, "1" ) != 0 )
+	{
+		GtkWidget *widget = ui_lookup_widget(ui_widgets.trial_dialog, "trial_check_show_again");
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), 1 );
+	}
+	
+	gtk_window_present( GTK_WINDOW(ui_widgets.trial_dialog) );
+}
+
+void on_trial_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	if ( response < 0 ) return;
+
+	GtkWidget *widget = ui_lookup_widget(ui_widgets.trial_dialog, "trial_check_show_again");
+	int show_again = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) == FALSE ? 1 : 0;
+
+	GError *error = NULL;
+	gchar *trialfile = g_build_filename(app->configdir, "trial.conf", NULL);
+	g_file_set_contents( trialfile, show_again ? "1" : "0", -1, &error );
+	
+	gtk_widget_hide(GTK_WIDGET(dialog));
+
+	if ( main_status.quitting ) on_exit_clicked( NULL, NULL );
 }
 
 G_MODULE_EXPORT void on_comments_function_activate(GtkMenuItem *menuitem, gpointer user_data)

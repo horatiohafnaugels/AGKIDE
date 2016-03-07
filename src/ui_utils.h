@@ -156,6 +156,7 @@ typedef struct UIWidgets
 	GtkWidget	*ios_dialog;
 	GtkWidget	*keystore_dialog;
 	GtkWidget	*install_dialog;
+	GtkWidget	*trial_dialog;
 
 	/* other widgets not needed in GeanyMainWidgets */
 	GtkWidget	*statusbar;			/* use ui_set_statusbar() to set */
@@ -242,6 +243,7 @@ GtkWidget *create_keystore_dialog(void);
 GtkWidget *create_install_dialog(void);
 GtkWidget *create_project_dialog(void);
 GtkWidget *create_toolbar_popup_menu1(void);
+GtkWidget *create_trial_dialog(void);
 GtkWidget *create_window1(void);
 
 void ui_widget_set_sensitive(GtkWidget *widget, gboolean set);

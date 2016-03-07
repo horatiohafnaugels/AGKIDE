@@ -89,6 +89,7 @@ static GtkWidget* ios_dialog = NULL;
 static GtkWidget* keystore_dialog = NULL;
 static GtkWidget* install_dialog = NULL;
 static GtkWidget* project_dialog = NULL;
+static GtkWidget* trial_dialog = NULL;
 
 static struct
 {
@@ -2553,6 +2554,10 @@ GtkWidget *create_toolbar_popup_menu1(void)
 	return toolbar_popup_menu1;
 }
 
+GtkWidget *create_trial_dialog(void)
+{
+	return trial_dialog;
+}
 
 GtkWidget *create_window1(void)
 {
@@ -2625,6 +2630,7 @@ void ui_init_builder(void)
 	install_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "installation_dialog"));
 	project_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "project_dialog"));
 	toolbar_popup_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "toolbar_popup_menu1"));
+	trial_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "trial_dialog"));
 	window1 = GTK_WIDGET(gtk_builder_get_object(builder, "window1"));
 
 	g_object_set_data(G_OBJECT(edit_menu1), "edit_menu1", edit_menu1);
@@ -2635,6 +2641,7 @@ void ui_init_builder(void)
 	g_object_set_data(G_OBJECT(install_dialog), "installation_dialog", install_dialog);
 	g_object_set_data(G_OBJECT(project_dialog), "project_dialog", project_dialog);
 	g_object_set_data(G_OBJECT(toolbar_popup_menu1), "toolbar_popup_menu1", toolbar_popup_menu1);
+	g_object_set_data(G_OBJECT(trial_dialog), "trial_dialog", trial_dialog);
 	g_object_set_data(G_OBJECT(window1), "window1", window1);
 
 	all_objects = gtk_builder_get_objects(builder);
@@ -2761,6 +2768,8 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(project_dialog);
 	if (GTK_IS_WIDGET(toolbar_popup_menu1))
 		gtk_widget_destroy(toolbar_popup_menu1);
+	if (GTK_IS_WIDGET(trial_dialog))
+		gtk_widget_destroy(trial_dialog);
 	if (GTK_IS_WIDGET(window1))
 		gtk_widget_destroy(window1);
 }

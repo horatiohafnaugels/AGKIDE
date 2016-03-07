@@ -26,6 +26,8 @@ void win32_init();
 
 void win32_check_xinput();
 
+void win32_update_exe_icon( gchar* exe_file, gchar* ico_file ); 
+
 void win32_finalize();
 
 void win32_show_pref_file_dialog(GtkEntry *item);

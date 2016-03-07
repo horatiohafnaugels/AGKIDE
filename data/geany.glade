@@ -8415,6 +8415,12 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -8435,6 +8441,12 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -11596,6 +11608,7 @@ To generate a keystore file you need to submit some information about you or you
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">D_ebug</property>
                     <property name="use_underline">True</property>
+                    <signal name="activate" handler="on_menu_debug_activate" swapped="no"/>
                     <child type="submenu">
                       <object class="GtkMenu" id="menu5">
                         <property name="visible">True</property>
@@ -11605,7 +11618,7 @@ To generate a keystore file you need to submit some information about you or you
                             <property name="label">gtk-media-pause</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Pause the current program</property>
+                            <property name="tooltip_text" translatable="yes">Pause/Continue the current program</property>
                             <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
                             <signal name="activate" handler="on_debug_pause_activate" swapped="no"/>
@@ -11905,6 +11918,15 @@ To generate a keystore file you need to submit some information about you or you
                             <property name="label">Community _Forum</property>
                             <property name="use_underline">True</property>
                             <signal name="activate" handler="on_help_menu_item_forum_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="help_menu_item_register">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Register Your Interest</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_help_menu_item_register_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>
@@ -13847,6 +13869,85 @@ To generate a keystore file you need to submit some information about you or you
     </child>
     <action-widgets>
       <action-widget response="0">button1</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="trial_dialog">
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="title" translatable="yes">AGK Trial Version</property>
+    <property name="type_hint">normal</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox12">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area12">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkCheckButton" id="trial_check_show_again">
+                <property name="label" translatable="yes">Do not show this again</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+                <property name="secondary">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="trial_button_ok">
+                <property name="label">gtk-ok</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal name="clicked" handler="on_trial_button_ok_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEventBox" id="trial_image_event">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <signal name="button-press-event" handler="on_trial_image_event_button_press_event" swapped="no"/>
+            <child>
+              <object class="GtkImage" id="image21">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="pixbuf">TrialPopup.png</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-1">trial_check_show_again</action-widget>
+      <action-widget response="0">trial_button_ok</action-widget>
     </action-widgets>
   </object>
   <object class="GtkListStore" id="variable_store">

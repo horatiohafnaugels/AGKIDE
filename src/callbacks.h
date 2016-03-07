@@ -264,6 +264,17 @@ on_help1_activate					  (GtkMenuItem	 *menuitem,
 										gpointer		 user_data);
 
 G_MODULE_EXPORT void
+on_trial_image_event_button_press_event(GtkWidget *widget, 
+										GdkEvent *event, 
+										gpointer user_data);
+
+void on_trial_dialog_response(GtkDialog *dialog, gint response, gpointer user_data);
+
+G_MODULE_EXPORT void
+on_help_menu_item_register_activate		(GtkMenuItem	 *menuitem,
+										gpointer		 user_data);
+
+G_MODULE_EXPORT void
 on_toolbutton_compile_clicked		  (GtkAction	   *action,
 										gpointer		 user_data);
 

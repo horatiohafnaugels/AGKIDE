@@ -1367,6 +1367,11 @@ gint main(gint argc, gchar **argv)
 #endif
 	setup_window_position();
 
+#ifndef AGK_TRIAL_POPUP
+	GtkWidget *menu_register = ui_lookup_widget(main_widgets.window, "help_menu_item_register");
+	gtk_widget_hide(menu_register);
+#endif
+
 	/* finally show the window */
 	//document_grab_focus(doc);
 	gtk_widget_show(main_widgets.window);
@@ -1494,6 +1499,12 @@ gint main(gint argc, gchar **argv)
 				install_thread = 0;
 			}
 		}
+	}
+	else
+	{
+#ifdef AGK_TRIAL_POPUP
+		on_help_menu_item_register_activate( NULL, NULL );
+#endif
 	}
 
 #ifdef G_OS_WIN32

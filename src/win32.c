@@ -101,11 +101,17 @@ void win32_init()
 
 void win32_check_xinput()
 {
-	HMODULE lib_xinput = LoadLibrary( "XInput9_1_0.dll" );
+	HMODULE lib_xinput = LoadLibrary( "XInput1_4.dll" ); // Windows 8 and 10
+	if ( !lib_xinput ) lib_xinput = LoadLibrary( "XInput1_3.dll" ); // Everything else needs the DirectX End-User Runtime
 	if ( !lib_xinput )
 		dialogs_show_msgbox( GTK_MESSAGE_WARNING, "AGK could not detect the latest version of DirectX, please make sure you have the \"DirectX End-User Runtime\" installed or apps may not run properly on this machine" );
 	else
 		FreeLibrary(lib_xinput);
+}
+
+void win32_update_exe_icon( gchar* exe_file, gchar* ico_file )
+{
+	
 }
 
 void win32_finalize()

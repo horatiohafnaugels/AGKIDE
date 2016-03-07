@@ -1495,7 +1495,7 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 	if ( build_prefs.agk_debug_ip && *build_prefs.agk_debug_ip )
 	{
 		#ifdef AGK_FREE_VERSION
-			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging on remote devices is disabled in the trial version");
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging on remote devices is disabled in the trial version. Remove the debug IP address in the build settings to stop this message");
 		#else
 			debug_local = 0;
 			// debug on remote device
