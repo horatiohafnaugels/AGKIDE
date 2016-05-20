@@ -2432,6 +2432,9 @@ gboolean utils_copy_folder ( const gchar* src, const gchar* dst, gboolean recurs
 gboolean utils_remove_folder_recursive ( const gchar* src )
 {
 	g_return_val_if_fail (src != NULL, FALSE);
+	if ( strcmp(src,"/") == 0 ) { g_critical (G_STRLOC ": Delete attempt on '%s' ignored.", src); return FALSE; } // don't delete root
+	if ( strcmp(src,"C:") == 0 ) { g_critical (G_STRLOC ": Delete attempt on '%s' ignored.", src); return FALSE; } // don't delete root
+	if ( strcmp(src,"C:\\") == 0 ) { g_critical (G_STRLOC ": Delete attempt on '%s' ignored.", src); return FALSE; } // don't delete root
 
 	if (!g_file_test (src, G_FILE_TEST_EXISTS)) {
         return TRUE;
@@ -2559,6 +2562,114 @@ gboolean utils_add_folder_to_zip ( mz_zip_archive *pZip, const gchar* src, const
 
 		g_free(fullsrcpath);
 		g_free(fulldstpath);
+	}
+
+	g_dir_close(dir);
+	
+	return TRUE;
+}
+
+gboolean utils_add_folder_to_html5_data_file( FILE *pHTML5Data, const gchar* srcfull, const gchar* src, gchar* load_package_string, gchar* additional_folders_string, int* currpos )
+{
+	g_return_val_if_fail (pHTML5Data != NULL, FALSE);
+	g_return_val_if_fail (srcfull != NULL, FALSE);
+	g_return_val_if_fail (src != NULL, FALSE);
+    g_return_val_if_fail (load_package_string != NULL, FALSE);
+	g_return_val_if_fail (additional_folders_string != NULL, FALSE);
+	g_return_val_if_fail (currpos != NULL, FALSE);
+
+	if (!g_file_test (srcfull, G_FILE_TEST_EXISTS)) {
+        g_critical (G_STRLOC ": Location '%s' not found.", srcfull);
+        return FALSE;
+    }
+
+	if (!g_file_test (srcfull, G_FILE_TEST_IS_DIR)) {
+        g_critical (G_STRLOC ": Location '%s' is not a directory.", srcfull);
+        return FALSE;
+    }
+
+	// scan the directory
+	const gchar *filename;
+	GDir *dir = g_dir_open(srcfull, 0, NULL);
+	if (dir == NULL)
+	{
+		g_critical (G_STRLOC ": Failed to open directory '%s'", srcfull);
+		return FALSE;
+	}
+
+	foreach_dir(filename, dir)
+	{
+		gchar* filepath = g_build_path( "/", srcfull, filename, NULL );
+		gchar* shortfilepath = g_build_path( "/", src, filename, NULL );
+			
+		if ( g_file_test( filepath, G_FILE_TEST_IS_DIR ) )
+		{
+			strcat( additional_folders_string, "Module[\"FS_createPath\"](\"" ); 
+			strcat( additional_folders_string, src ); 
+			strcat( additional_folders_string, "\", \"" );
+			strcat( additional_folders_string, filename );
+			strcat( additional_folders_string, "\", true, true);" );
+
+			if ( !utils_add_folder_to_html5_data_file( pHTML5Data, filepath, shortfilepath, load_package_string, additional_folders_string, currpos ) ) 
+			{
+				g_dir_close(dir);
+				g_free(filepath);
+				g_free(shortfilepath);
+				return FALSE;
+			}
+		}
+		else if ( g_file_test( filepath, G_FILE_TEST_IS_REGULAR ) )
+		{
+			gchar *contents = 0;
+			gsize length = 0;
+
+			if ( !g_file_get_contents( filepath, &contents, &length, NULL ) )
+			{
+				g_dir_close(dir);
+				g_free(filepath);
+				g_free(shortfilepath);
+				if ( contents ) g_free(contents);
+
+				g_critical (G_STRLOC ": Failed to open file '%s'", filepath);
+				return FALSE;
+			}
+			
+			if ( length > 0 && fwrite( contents, 1, length, pHTML5Data ) != length )
+			{
+				g_dir_close(dir);
+				g_free(filepath);
+				g_free(shortfilepath);
+				g_free(contents);
+
+				g_critical (G_STRLOC ": Failed to convert file '%s' to HTML5 data", filepath);
+				return FALSE;
+			}
+
+			g_free(contents);
+
+			int audio = 0;
+			gchar *ext = strrchr( filename, '.' );
+			if ( ext )
+			{
+				if ( utils_str_casecmp( ext, ".mp3" ) == 0 ) audio = 1;
+				if ( utils_str_casecmp( ext, ".m4a" ) == 0 ) audio = 1;
+				if ( utils_str_casecmp( ext, ".wav" ) == 0 ) audio = 1;
+				if ( utils_str_casecmp( ext, ".ogg" ) == 0 ) audio = 1;
+			}
+
+			// append file data to load packing string
+			char str[ 30 ];
+			strcat( load_package_string, "{\"audio\":" ); strcat( load_package_string, audio ? "1" : "0" );
+			strcat( load_package_string, ",\"start\":" ); sprintf( str, "%d", *currpos ); strcat( load_package_string, str );
+			strcat( load_package_string, ",\"crunched\":0" ); 
+			strcat( load_package_string, ",\"end\":" ); sprintf( str, "%d", *currpos+length ); strcat( load_package_string, str );
+			strcat( load_package_string, ",\"filename\":\"" ); strcat( load_package_string, shortfilepath ); strcat( load_package_string, "\"}," );
+
+			*currpos += length;
+		}
+
+		g_free(filepath);
+		g_free(shortfilepath);
 	}
 
 	g_dir_close(dir);

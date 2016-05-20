@@ -449,6 +449,386 @@ void project_import(void)
 	}
 }
 
+static void on_html5_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	static int running = 0;
+	if ( running ) return;
+
+	running = 1;
+
+	if ( response != 1 )
+	{
+		gtk_widget_hide(GTK_WIDGET(dialog));
+	}
+	else
+	{
+		int i;
+		GtkWidget *widget;
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.html5_dialog, "html5_export1"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.html5_dialog, "button12"), FALSE );
+		
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// app details
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_commands_combo");
+		gchar *html5_commands = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int commands_mode = -1;
+		if ( strcmp(html5_commands,"2D and 3D") == 0 ) commands_mode = 1;
+		else if ( strcmp(html5_commands,"2D Only") == 0 ) commands_mode = 0;
+		g_free(html5_commands);
+
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_dynamic_memory");
+		int dynamic_memory = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+				
+		// output
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_entry");
+		gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		// START CHECKS
+
+		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your HTML5 files"); goto html5_dialog_clean_up; }
+		if ( commands_mode < 0 ) { SHOW_ERR("Unrecognised choice for 'commands used' drop down box"); goto html5_dialog_clean_up; }
+
+		goto html5_dialog_continue;
+
+html5_dialog_clean_up:
+		if ( output_file ) g_free(output_file);
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.html5_dialog, "html5_export1"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.html5_dialog, "button12"), TRUE );
+		running = 0;
+		return;
+
+html5_dialog_continue:
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// CHECKS COMPLETE, START EXPORT
+
+		// make temporary folder
+		gchar* tmp_folder = g_build_filename( app->project->base_path, "build_tmp", NULL );
+		utils_str_replace_char( tmp_folder, '\\', '/' );
+		
+		const gchar *szCommandsFolder = "";
+		if ( dynamic_memory ) szCommandsFolder = commands_mode ? "3Ddynamic" : "2Ddynamic";
+		else szCommandsFolder = commands_mode ? "3D" : "2D";
+
+		gchar* src_folder = g_build_path( "/", app->datadir, "html5", szCommandsFolder, NULL );
+		utils_str_replace_char( src_folder, '\\', '/' );
+
+		// decalrations
+		gchar sztemp[30];
+		gchar *newcontents = 0;
+		gchar *load_package_string = g_new0( gchar, 200000 );
+		gchar *additional_folders_string = g_new0( gchar, 200000 );
+		gchar* agkplayer_file = NULL;
+		gchar* html5data_file = NULL;
+		gchar *contents = NULL;
+		gchar *contents2 = NULL;
+		gchar *contents3 = NULL;
+		gsize length = 0;
+		GError *error = NULL;
+		FILE *pHTML5File = 0;
+		gchar *media_folder = 0;
+
+		mz_zip_archive zip_archive;
+		memset(&zip_archive, 0, sizeof(zip_archive));
+		gchar *str_out = NULL;
+				
+		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
+		{
+			SHOW_ERR( "Failed to copy source folder" );
+			goto html5_dialog_cleanup2;
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// create HTML5 data file that we'll add all the media files to
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.data", NULL );
+		pHTML5File = fopen( html5data_file, "wb" );
+		if ( !pHTML5File )
+		{
+			SHOW_ERR( "Failed to open HTML5 data file for writing" );
+			goto html5_dialog_cleanup2;
+		}
+
+		// start the load package string that will store the list of files, it will be built at the same time as adding the media files
+		strcpy( load_package_string, "loadPackage({\"files\":[" );
+		strcpy( additional_folders_string, "Module[\"FS_createPath\"](\"/\", \"media\", true, true);" );
+		media_folder = g_build_path( "/", app->project->base_path, "media", NULL );
+		int currpos = 0;
+
+		// add the media files and construct the load package string, currpos will have the total data size afterwards
+		if ( !utils_add_folder_to_html5_data_file( pHTML5File, media_folder, "/media", load_package_string, additional_folders_string, &currpos ) )
+		{
+			fclose( pHTML5File );
+			pHTML5File = 0;
+
+			SHOW_ERR( "Failed to write HTML5 data file" );
+			goto html5_dialog_cleanup2;
+		}
+
+		fclose( pHTML5File );
+		pHTML5File = 0;
+
+		// remove the final comma that was added
+		if ( *load_package_string ) load_package_string[ strlen(load_package_string) - 1 ] = 0;
+
+		// finsh the load package string 
+		strcat( load_package_string, "],\"remote_package_size\":" );
+		sprintf( sztemp, "%d", currpos );
+		strcat( load_package_string, sztemp );
+		strcat( load_package_string, ",\"package_uuid\":\"e3c8dd30-b68a-4332-8c93-d0cf8f9d28a0\"})" );
+
+		
+		// edit AGKplayer.js to add our load package string
+		agkplayer_file = g_build_path( "/", tmp_folder, "AGKPlayer.js", NULL );
+
+		if ( !g_file_get_contents( agkplayer_file, &contents, &length, &error ) )
+		{
+			SHOW_ERR1( "Failed to read AGKPlayer.js file: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto html5_dialog_cleanup2;
+		}
+
+		newcontents = g_new0( gchar, length + 400000 );
+
+		contents2 = contents;
+		contents3 = 0;
+
+		// the order of these relacements is important (if more than one), they must occur in the same order as they occur in the file
+
+		// replace %%ADDITIONALFOLDERS%%
+		contents3 = strstr( contents2, "%%ADDITIONALFOLDERS%%" );
+		if ( contents3 )
+		{
+			*contents3 = 0;
+			contents3 += strlen("%%ADDITIONALFOLDERS%%");
+
+			strcat( newcontents, contents2 );
+			strcat( newcontents, additional_folders_string );
+						
+			contents2 = contents3;
+		}
+		else
+		{
+			SHOW_ERR( "AGKPlayer.js is corrupt, it is missing the %%ADDITIONALFOLDERS%% variable" );
+			goto html5_dialog_cleanup2;
+		}
+
+		// replace %%LOADPACKAGE%%
+		contents3 = strstr( contents2, "%%LOADPACKAGE%%" );
+		if ( contents3 )
+		{
+			*contents3 = 0;
+			contents3 += strlen("%%LOADPACKAGE%%");
+
+			strcat( newcontents, contents2 );
+			strcat( newcontents, load_package_string );
+						
+			contents2 = contents3;
+		}
+		else
+		{
+			SHOW_ERR( "AGKPlayer.js is corrupt, it is missing the %%LOADPACKAGE%% variable" );
+			goto html5_dialog_cleanup2;
+		}
+
+		// write the rest of the file
+		strcat( newcontents, contents2 );
+	
+		// write new AGKPlayer.js file
+		if ( !g_file_set_contents( agkplayer_file, newcontents, strlen(newcontents), &error ) )
+		{
+			SHOW_ERR1( "Failed to write AGKPlayer.js file: %s", error->message );
+			g_error_free(error);
+			error = NULL;
+			goto html5_dialog_cleanup2;
+		}
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// reuse variables
+		if ( html5data_file ) g_free(html5data_file);
+		if ( agkplayer_file ) g_free(agkplayer_file);
+
+		// create zip file
+		/*
+		if ( !mz_zip_writer_init_file( &zip_archive, output_file, 0 ) )
+		{
+			SHOW_ERR( "Failed to initialise zip file for writing" );
+			goto html5_dialog_cleanup2;
+		}
+
+		// copy files to zip
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.asm.js", NULL );
+		mz_zip_writer_add_file( &zip_archive, "AGKPlayer.asm.js", html5data_file, NULL, 0, 9 );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.js", NULL );
+		mz_zip_writer_add_file( &zip_archive, "AGKPlayer.js", html5data_file, NULL, 0, 9 );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.data", NULL );
+		mz_zip_writer_add_file( &zip_archive, "AGKPlayer.data", html5data_file, NULL, 0, 9 );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.html.mem", NULL );
+		mz_zip_writer_add_file( &zip_archive, "AGKPlayer.html.mem", html5data_file, NULL, 0, 9 );
+		g_free( html5data_file );
+
+		// create main html5 file with project name so it stands out as the file to run
+		agkplayer_file = g_new0( gchar, 1024 );
+		strcpy( agkplayer_file, app->project->name );
+		utils_str_replace_char( agkplayer_file, ' ', '_' );
+		strcat( agkplayer_file, ".html" );
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.html", NULL );
+		mz_zip_writer_add_file( &zip_archive, agkplayer_file, html5data_file, NULL, 0, 9 );
+		*/
+
+		utils_mkdir( output_file, TRUE );
+
+		// copy files to folder
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.asm.js", NULL );
+		agkplayer_file = g_build_path( "/", output_file, "AGKPlayer.asm.js", NULL );
+		utils_copy_file( html5data_file, agkplayer_file, TRUE, NULL );
+		g_free( agkplayer_file );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.js", NULL );
+		agkplayer_file = g_build_path( "/", output_file, "AGKPlayer.js", NULL );
+		utils_copy_file( html5data_file, agkplayer_file, TRUE, NULL );
+		g_free( agkplayer_file );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.data", NULL );
+		agkplayer_file = g_build_path( "/", output_file, "AGKPlayer.data", NULL );
+		utils_copy_file( html5data_file, agkplayer_file, TRUE, NULL );
+		g_free( agkplayer_file );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.html.mem", NULL );
+		agkplayer_file = g_build_path( "/", output_file, "AGKPlayer.html.mem", NULL );
+		utils_copy_file( html5data_file, agkplayer_file, TRUE, NULL );
+		g_free( agkplayer_file );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "background.jpg", NULL );
+		agkplayer_file = g_build_path( "/", output_file, "background.jpg", NULL );
+		utils_copy_file( html5data_file, agkplayer_file, TRUE, NULL );
+		g_free( agkplayer_file );
+		g_free( html5data_file );
+
+		html5data_file = g_build_path( "/", tmp_folder, "made-with-appgamekit.png", NULL );
+		agkplayer_file = g_build_path( "/", output_file, "made-with-appgamekit.png", NULL );
+		utils_copy_file( html5data_file, agkplayer_file, TRUE, NULL );
+		g_free( agkplayer_file );
+		g_free( html5data_file );
+
+		// create main html5 file with project name so it stands out as the file to run
+		html5data_file = g_new0( gchar, 1024 );
+		strcpy( html5data_file, app->project->name );
+		utils_str_replace_char( html5data_file, ' ', '_' );
+		strcat( html5data_file, ".html" );
+		agkplayer_file = g_build_path( "/", output_file, html5data_file, NULL );
+		g_free( html5data_file );
+		html5data_file = g_build_path( "/", tmp_folder, "AGKPlayer.html", NULL );
+		utils_copy_file( html5data_file, agkplayer_file, TRUE, NULL );
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		/*
+		if ( !mz_zip_writer_finalize_archive( &zip_archive ) )
+		{
+			SHOW_ERR( "Failed to finalize zip file" );
+			goto html5_dialog_cleanup2;
+		}
+		if ( !mz_zip_writer_end( &zip_archive ) )
+		{
+			SHOW_ERR( "Failed to end zip file" );
+			goto html5_dialog_cleanup2;
+		}
+		*/
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		gtk_widget_hide(GTK_WIDGET(dialog));
+
+html5_dialog_cleanup2:
+        
+        gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.html5_dialog, "html5_export1"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.html5_dialog, "button12"), TRUE );
+
+		utils_remove_folder_recursive( tmp_folder );
+
+		if ( newcontents ) g_free(newcontents);
+		if ( contents ) g_free(contents);
+		if ( load_package_string ) g_free(load_package_string);
+		if ( additional_folders_string ) g_free(additional_folders_string);
+		if ( agkplayer_file ) g_free(agkplayer_file);
+		if ( html5data_file ) g_free(html5data_file);
+		if ( media_folder ) g_free(media_folder);
+		if ( pHTML5File ) fclose(pHTML5File);
+
+		if ( error ) g_error_free(error);
+		
+		if ( tmp_folder ) g_free(tmp_folder);
+		if ( src_folder ) g_free(src_folder);
+		if ( output_file ) g_free(output_file);
+	}
+
+	running = 0;
+}
+
+void project_export_html5()
+{
+	static GeanyProject *last_proj = 0;
+
+	if ( !app->project ) 
+	{
+		SHOW_ERR( "You must have a project open to export it" );
+		return;
+	}
+
+	if (ui_widgets.html5_dialog == NULL)
+	{
+		ui_widgets.html5_dialog = create_html5_dialog();
+		gtk_widget_set_name(ui_widgets.html5_dialog, "Export HTML5");
+		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.html5_dialog), GTK_WINDOW(main_widgets.window));
+
+		g_signal_connect(ui_widgets.html5_dialog, "response", G_CALLBACK(on_html5_dialog_response), NULL);
+        g_signal_connect(ui_widgets.html5_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+		//ui_setup_open_button_callback_html5(ui_lookup_widget(ui_widgets.html5_dialog, "html5_app_icon_path"), NULL,
+		//	GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.html5_dialog, "html5_app_icon_entry")));
+		
+		ui_setup_open_button_callback_html5(ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, GTK_ENTRY(ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_entry")));
+
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.html5_dialog, "html5_commands_combo")), 0 );
+	}
+
+	if ( app->project != last_proj )
+	{
+		last_proj = app->project;
+		//gchar *filename = g_strconcat( app->project->name, ".zip", NULL );
+		gchar* html5_path = g_build_filename( app->project->base_path, "HTML5", NULL );
+		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_entry")), html5_path );
+		g_free(html5_path);
+		//g_free(filename);
+	}
+
+	gtk_window_present(GTK_WINDOW(ui_widgets.html5_dialog));
+}
+
 static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 {
 	static int running = 0;
@@ -645,7 +1025,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			{
 				if ( (version_number[i] < 48 || version_number[i] > 57) && version_number[i] != 46 ) 
 				{ 
-					SHOW_ERR("Version number contains invalid characters, must be 0-9 and . only"); 
+					SHOW_ERR("Version name contains invalid characters, must be 0-9 and . only"); 
 					goto android_dialog_clean_up; 
 				}
 			}
@@ -1308,6 +1688,7 @@ android_dialog_cleanup2:
 		if ( tmp_folder ) g_free(tmp_folder);
 		if ( android_folder ) g_free(android_folder);
 		if ( src_folder ) g_free(src_folder);
+		if ( str_out ) g_free(str_out);
 
 		if ( output_file ) g_free(output_file);
 		if ( app_name ) g_free(app_name);

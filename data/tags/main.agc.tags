@@ -1609,3 +1609,46 @@ GetLocalNotificationExists|Integer|(Integer iID)|
 GetLocalNotificationTime|Integer|(Integer iID)|
 GetLocalNotificationMessage|String|(Integer iID)|
 GetUnixTime|Integer|()|
+RunApp|Integer|(String szFilename, String szParameters)|
+GetAppRunning|Integer|(Integer appID)|
+TerminateApp||(Integer appID)|
+GetObjectMeshSizeMinX|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMaxX|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMinY|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMaxY|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMinZ|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMaxZ|Float|(Integer objID, Integer meshIndex)|
+GetObjectSizeMinX|Float|(Integer objID)|
+GetObjectSizeMaxX|Float|(Integer objID)|
+GetObjectSizeMinY|Float|(Integer objID)|
+GetObjectSizeMaxY|Float|(Integer objID)|
+GetObjectSizeMinZ|Float|(Integer objID)|
+GetObjectSizeMaxZ|Float|(Integer objID)|
+SetCameraOrthoWidth||(Integer cameraID, Float width)|
+SaveSharedVariable||(String varName, String varValue)|
+LoadSharedVariable|String|(String varName, String defaultValue)|
+DeleteSharedVariable||(String varName)|
+LoadImageResized||(Integer iImageID, String szFilename, Float scaleX, Float scaleY)|
+LoadImageResized|Integer|(String szFilename, Float scaleX, Float scaleY)|
+ResizeImage||(Integer imageID, Integer width, Integer height)|
+ConnectSocket|Integer|(String szIP, Integer port, Integer timeout)|
+ConnectSocket|Integer|(Integer socketID, String szIP, Integer port, Integer timeout)|
+GetSocketConnected|Integer|(Integer socketID)|
+DeleteSocket||(Integer socketID)|
+GetSocketRemoteIP|String|(Integer socketID)|
+GetSocketBytesAvailable|Integer|(Integer socketID)|
+GetSocketByte|Integer|(Integer socketID)|
+GetSocketInteger|Integer|(Integer socketID)|
+GetSocketFloat|Float|(Integer socketID)|
+GetSocketString|String|(Integer socketID)|
+SendSocketByte|Integer|(Integer socketID, Integer value)|
+SendSocketInteger|Integer|(Integer socketID, Integer value)|
+SendSocketFloat|Integer|(Integer socketID, Float value)|
+SendSocketString|Integer|(Integer socketID, String value)|
+CreateSocketListener|Integer|(String szIP, Integer port)|
+CreateSocketListener|Integer|(Integer listenerID, String szIP, Integer port)|
+GetSocketListnerConnection|Integer|(Integer listenerID)|
+DeleteSocketListener||(Integer listenerID)|
+FlushSocket|Integer|(Integer socketID)|
+GetSocketExists|Integer|(Integer socketID)|
+GetPaused|Integer|()|

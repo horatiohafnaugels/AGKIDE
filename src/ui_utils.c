@@ -84,6 +84,7 @@ static GtkWidget* window1 = NULL;
 static GtkWidget* toolbar_popup_menu1 = NULL;
 static GtkWidget* edit_menu1 = NULL;
 static GtkWidget* prefs_dialog = NULL;
+static GtkWidget* html5_dialog = NULL;
 static GtkWidget* android_dialog = NULL;
 static GtkWidget* ios_dialog = NULL;
 static GtkWidget* keystore_dialog = NULL;
@@ -1785,6 +1786,7 @@ GtkWidget *ui_path_box_new(const gchar *title, GtkFileChooserAction action, GtkE
 
 
 static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data);
+static void ui_path_box_open_clicked_html5(GtkButton *button, gpointer user_data);
 static void ui_path_box_open_clicked_android(GtkButton *button, gpointer user_data);
 static void ui_path_box_open_clicked_ios(GtkButton *button, gpointer user_data);
 static void ui_path_box_open_clicked_keystore(GtkButton *button, gpointer user_data);
@@ -1803,6 +1805,18 @@ void ui_setup_open_button_callback(GtkWidget *open_btn, const gchar *title,
 				(GDestroyNotify) g_free);
 	g_object_set_data(G_OBJECT(open_btn), "action", GINT_TO_POINTER(action));
 	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked), path_entry);
+}
+
+void ui_setup_open_button_callback_html5(GtkWidget *open_btn, const gchar *title,
+		GtkFileChooserAction action, GtkEntry *entry)
+{
+	GtkWidget *path_entry = GTK_WIDGET(entry);
+
+	if (title)
+		g_object_set_data_full(G_OBJECT(open_btn), "title", g_strdup(title), (GDestroyNotify) g_free);
+
+	g_object_set_data(G_OBJECT(open_btn), "action", GINT_TO_POINTER(action));
+	g_signal_connect(open_btn, "clicked", G_CALLBACK(ui_path_box_open_clicked_html5), path_entry);
 }
 
 void ui_setup_open_button_callback_android(GtkWidget *open_btn, const gchar *title,
@@ -1946,6 +1960,75 @@ static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data)
 		if ( interface_prefs.use_native_windows_dialogs )
 		{
 			utf8_path = win32_show_file_save_dialog(GTK_WINDOW(ui_widgets.prefs_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+
+	if (utf8_path != NULL)
+	{
+		gtk_entry_set_text(GTK_ENTRY(entry), utf8_path);
+		g_free(utf8_path);
+	}
+}
+
+static void ui_path_box_open_clicked_html5(GtkButton *button, gpointer user_data)
+{
+	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
+	GtkEntry *entry = user_data;
+	const gchar *title = g_object_get_data(G_OBJECT(button), "title");
+	gchar *utf8_path = NULL;
+
+	/* TODO: extend for other actions */
+	g_return_if_fail(action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER ||
+					 action == GTK_FILE_CHOOSER_ACTION_OPEN ||
+					 action == GTK_FILE_CHOOSER_ACTION_SAVE);
+
+	if (title == NULL)
+		title = (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ?
+			_("Select Folder") : _("Select File");
+
+	if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_dialog(GTK_WINDOW(ui_widgets.html5_dialog), title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)
+	{
+		gchar *path = g_path_get_dirname(gtk_entry_get_text(GTK_ENTRY(entry)));
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_folder_dialog(ui_widgets.html5_dialog, title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, path);
+		}
+
+		g_free(path);
+	}
+	else if (action == GTK_FILE_CHOOSER_ACTION_SAVE)
+	{
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_file_save_dialog(GTK_WINDOW(ui_widgets.html5_dialog), title,
 							gtk_entry_get_text(GTK_ENTRY(entry)));
 		}
 		else
@@ -2524,6 +2607,11 @@ GtkWidget *create_prefs_dialog(void)
 	return prefs_dialog;
 }
 
+GtkWidget *create_html5_dialog(void)
+{
+	return html5_dialog;
+}
+
 GtkWidget *create_android_dialog(void)
 {
 	return android_dialog;
@@ -2624,6 +2712,7 @@ void ui_init_builder(void)
 
 	edit_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "edit_menu1"));
 	prefs_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_dialog"));
+	html5_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "html5_dialog"));
 	android_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "android_dialog"));
 	ios_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "ios_dialog"));
 	keystore_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "keystore_dialog"));
@@ -2635,6 +2724,7 @@ void ui_init_builder(void)
 
 	g_object_set_data(G_OBJECT(edit_menu1), "edit_menu1", edit_menu1);
 	g_object_set_data(G_OBJECT(prefs_dialog), "prefs_dialog", prefs_dialog);
+	g_object_set_data(G_OBJECT(html5_dialog), "html5_dialog", html5_dialog);
 	g_object_set_data(G_OBJECT(android_dialog), "android_dialog", android_dialog);
 	g_object_set_data(G_OBJECT(ios_dialog), "ios_dialog", ios_dialog);
 	g_object_set_data(G_OBJECT(keystore_dialog), "keystore_dialog", keystore_dialog);
@@ -2756,6 +2846,8 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(edit_menu1);
 	if (GTK_IS_WIDGET(prefs_dialog))
 		gtk_widget_destroy(prefs_dialog);
+	if (GTK_IS_WIDGET(html5_dialog))
+		gtk_widget_destroy(html5_dialog);
 	if (GTK_IS_WIDGET(android_dialog))
 		gtk_widget_destroy(android_dialog);
 	if (GTK_IS_WIDGET(ios_dialog))

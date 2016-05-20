@@ -1067,8 +1067,10 @@ GPid build_compile_project_spawn_cmd(GeanyProject *project)
 #else
 	#ifdef __x86_64__
 		static const gchar *compiler = "AGKCompiler64";
-	#else
+	#elif __i386__
 		static const gchar *compiler = "AGKCompiler32";
+	#else
+		static const gchar *compiler = "AGKCompiler";
 	#endif
 #endif
 
@@ -1343,8 +1345,10 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 #else
 	#ifdef __x86_64__
 		static const gchar *broadcaster = "AGKBroadcaster64";
-	#else
+	#elif __i386__
 		static const gchar *broadcaster = "AGKBroadcaster32";
+	#else
+		static const gchar *broadcaster = "AGKBroadcaster";
 	#endif
 #endif
 
@@ -1442,8 +1446,10 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 #else
 	#ifdef __x86_64__
 		static const gchar *broadcaster = "AGKBroadcaster64";
-	#else
+	#elif __i386__
 		static const gchar *broadcaster = "AGKBroadcaster32";
+	#else
+		static const gchar *broadcaster = "AGKBroadcaster";
 	#endif
 #endif
 
@@ -1522,8 +1528,10 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 #else
 		#ifdef __x86_64__
 			path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/LinuxPlayer64", NULL );
-		#else
+		#elif __i386__
 			path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/LinuxPlayer32", NULL );
+		#else
+			path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/PiPlayer", NULL );
 		#endif
 #endif
 		

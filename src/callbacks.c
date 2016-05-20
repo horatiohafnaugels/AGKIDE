@@ -1498,6 +1498,39 @@ G_MODULE_EXPORT void on_help_menu_item_forum_activate(GtkMenuItem *item, gpointe
 
 G_MODULE_EXPORT void on_help_menu_item_register_activate(GtkMenuItem *item, gpointer user_data)
 {
+
+	// only show the popup on Steam
+#ifdef G_OS_WIN32
+	gchar *install_dir = win32_get_installation_dir();
+	if ( strstr( install_dir, "SteamApps\\common" ) == 0 && strstr( install_dir, "SteamApps/common" ) == 0 ) 
+	{
+		if ( user_data ) *((gint*)user_data) = 1;
+		return;
+	}
+	g_free(install_dir);
+#elif __APPLE__
+	char szRoot[ 1024 ];
+	uint32_t size = 1024;
+	if ( _NSGetExecutablePath(szRoot, &size) == 0 )
+	{
+		if ( strstr( szRoot, "SteamApps/common" ) == 0 )
+		{
+			if ( user_data ) *((gint*)user_data) = 1;
+			return;
+		}
+	}
+#else
+	gchar szExePath[1024];
+	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
+	readlink( "/proc/self/exe", szExePath, 1024 );
+	if ( strstr( szExePath, "SteamApps/common" ) == 0 ) 
+	{
+		if ( user_data ) *((gint*)user_data) = 1;
+		return;
+	}
+#endif
+
+
 	gchar *szContents = 0;
 	gsize length = 0;
 	gchar *trialfile = g_build_filename(app->configdir, "trial.conf", NULL);
@@ -1949,7 +1982,7 @@ G_MODULE_EXPORT void on_previous_message1_activate(GtkMenuItem *menuitem, gpoint
 
 
 G_MODULE_EXPORT void on_menu_comments_multiline_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
+{	
 	insert_callback_from_menu = TRUE;
 	on_comments_multiline_activate(menuitem, user_data);
 }
@@ -1999,12 +2032,29 @@ G_MODULE_EXPORT void on_project_import1_activate(GtkMenuItem *menuitem, gpointer
 	project_import();
 }
 
+G_MODULE_EXPORT void on_project_export_html5_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+#ifdef AGK_FREE_VERSION
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting is not available in the trial version");
+#else
+	#ifdef __arm__
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Unfortunately exporting is not supported on Raspberry Pi");
+	#else
+		project_export_html5();
+	#endif
+#endif
+}
+
 G_MODULE_EXPORT void on_project_export_apk_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 #ifdef AGK_FREE_VERSION
 	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting is not available in the trial version");
 #else
-	project_export_apk();
+	#ifdef __arm__
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Unfortunately exporting is not supported on Raspberry Pi");
+	#else
+		project_export_apk();
+	#endif
 #endif
 }
 
@@ -2013,7 +2063,11 @@ G_MODULE_EXPORT void on_menu_tools_android_keystore_activate(GtkMenuItem *menuit
 #ifdef AGK_FREE_VERSION
 	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Generating a keystore is not available in the trial version");
 #else
-	project_generate_keystore();
+	#ifdef __arm__
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Unfortunately generating a keystore is not supported on Raspberry Pi");
+	#else
+		project_generate_keystore();
+	#endif
 #endif
 }
 
@@ -2100,8 +2154,8 @@ G_MODULE_EXPORT void on_menu_tools_install_files_activate(GtkMenuItem *menuitem,
 			GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_file_entry")));
 	}
 
-	gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_file_entry")), install_prefs.projects_folder );
-	gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_file_entry")), install_prefs.tier2_folder );
+	gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "agk_projects_file_entry")), install_prefs.projects_folder ? install_prefs.projects_folder : "" );
+	gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.install_dialog, "tier2_libraries_file_entry")), install_prefs.tier2_folder ? install_prefs.tier2_folder : "" );
 
 	int index = 2-install_prefs.update_projects_mode;
 	if ( index > 2 ) index = 0;

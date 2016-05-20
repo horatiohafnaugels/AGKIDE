@@ -23,6 +23,7 @@ SYS_DATA_FILES = \
 	$(srcdir)/data/colorschemes/* \
 	$(srcdir)/data/android/* \
 	$(srcdir)/data/ios/* \
+	$(srcdir)/data/html5/* \
 	$(srcdir)/data/tags/* \
 	$(top_srcdir)/data/geany.glade \
 	data/geany.css \
@@ -95,6 +96,8 @@ install-data-only:
 	rsync -r --exclude=.svn $(srcdir)/data/android/. $(pkgdatadir)/android
 	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/ios;
 	rsync -r --exclude=.svn $(srcdir)/data/ios/. $(pkgdatadir)/ios
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/html5;
+	rsync -r --exclude=.svn $(srcdir)/data/html5/. $(pkgdatadir)/html5
 
 dist-hook:
 	@if test -d "$(top_srcdir)/.git"; then \

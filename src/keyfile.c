@@ -73,7 +73,11 @@
 #else
 #define GEANY_DEFAULT_TOOLS_TERMINAL	"xterm -e \"/bin/sh %c\""
 #endif
-#define GEANY_DEFAULT_TOOLS_BROWSER		"firefox"
+#ifdef __arm__
+	#define GEANY_DEFAULT_TOOLS_BROWSER		"epiphany-browser"
+#else
+	#define GEANY_DEFAULT_TOOLS_BROWSER		"firefox"
+#endif
 #define GEANY_DEFAULT_TOOLS_PRINTCMD	"lpr"
 #define GEANY_DEFAULT_TOOLS_GREP		"grep"
 #define GEANY_DEFAULT_MRU_LENGTH		10
