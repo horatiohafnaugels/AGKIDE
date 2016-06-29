@@ -24,6 +24,7 @@ GetScreenBoundsTop|Float|()|
 GetScreenBoundsBottom|Float|()|
 GetDisplayAspect|Float|()|
 GetOrientation|Integer|()|
+GetPaused|Integer|()|
 GetResumed|Integer|()|
 SetDefaultMagFilter||(Integer filter)|
 SetDefaultMinFilter||(Integer filter)|
@@ -86,6 +87,8 @@ LoadImage|Integer|(String sImageFilename, Integer bBlackToAlpha)|
 LoadImage|Integer|(String sImageFilename)|
 LoadSubImage||(Integer iImageIndex, Integer iParentIndex, String sImageFilename)|
 LoadSubImage|Integer|(Integer iParentIndex, String sImageFilename)|
+LoadImageResized||(Integer iImageID, String szFilename, Float scaleX, Float scaleY, Integer cache)|
+LoadImageResized|Integer|(String szFilename, Float scaleX, Float scaleY, Integer cache)|
 CreateImageColor||(Integer imageID, Integer red, Integer green, Integer blue, Integer alpha)|
 CreateImageColor|Integer|(Integer red, Integer green, Integer blue, Integer alpha)|
 CreateRenderImage||(Integer imageID, Integer width, Integer height, Integer format, Integer mipmap)|
@@ -107,6 +110,7 @@ GetImage||(Integer imageID, Float x, Float y, Float width, Float height)|
 GetImageFilename|String|(Integer imageID)|
 CopyImage|Integer|(Integer fromImage, Integer x, Integer y, Integer width, Integer height)|
 CopyImage||(Integer newImage, Integer fromImage, Integer x, Integer y, Integer width, Integer height)|
+ResizeImage||(Integer imageID, Integer width, Integer height)|
 ShowChooseImageScreen|Integer|()|
 IsChoosingImage|Integer|()|
 GetChosenImage|Integer|()|
@@ -635,6 +639,8 @@ GetRawTouchValue|Integer|(Integer iIndex)|
 GetRawTouchTime|Float|(Integer iIndex)|
 LoadSound||(Integer iID, String sFilename)|
 LoadSound|Integer|(String sFilename)|
+LoadSoundOGG||(Integer iID, String sFilename)|
+LoadSoundOGG|Integer|(String sFilename)|
 SaveSound||(Integer iID, String sFilename)|
 PlaySound|Integer|(Integer iID)|
 PlaySound|Integer|(Integer iID, Integer iVol)|
@@ -673,6 +679,21 @@ GetMusicExists|Integer|(Integer iID)|
 GetMusicDuration|Float|(Integer iID)|
 GetMusicPosition|Float|()|
 SeekMusic||(Float seconds, Integer mode)|
+LoadMusicOGG|Integer|(String sFile)|
+LoadMusicOGG||(Integer musicID, String sFile)|
+GetMusicExistsOGG|Integer|(Integer musicID)|
+SetMusicVolumeOGG||(Integer musicID, Integer vol)|
+PlayMusicOGG||(Integer musicID)|
+PlayMusicOGG||(Integer musicID, Integer iLoop)|
+PauseMusicOGG||(Integer musicID)|
+ResumeMusicOGG||(Integer musicID)|
+StopMusicOGG||(Integer musicID)|
+DeleteMusicOGG||(Integer musicID)|
+GetMusicPlayingOGG|Integer|(Integer musicID)|
+GetMusicLoopCountOGG|Integer|(Integer musicID)|
+GetMusicDurationOGG|Float|(Integer musicID)|
+GetMusicPositionOGG|Float|(Integer musicID)|
+SeekMusicOGG||(Integer musicID, Float seconds, Integer mode)|
 RecordSound||(String szFilename)|
 StopSoundRecording||()|
 IsSoundRecording|Integer|()|
@@ -746,6 +767,26 @@ GetFileCount|Integer|()|
 CreateBroadcastListener|Integer|(Integer port)|
 GetBroadcastMessage|Integer|(Integer iID)|
 DeleteBroadcastListener||(Integer iID)|
+ConnectSocket|Integer|(String szIP, Integer port, Integer timeout)|
+ConnectSocket|Integer|(Integer socketID, String szIP, Integer port, Integer timeout)|
+GetSocketConnected|Integer|(Integer socketID)|
+GetSocketExists|Integer|(Integer socketID)|
+DeleteSocket||(Integer socketID)|
+GetSocketRemoteIP|String|(Integer socketID)|
+FlushSocket|Integer|(Integer socketID)|
+GetSocketBytesAvailable|Integer|(Integer socketID)|
+GetSocketByte|Integer|(Integer socketID)|
+GetSocketInteger|Integer|(Integer socketID)|
+GetSocketFloat|Float|(Integer socketID)|
+GetSocketString|String|(Integer socketID)|
+SendSocketByte|Integer|(Integer socketID, Integer value)|
+SendSocketInteger|Integer|(Integer socketID, Integer value)|
+SendSocketFloat|Integer|(Integer socketID, Float value)|
+SendSocketString|Integer|(Integer socketID, String value)|
+CreateSocketListener|Integer|(String szIP, Integer port)|
+CreateSocketListener|Integer|(Integer listenerID, String szIP, Integer port)|
+GetSocketListnerConnection|Integer|(Integer listenerID)|
+DeleteSocketListener||(Integer listenerID)|
 HostNetwork|Integer|(String szNetworkName, String szMyName, Integer port)|
 SetNetworkNoMoreClients||(Integer iNetID)|
 JoinNetwork|Integer|(String szNetworkName, String szMyName)|
@@ -789,6 +830,7 @@ SetHTTPHost|Integer|(Integer iHTTP, String szHost, Integer iSecure)|
 SetHTTPHost|Integer|(Integer iHTTP, String szHost, Integer iSecure, String szUser, String szPass)|
 CloseHTTPConnection||(Integer iHTTP)|
 SetHTTPTimeout||(Integer iHTTP, Integer milliseconds)|
+SetHTTPVerifyCertificate||(Integer iHTTP, Integer mode)|
 SendHTTPRequest|String|(Integer iHTTP, String szServerFile)|
 SendHTTPRequest|String|(Integer iHTTP, String szServerFile, String szPostData)|
 SendHTTPRequestASync|Integer|(Integer iHTTP, String szServerFile)|
@@ -982,12 +1024,24 @@ GetHoursFromUnix|Integer|(Integer unixtime)|
 GetMinutesFromUnix|Integer|(Integer unixtime)|
 GetSecondsFromUnix|Integer|(Integer unixtime)|
 SetInneractiveDetails||(String szCode)|
+SetAdMobDetails||(String szID)|
+SetChartboostDetails||(String szKey1, String szKey2)|
+SetAmazonAdDetails||(String szKey)|
+SetAmazonAdTesting||(Integer mode)|
+ShowFullscreenAdvertAdMob||()|
+ShowFullscreenAdvertChartboost||()|
+ShowFullscreenAdvertAmazon||()|
+GetFullscreenAdvertLoadedAdMob|Integer|()|
+GetFullscreenAdvertLoadedChartboost|Integer|()|
+GetFullscreenAdvertLoadedAmazon|Integer|()|
 CreateFullscreenAdvert||()|
 CreateAdvert||(Integer type, Integer horz, Integer vert, Integer test)|
 CreateAdvertEx||(Integer type, Integer horz, Integer vert, Integer test, Float offsetx, Float offsety)|
 SetAdvertPosition||(Float x, Float y, Float width)|
 SetAdvertLocation||(Integer horz, Integer vert, Float width)|
 SetAdvertLocationEx||(Integer horz, Integer vert, Float offsetx, Float offsety, Float width)|
+SetAdvertVisible||(Integer iVisible)|
+RequestAdvertRefresh||()|
 DeleteAdvert||()|
 CreateZip||(Integer zipID, String filename)|
 CreateZip|Integer|(String filename)|
@@ -1006,10 +1060,6 @@ GetInAppPurchaseAvailable|Integer|(Integer iID)|
 InAppPurchaseActivate||(Integer iID)|
 GetInAppPurchaseState|Integer|()|
 InAppPurchaseRestore||()|
-SetAdMobDetails||(String szID)|
-SetChartboostDetails||(String szKey1, String szKey2)|
-SetAdvertVisible||(Integer iVisible)|
-RequestAdvertRefresh||()|
 TwitterSetup||(String szKey, String szSecret)|
 TwitterMessage||(String szMessage)|
 FacebookSetup||(String szID)|
@@ -1035,6 +1085,11 @@ NotificationCreate||(String szDateTime, String szMessage, String szData)|
 GetNotification|Integer|()|
 GetNotificationData|String|()|
 NotificationReset||()|
+SetLocalNotification||(Integer iID, Integer datetime, String szMessage)|
+CancelLocalNotification||(Integer iID)|
+GetLocalNotificationExists|Integer|(Integer iID)|
+GetLocalNotificationTime|Integer|(Integer iID)|
+GetLocalNotificationMessage|String|(Integer iID)|
 MakeColor|Integer|(Integer red, Integer green, Integer blue)|
 GetColorRed|Integer|(Integer color)|
 GetColorGreen|Integer|(Integer color)|
@@ -1104,6 +1159,8 @@ CreateObjectPlane||(Integer objID, Float width, Float height)|
 CreateObjectPlane|Integer|(Float width, Float height)|
 CreateObjectQuad||(Integer objID)|
 CreateObjectQuad|Integer|()|
+CreateObjectFromHeightMap|Integer|(String szImageFile, Float width, Float height, Float length, Integer smoothing, Integer split)|
+CreateObjectFromHeightMap||(Integer objID, String szImageFile, Float width, Float height, Float length, Integer smoothing, Integer split)|
 CreateObjectFromObjectMesh|Integer|(Integer fromObjID, Integer meshIndex)|
 CreateObjectFromObjectMesh||(Integer objID, Integer fromObjID, Integer meshIndex)|
 LoadObject|Integer|(String szFilename)|
@@ -1129,6 +1186,17 @@ GetObjectNumMeshes|Integer|(Integer objID)|
 GetObjectMeshName|String|(Integer objID, Integer meshIndex)|
 SetObjectMeshImage||(Integer objID, Integer meshIndex, Integer imageID, Integer textureStage)|
 SetObjectMeshLightMap||(Integer objID, Integer meshIndex, Integer imageID)|
+SetObjectMeshShader||(Integer objID, Integer meshIndex, Integer shaderID)|
+GetObjectMeshVSSource|String|(Integer objID, Integer meshIndex)|
+GetObjectMeshPSSource|String|(Integer objID, Integer meshIndex)|
+SetObjectMeshUVOffset||(Integer objID, Integer meshIndex, Integer textureStage, Float offsetU, Float offsetV)|
+SetObjectMeshUVScale||(Integer objID, Integer meshIndex, Integer textureStage, Float scaleU, Float scaleV)|
+GetObjectMeshSizeMinX|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMaxX|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMinY|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMaxY|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMinZ|Float|(Integer objID, Integer meshIndex)|
+GetObjectMeshSizeMaxZ|Float|(Integer objID, Integer meshIndex)|
 FixObjectToObject||(Integer objID, Integer toObjID)|
 FixObjectToBone||(Integer objID, Integer toObjID, Integer toBoneIndex)|
 GetObjectNumAnimations|Integer|(Integer objID)|
@@ -1154,9 +1222,6 @@ GetObjectBoneName|String|(Integer objID, Integer boneIndex)|
 GetObjectBoneX|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneY|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneZ|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldX|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldY|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldZ|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneAngleX|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneAngleY|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneAngleZ|Float|(Integer objID, Integer boneIndex)|
@@ -1164,6 +1229,16 @@ GetObjectBoneQuatW|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneQuatX|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneQuatY|Float|(Integer objID, Integer boneIndex)|
 GetObjectBoneQuatZ|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldZ|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldAngleX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldAngleY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldAngleZ|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatW|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatX|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatY|Float|(Integer objID, Integer boneIndex)|
+GetObjectBoneWorldQuatZ|Float|(Integer objID, Integer boneIndex)|
 SetObjectPosition||(Integer objID, Float x, Float y, Float z)|
 SetObjectRotation||(Integer objID, Float angx, Float angy, Float angz)|
 SetObjectRotationQuat||(Integer objID, Float w, Float x, Float y, Float z)|
@@ -1198,18 +1273,31 @@ GetObjectWorldQuatW|Float|(Integer objID)|
 GetObjectWorldQuatX|Float|(Integer objID)|
 GetObjectWorldQuatY|Float|(Integer objID)|
 GetObjectWorldQuatZ|Float|(Integer objID)|
+GetObjectSizeMinX|Float|(Integer objID)|
+GetObjectSizeMaxX|Float|(Integer objID)|
+GetObjectSizeMinY|Float|(Integer objID)|
+GetObjectSizeMaxY|Float|(Integer objID)|
+GetObjectSizeMinZ|Float|(Integer objID)|
+GetObjectSizeMaxZ|Float|(Integer objID)|
 SetObjectLookAt||(Integer objID, Float x, Float y, Float z, Float roll)|
 FixObjectPivot||(Integer objID)|
+GetObjectHeightMapHeight|Float|(Integer objID, Float x, Float z)|
 SetObjectImage||(Integer objID, Integer imageID, Integer texStage)|
 SetObjectLightMap||(Integer objID, Integer imageID)|
 SetObjectShader||(Integer objID, Integer shaderID)|
 SetObjectColor||(Integer objID, Integer red, Integer green, Integer blue, Integer alpha)|
 SetObjectColorEmissive||(Integer objID, Integer red, Integer green, Integer blue)|
 SetObjectLightMode||(Integer objID, Integer mode)|
+SetObjectScreenCulling||(Integer objID, Integer mode)|
+SetObjectUVOffset||(Integer objID, Integer textureStage, Float offsetU, Float offsetV)|
+SetObjectUVScale||(Integer objID, Integer textureStage, Float scaleU, Float scaleV)|
+SetObjectFogMode||(Integer objID, Integer mode)|
 SetObjectDepthReadMode||(Integer objID, Integer mode)|
 SetObjectDepthWrite||(Integer objID, Integer mode)|
 SetObjectDepthBias||(Integer objID, Float bias)|
+SetObjectDepthRange||(Integer objID, Float zNear, Float zFar)|
 SetObjectTransparency||(Integer objID, Integer mode)|
+SetObjectAlphaMask||(Integer objID, Integer mode)|
 SetObjectCullMode||(Integer objID, Integer mode)|
 SetObjectVisible||(Integer objID, Integer mode)|
 GetObjectDepthReadMode|Integer|(Integer objID)|
@@ -1247,6 +1335,18 @@ GetObjectRayCastBounceX|Float|(Integer index)|
 GetObjectRayCastBounceY|Float|(Integer index)|
 GetObjectRayCastBounceZ|Float|(Integer index)|
 GetObjectRayCastDistance|Float|(Integer index)|
+SetFogMode||(Integer mode)|
+SetFogColor||(Integer red, Integer green, Integer blue)|
+SetFogSunColor||(Integer red, Integer green, Integer blue)|
+SetFogRange||(Float minDist, Float maxDist)|
+GetFogMode|Integer|()|
+SetSkyBoxVisible||(Integer active)|
+SetSkyBoxSkyColor||(Integer red, Integer green, Integer blue)|
+SetSkyBoxHorizonColor||(Integer red, Integer green, Integer blue)|
+SetSkyBoxSunColor||(Integer red, Integer green, Integer blue)|
+SetSkyBoxHorizonSize||(Float size, Float height)|
+SetSkyBoxSunVisible||(Integer visible)|
+SetSkyBoxSunSize||(Float sun, Float halo)|
 LoadShader|Integer|(String szVertexFile, String szPixelFile)|
 LoadShader||(Integer shaderID, String szVertexFile, String szPixelFile)|
 LoadFullScreenShader|Integer|(String szPixelFile)|
@@ -1281,6 +1381,7 @@ SetCameraLookAt||(Integer cameraID, Float x, Float y, Float z, Float roll)|
 SetCameraRange||(Integer cameraID, Float fNear, Float fFar)|
 SetCameraAspect||(Integer cameraID, Float aspect)|
 SetCameraFOV||(Integer cameraID, Float fov)|
+SetCameraOrthoWidth||(Integer cameraID, Float width)|
 GetCameraFOV|Float|(Integer cameraID)|
 CreatePointLight||(Integer lightID, Float x, Float y, Float z, Float radius, Integer red, Integer green, Integer blue)|
 GetPointLightExists|Integer|(Integer lightID)|
@@ -1419,8 +1520,11 @@ Delete3DPhysicsRay||(Integer rayID)|
 Ray3DPhysicsExist|Integer|(Integer rayID)|
 RayCast3DPhysics||(Integer rayID, Integer fromVec3ID, Integer toVec3ID, Integer allOrClosest)|
 RayCast3DPhysicsObject|Integer|(Integer objID, Integer rayID, Integer fromVec3ID, Integer toVec3ID, Integer allOrClosest)|
+Get3DPhysicsRayCastObjectHit|Integer|(Integer rayID, Float fractionIndex)|
 Get3DPhysicsRayCastClosestObjectHit|Integer|(Integer rayID)|
 Get3DPhysicsRayCastFraction|Float|(Integer rayID)|
+Get3DPhysicsRayCastContactPosition|Integer|(Integer rayID, Float fractionIndex, Integer outVec3ID)|
+Get3DPhysicsRayCastClosestContactPosition|Integer|(Integer rayID, Integer outVec3ID)|
 Get3DPhysicsRayCastNormalVector||(Integer rayID, Integer returnVec3ID)|
 Get3DPhysicsRayCastNumHits|Integer|(Integer rayID)|
 SphereCast3DPhysics||(Integer rayID, Integer fromVec3ID, Integer toVec3ID, Float radius)|
@@ -1458,9 +1562,11 @@ Crouch3DPhysicsCharacterController||(Integer objID)|
 Stand3DPhysicsCharacterController||(Integer objID)|
 Debug3DPhysicsCharacterController||(Integer objID, Integer isDebug)|
 Set3DPhysicsCharacterControllerPosition||(Integer objID, Float posX, Float posY, Float posZ)|
+SetWindowPosition||(Integer x, Integer y)|
 SetWindowSize||(Integer width, Integer height, Integer fullscreen)|
 SetWindowAllowResize||(Integer mode)|
 MinimizeApp||()|
+RestoreApp||()|
 SetScreenResolution||(Integer width, Integer height)|
 GetDeviceName|String|()|
 GetDeviceBaseName|String|()|
@@ -1468,6 +1574,7 @@ GetDeviceType|String|()|
 GetAppName|String|()|
 GetDeviceLanguage|String|()|
 SetSleepMode||(Integer mode)|
+SetAntialiasMode||(Integer mode)|
 SetExpansionFileKey||(String key)|
 SetExpansionFileVersion||(Integer version)|
 GetExpansionFileState|Integer|()|
@@ -1529,10 +1636,17 @@ GetCameraExists|Integer|()|
 GetGPSSensorExists|Integer|()|
 SetRawMouseVisible||(Integer visible)|
 SetRawMousePosition||(Float x, Float y)|
+GetUnixTime|Integer|()|
 GetDayOfWeek|Integer|()|
 GetCurrentDate|String|()|
 GetCurrentTime|String|()|
 OpenBrowser||(String url)|
+RunApp|Integer|(String szFilename, String szParameters)|
+GetAppRunning|Integer|(Integer appID)|
+TerminateApp||(Integer appID)|
+ViewFile||(String szFilename)|
+ShareText||(String szText)|
+ShareImage||(String szFilename)|
 GetInternetState|Integer|()|
 SetPushNotificationKeys||(String data1, String reserved)|
 PushNotificationSetup|Integer|()|
@@ -1555,100 +1669,10 @@ GameCenterShowLeaderBoard||(String szBoardID)|
 GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplete)|
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
-SetHTTPVerifyCertificate||(Integer iHTTP, Integer mode)|
-SetObjectScreenCulling||(Integer objID, Integer mode)|
-SetObjectMeshShader||(Integer objID, Integer meshIndex, Integer shaderID)|
-GetObjectMeshVSSource|String|(Integer objID, Integer meshIndex)|
-GetObjectMeshPSSource|String|(Integer objID, Integer meshIndex)|
-Get3DPhysicsRayCastObjectHit|Integer|(Integer rayID, Float fractionIndex)|
-Get3DPhysicsRayCastContactPosition|Integer|(Integer rayID, Float fractionIndex, Integer outVec3ID)|
-Get3DPhysicsRayCastClosestContactPosition|Integer|(Integer rayID, Integer outVec3ID)|
-SetWindowPosition||(Integer x, Integer y)|
-CreateObjectFromHeightMap|Integer|(String szImageFile, Float width, Float height, Float length, Integer smoothing, Integer split)|
-CreateObjectFromHeightMap||(Integer objID, String szImageFile, Float width, Float height, Float length, Integer smoothing, Integer split)|
-SetObjectMeshUVOffset||(Integer objID, Integer meshIndex, Integer textureStage, Float offsetU, Float offsetV)|
-SetObjectMeshUVScale||(Integer objID, Integer meshIndex, Integer textureStage, Float scaleU, Float scaleV)|
-SetObjectUVOffset||(Integer objID, Integer textureStage, Float offsetU, Float offsetV)|
-SetObjectUVScale||(Integer objID, Integer textureStage, Float scaleU, Float scaleV)|
-SetObjectAlphaMask||(Integer objID, Integer mode)|
-SetObjectFogMode||(Integer objID, Integer mode)|
-SetFogMode||(Integer mode)|
-SetFogColor||(Integer red, Integer green, Integer blue)|
-SetFogSunColor||(Integer red, Integer green, Integer blue)|
-SetFogRange||(Float minDist, Float maxDist)|
-GetFogMode|Integer|()|
-SetAntialiasMode||(Integer mode)|
-GetObjectBoneWorldAngleX|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldAngleY|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldAngleZ|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldQuatW|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldQuatX|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldQuatY|Float|(Integer objID, Integer boneIndex)|
-GetObjectBoneWorldQuatZ|Float|(Integer objID, Integer boneIndex)|
-SetSkyBoxVisible||(Integer active)|
-SetSkyBoxSkyColor||(Integer red, Integer green, Integer blue)|
-SetSkyBoxHorizonColor||(Integer red, Integer green, Integer blue)|
-SetSkyBoxSunColor||(Integer red, Integer green, Integer blue)|
-SetSkyBoxHorizonSize||(Float size, Float height)|
-SetSkyBoxSunVisible||(Integer visible)|
-SetSkyBoxSunSize||(Float sun, Float halo)|
-RestoreApp||()|
-SetObjectDepthRange||(Integer objID, Float zNear, Float zFar)|
-GetObjectHeightMapHeight|Float|(Integer objID, Float x, Float z)|
-SetAmazonAdDetails||(String szKey)|
-SetAmazonAdTesting||(Integer mode)|
-ShowFullscreenAdvertAdMob||()|
-ShowFullscreenAdvertChartboost||()|
-ShowFullscreenAdvertAmazon||()|
-GetFullscreenAdvertLoadedAdMob|Integer|()|
-GetFullscreenAdvertLoadedChartboost|Integer|()|
-GetFullscreenAdvertLoadedAmazon|Integer|()|
-SetLocalNotification||(Integer iID, Integer datetime, String szMessage)|
-CancelLocalNotification||(Integer iID)|
-GetLocalNotificationExists|Integer|(Integer iID)|
-GetLocalNotificationTime|Integer|(Integer iID)|
-GetLocalNotificationMessage|String|(Integer iID)|
-GetUnixTime|Integer|()|
-RunApp|Integer|(String szFilename, String szParameters)|
-GetAppRunning|Integer|(Integer appID)|
-TerminateApp||(Integer appID)|
-GetObjectMeshSizeMinX|Float|(Integer objID, Integer meshIndex)|
-GetObjectMeshSizeMaxX|Float|(Integer objID, Integer meshIndex)|
-GetObjectMeshSizeMinY|Float|(Integer objID, Integer meshIndex)|
-GetObjectMeshSizeMaxY|Float|(Integer objID, Integer meshIndex)|
-GetObjectMeshSizeMinZ|Float|(Integer objID, Integer meshIndex)|
-GetObjectMeshSizeMaxZ|Float|(Integer objID, Integer meshIndex)|
-GetObjectSizeMinX|Float|(Integer objID)|
-GetObjectSizeMaxX|Float|(Integer objID)|
-GetObjectSizeMinY|Float|(Integer objID)|
-GetObjectSizeMaxY|Float|(Integer objID)|
-GetObjectSizeMinZ|Float|(Integer objID)|
-GetObjectSizeMaxZ|Float|(Integer objID)|
-SetCameraOrthoWidth||(Integer cameraID, Float width)|
 SaveSharedVariable||(String varName, String varValue)|
 LoadSharedVariable|String|(String varName, String defaultValue)|
 DeleteSharedVariable||(String varName)|
-LoadImageResized||(Integer iImageID, String szFilename, Float scaleX, Float scaleY)|
-LoadImageResized|Integer|(String szFilename, Float scaleX, Float scaleY)|
-ResizeImage||(Integer imageID, Integer width, Integer height)|
-ConnectSocket|Integer|(String szIP, Integer port, Integer timeout)|
-ConnectSocket|Integer|(Integer socketID, String szIP, Integer port, Integer timeout)|
-GetSocketConnected|Integer|(Integer socketID)|
-DeleteSocket||(Integer socketID)|
-GetSocketRemoteIP|String|(Integer socketID)|
-GetSocketBytesAvailable|Integer|(Integer socketID)|
-GetSocketByte|Integer|(Integer socketID)|
-GetSocketInteger|Integer|(Integer socketID)|
-GetSocketFloat|Float|(Integer socketID)|
-GetSocketString|String|(Integer socketID)|
-SendSocketByte|Integer|(Integer socketID, Integer value)|
-SendSocketInteger|Integer|(Integer socketID, Integer value)|
-SendSocketFloat|Integer|(Integer socketID, Float value)|
-SendSocketString|Integer|(Integer socketID, String value)|
-CreateSocketListener|Integer|(String szIP, Integer port)|
-CreateSocketListener|Integer|(Integer listenerID, String szIP, Integer port)|
-GetSocketListnerConnection|Integer|(Integer listenerID)|
-DeleteSocketListener||(Integer listenerID)|
-FlushSocket|Integer|(Integer socketID)|
-GetSocketExists|Integer|(Integer socketID)|
-GetPaused|Integer|()|
+GetInAppPurchaseLocalPrice|String|(Integer iID)|
+GetInAppPurchaseDescription|String|(Integer iID)|
+SetTweenDuration||(Integer tweenID, Float duration)|
+FacebookGetAccessToken|String|()|

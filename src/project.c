@@ -95,6 +95,7 @@ static void init_stash_prefs(void);
 
 static gint ios_exporting_player = 0;
 
+#define AGK_CLEAR_STR(dst) if((dst)) g_free((dst)); (dst)
 
 /* TODO: this should be ported to Glade like the project preferences dialog,
  * then we can get rid of the PropertyDialogElements struct altogether as
@@ -456,6 +457,24 @@ static void on_html5_dialog_response(GtkDialog *dialog, gint response, gpointer 
 
 	running = 1;
 
+	// save current values
+	if ( app->project )
+	{
+		GtkWidget *widget;
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_commands_combo");
+		gchar *html5_commands = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		if ( strcmp(html5_commands,"2D and 3D") == 0 ) app->project->html5_settings.commands_used = 1;
+		else if ( strcmp(html5_commands,"2D Only") == 0 ) app->project->html5_settings.commands_used = 0;
+		g_free(html5_commands);
+
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_dynamic_memory");
+		app->project->html5_settings.dynamic_memory = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+				
+		// output
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_entry");
+		AGK_CLEAR_STR(app->project->html5_settings.output_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+	}
+
 	if ( response != 1 )
 	{
 		gtk_widget_hide(GTK_WIDGET(dialog));
@@ -562,21 +581,24 @@ html5_dialog_continue:
 		media_folder = g_build_path( "/", app->project->base_path, "media", NULL );
 		int currpos = 0;
 
-		// add the media files and construct the load package string, currpos will have the total data size afterwards
-		if ( !utils_add_folder_to_html5_data_file( pHTML5File, media_folder, "/media", load_package_string, additional_folders_string, &currpos ) )
+		if ( g_file_test (media_folder, G_FILE_TEST_EXISTS) )
 		{
-			fclose( pHTML5File );
-			pHTML5File = 0;
+			// add the media files and construct the load package string, currpos will have the total data size afterwards
+			if ( !utils_add_folder_to_html5_data_file( pHTML5File, media_folder, "/media", load_package_string, additional_folders_string, &currpos ) )
+			{
+				fclose( pHTML5File );
+				pHTML5File = 0;
 
-			SHOW_ERR( "Failed to write HTML5 data file" );
-			goto html5_dialog_cleanup2;
+				SHOW_ERR( "Failed to write HTML5 data file" );
+				goto html5_dialog_cleanup2;
+			}
 		}
 
 		fclose( pHTML5File );
 		pHTML5File = 0;
 
 		// remove the final comma that was added
-		if ( *load_package_string ) load_package_string[ strlen(load_package_string) - 1 ] = 0;
+		if ( *load_package_string && load_package_string[strlen(load_package_string)-1] == ',' ) load_package_string[ strlen(load_package_string) - 1 ] = 0;
 
 		// finsh the load package string 
 		strcat( load_package_string, "],\"remote_package_size\":" );
@@ -798,6 +820,9 @@ void project_export_html5()
 		return;
 	}
 
+	// make sure the project is up to date
+	build_compile_project(0);
+
 	if (ui_widgets.html5_dialog == NULL)
 	{
 		ui_widgets.html5_dialog = create_html5_dialog();
@@ -819,11 +844,28 @@ void project_export_html5()
 	if ( app->project != last_proj )
 	{
 		last_proj = app->project;
-		//gchar *filename = g_strconcat( app->project->name, ".zip", NULL );
-		gchar* html5_path = g_build_filename( app->project->base_path, "HTML5", NULL );
-		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_entry")), html5_path );
-		g_free(html5_path);
-		//g_free(filename);
+
+		GtkWidget *widget;
+
+		// set defaults for this project
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_commands_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->html5_settings.commands_used );
+
+		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_dynamic_memory");
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), app->project->html5_settings.dynamic_memory ? 1 : 0 );
+		
+		if ( !app->project->html5_settings.output_path || !*app->project->html5_settings.output_path )
+		{
+			gchar* html5_path = g_build_filename( app->project->base_path, "HTML5", NULL );
+			widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), html5_path );
+			g_free(html5_path);
+		}
+		else
+		{
+			widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_output_file_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), app->project->html5_settings.output_path );
+		}
 	}
 
 	gtk_window_present(GTK_WINDOW(ui_widgets.html5_dialog));
@@ -835,6 +877,99 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 	if ( running ) return;
 
 	running = 1;
+
+	// save default settings
+	if ( app->project )
+	{
+		GtkWidget *widget;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_name_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.app_name) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_package_name_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.package_name) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.app_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.ouya_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
+		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		app->project->apk_settings.orientation = 0;
+		if ( strcmp(app_orientation,"Portrait") == 0 ) app->project->apk_settings.orientation = 1;
+		else if ( strcmp(app_orientation,"All") == 0 ) app->project->apk_settings.orientation = 2;
+		g_free(app_orientation);
+				
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
+		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		app->project->apk_settings.sdk_version = 0;
+		if ( strcmp(app_sdk,"3.2") == 0 ) app->project->apk_settings.sdk_version = 1;
+		g_free(app_sdk);
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
+		AGK_CLEAR_STR(app->project->apk_settings.game_circle_api_key) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
+		AGK_CLEAR_STR(app->project->apk_settings.play_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_shared_user_id");
+		AGK_CLEAR_STR(app->project->apk_settings.shared_user_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		// permissions
+		app->project->apk_settings.permission_flags = 0;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_WRITE;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_GPS;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_LOCATION;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_internet");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_INTERNET;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_wake");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_WAKE;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_IAP;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_PUSH;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
+		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_EXPANSION;
+
+		// signing
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.keystore_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_version_number_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.version_name) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_build_number_entry");
+		int build_number = atoi(gtk_entry_get_text(GTK_ENTRY(widget)));
+		app->project->apk_settings.version_number = build_number;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.alias) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		// output
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.output_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
+		gchar *output_type = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int app_type = 0;
+		if ( strcmp(output_type,"Amazon") == 0 ) app_type = 1;
+		else if ( strcmp(output_type,"Ouya") == 0 ) app_type = 2;
+		g_free(output_type);
+		app->project->apk_settings.app_type = app_type;
+	}
 
 	if ( response != 1 )
 	{
@@ -886,6 +1021,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gchar *google_play_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_shared_user_id");
+		gchar *shared_user_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -990,11 +1128,11 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 				goto android_dialog_clean_up; 
 			}
 
-			if ( (package_name[i] < 97 || package_name[i] > 122)
-			  && (package_name[i] < 65 || package_name[i] > 90) 
-			  && (package_name[i] < 48 || package_name[i] > 57) 
-			  && package_name[i] != 46 
-			  && package_name[i] != 95 ) 
+			if ( (package_name[i] < 97 || package_name[i] > 122) // a-z
+			  && (package_name[i] < 65 || package_name[i] > 90) // A-Z
+			  && (package_name[i] < 48 || package_name[i] > 57) //0-9
+			  && package_name[i] != 46 // .
+			  && package_name[i] != 95 ) // _
 			{ 
 				SHOW_ERR("Package name contains invalid characters, must be A-Z 0-9 . and undersore only"); 
 				goto android_dialog_clean_up; 
@@ -1002,6 +1140,23 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 			last = package_name[i];
 		}
+
+		// check shared user id
+		/*
+		if ( strlen(shared_user_id) > 50 ) { SHOW_ERR("Shared User ID must be less than 50 characters"); goto android_dialog_clean_up; }
+
+		for( i = 0; i < strlen(shared_user_id); i++ )
+		{
+			if ( (shared_user_id[i] < 97 || shared_user_id[i] > 122)
+			  && (shared_user_id[i] < 65 || shared_user_id[i] > 90) ) 
+			{ 
+				SHOW_ERR("Shared User ID contains invalid characters, must be A-Z only");
+				goto android_dialog_clean_up; 
+			}
+
+			last = package_name[i];
+		}
+		*/
 
 		// check icon
 		//if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto android_dialog_clean_up; }
@@ -1059,6 +1214,7 @@ android_dialog_clean_up:
 		if ( app_icon ) g_free(app_icon);
 		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
 		if ( google_play_app_id ) g_free(google_play_app_id);
+		if ( shared_user_id ) g_free(shared_user_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -1188,7 +1344,15 @@ android_dialog_continue:
 		strcat( newcontents, version_number );
 		strcat( newcontents, "\" package=\"" );
 		strcat( newcontents, package_name );
-		strcat( newcontents, "\" android:installLocation=\"auto\">\n\
+		strcat( newcontents, "\"" );
+		if( shared_user_id )
+		{
+			strcat( newcontents, " android:sharedUserId=\"" );
+			strcat( newcontents, shared_user_id );
+			strcat( newcontents, "\"" );
+		}
+
+		strcat( newcontents, " android:installLocation=\"auto\">\n\
     <uses-feature android:glEsVersion=\"0x00020000\"></uses-feature>\n\
     <uses-sdk android:minSdkVersion=\"" );
 		strcat( newcontents, szSDK );
@@ -1697,6 +1861,7 @@ android_dialog_cleanup2:
 		if ( ouya_icon ) g_free(ouya_icon);
 		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
 		if ( google_play_app_id ) g_free(google_play_app_id);
+		if ( shared_user_id ) g_free(shared_user_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -1717,6 +1882,9 @@ void project_export_apk()
 		SHOW_ERR( "You must have a project open to export it" );
 		return;
 	}
+
+	// make sure the project is up to date
+	build_compile_project(0);
 
 	if (ui_widgets.android_dialog == NULL)
 	{
@@ -1745,11 +1913,114 @@ void project_export_apk()
 	if ( app->project != last_proj )
 	{
 		last_proj = app->project;
-		gchar *filename = g_strconcat( app->project->name, ".apk", NULL );
-		gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
-		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")), apk_path );
-		g_free(apk_path);
-		g_free(filename);
+		
+		GtkWidget *widget;
+
+		// set defaults for this project
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_name_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.app_name, "") );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_package_name_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.package_name, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.app_icon_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.ouya_icon_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.orientation );
+						
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.sdk_version );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.game_circle_api_key, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_shared_user_id");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.shared_user_id, "") );
+
+		// permissions
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
+		int mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_WRITE) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_GPS) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_LOCATION) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_internet");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_INTERNET) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_wake");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_WAKE) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_IAP) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_PUSH) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_EXPANSION) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		// signing
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.keystore_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_password_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), "" );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_version_number_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.version_name, "") );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_build_number_entry");
+		if ( app->project->apk_settings.version_number == 0 )
+		{
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+		}
+		else
+		{
+			char szBuildNum[ 20 ];
+			sprintf( szBuildNum, "%d", app->project->apk_settings.version_number );
+			gtk_entry_set_text( GTK_ENTRY(widget), szBuildNum );
+		}
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.alias, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_password_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.app_type );
+		
+		if ( !app->project->apk_settings.output_path || !*app->project->apk_settings.output_path )
+		{
+			gchar *filename = g_strconcat( app->project->name, ".apk", NULL );
+			gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
+			gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")), apk_path );
+			g_free(apk_path);
+			g_free(filename);
+		}
+		else
+		{
+			widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), app->project->apk_settings.output_path );
+		}
 	}
 
 	gtk_window_present(GTK_WINDOW(ui_widgets.android_dialog));
@@ -2042,6 +2313,61 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 	running = 1;
 
+	if ( app->project && !ios_exporting_player )
+	{
+		GtkWidget *widget; 
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_name_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.app_name) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.prov_profile_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.app_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		// splash screens
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.splash_960_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2");
+		AGK_CLEAR_STR(app->project->ipa_settings.splash_1136_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
+		AGK_CLEAR_STR(app->project->ipa_settings.splash_2048_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.facebook_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
+		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		app->project->ipa_settings.orientation = 0;
+		if ( strcmp(app_orientation,"Landscape") == 0 ) app->project->ipa_settings.orientation = 0;
+		else if ( strcmp(app_orientation,"Portrait") == 0 ) app->project->ipa_settings.orientation = 1;
+		else if ( strcmp(app_orientation,"Both") == 0 ) app->project->ipa_settings.orientation = 2;
+		g_free(app_orientation);
+		
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.version_number) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_build_number_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.build_number) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
+		gchar *app_device = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		app->project->ipa_settings.device_type = 0;
+		if ( strcmp(app_device,"iPhone Only") == 0 ) app->project->ipa_settings.device_type = 1;
+		else if ( strcmp(app_device,"iPad Only") == 0 ) app->project->ipa_settings.device_type = 2;
+		g_free(app_device);
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
+		app->project->ipa_settings.uses_ads = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		// output
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry");
+		app->project->ipa_settings.output_path = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+	}
+
 	if ( response != 1 )
 	{
 		gtk_widget_hide(GTK_WIDGET(dialog));
@@ -2085,6 +2411,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		int orientation = 0;
 		if ( strcmp(app_orientation,"Landscape") == 0 ) orientation = 0;
 		else if ( strcmp(app_orientation,"Portrait") == 0 ) orientation = 1;
+		else if ( strcmp(app_orientation,"Both") == 0 ) orientation = 2;
 		g_free(app_orientation);
 		
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
@@ -2650,6 +2977,11 @@ ios_dialog_continue:
                 utils_str_replace_all( &contents, "<string>UIInterfaceOrientationLandscapeLeft</string>", "" );
                 utils_str_replace_all( &contents, "<string>UIInterfaceOrientationLandscapeRight</string>", "" );
                 utils_str_replace_all( &contents, "${InitialInterfaceOrientation}", "UIInterfaceOrientationPortrait" );
+                break;
+            }
+			case 2:
+            {
+				utils_str_replace_all( &contents, "${InitialInterfaceOrientation}", "UIInterfaceOrientationPortrait" );
                 break;
             }
 		}
@@ -3284,7 +3616,13 @@ ios_dialog_cleanup2:
 
 void project_export_ipa()
 {
-	static GeanyProject *last_proj = 0;
+	static GeanyProject *last_proj = -1;
+
+	if ( app->project )
+	{
+		// make sure the project is up to date
+		build_compile_project(0);
+	}
 
 	if (ui_widgets.ios_dialog == NULL)
 	{
@@ -3314,19 +3652,106 @@ void project_export_ipa()
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo")), 0 );
 	}
 
-	if ( app->project != last_proj || app->project == 0 )
+	if ( app->project != last_proj )
 	{
 		last_proj = app->project;
+
         if ( app->project )
         {
-            gchar *filename = g_strconcat( app->project->name, ".ipa", NULL );
-            gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
-            gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
-            g_free(apk_path);
-            g_free(filename);
+			GtkWidget *widget; 
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_name_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.app_name, "") );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.prov_profile_path, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.app_icon_path, "") );
+
+			// splash screens
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.splash_960_path, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.splash_1136_path, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.splash_2048_path, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.facebook_id, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
+			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->ipa_settings.orientation );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.version_number, "") );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_build_number_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.build_number, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
+			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->ipa_settings.device_type );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
+			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), app->project->ipa_settings.uses_ads ? 1 : 0 );
+
+			if ( !app->project->ipa_settings.output_path || !*app->project->ipa_settings.output_path )
+			{
+				gchar *filename = g_strconcat( app->project->name, ".ipa", NULL );
+				gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
+				gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
+				g_free(apk_path);
+				g_free(filename);
+			}
+			else
+			{
+				widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry");
+				gtk_entry_set_text( GTK_ENTRY(widget), app->project->ipa_settings.output_path );
+			}
         }
         else
         {
+			GtkWidget *widget; 
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_name_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			// splash screens
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
+			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_build_number_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
+			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
+			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), 0 );
+
             gchar* apk_path = g_build_filename( global_project_prefs.project_file_path, "AGK Player.ipa", NULL );
             gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
             g_free(apk_path);
@@ -3389,6 +3814,173 @@ gboolean project_close_all()
 	return TRUE;
 }
 
+void init_android_settings( GeanyProject* project )
+{
+	project->apk_settings.alias = 0;
+	project->apk_settings.app_icon_path = 0;
+	project->apk_settings.app_name = 0;
+	project->apk_settings.app_type = 0; // Google
+	project->apk_settings.game_circle_api_key = 0;
+	project->apk_settings.keystore_path = 0;
+	project->apk_settings.orientation = 0;
+	project->apk_settings.output_path = 0;
+	project->apk_settings.ouya_icon_path = 0;
+	project->apk_settings.package_name = 0;
+	project->apk_settings.permission_flags = AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE;
+	project->apk_settings.play_app_id = 0;
+	project->apk_settings.sdk_version = 0; // 2.3.1
+	project->apk_settings.shared_user_id = 0;
+	project->apk_settings.version_name = 0;
+	project->apk_settings.version_number = 0;
+}
+
+void init_ios_settings( GeanyProject* project )
+{
+	project->ipa_settings.app_icon_path = 0;
+	project->ipa_settings.app_name = 0;
+	project->ipa_settings.build_number = 0;
+	project->ipa_settings.device_type = 0; // iPhone and iPad
+	project->ipa_settings.facebook_id = 0;
+	project->ipa_settings.orientation = 0; // Landscape
+	project->ipa_settings.output_path = 0;
+	project->ipa_settings.prov_profile_path = 0;
+	project->ipa_settings.splash_1136_path = 0;
+	project->ipa_settings.splash_2048_path = 0;
+	project->ipa_settings.splash_960_path = 0;
+	project->ipa_settings.uses_ads = 0;
+	project->ipa_settings.version_number = 0;
+}
+
+void init_html5_settings( GeanyProject* project )
+{
+	project->html5_settings.commands_used = 0; // 2D only
+	project->html5_settings.dynamic_memory = 0;
+	project->html5_settings.output_path = 0;
+}
+
+void free_android_settings( GeanyProject* project )
+{
+	if ( project->apk_settings.alias ) g_free(project->apk_settings.alias);
+	if ( project->apk_settings.app_icon_path ) g_free(project->apk_settings.app_icon_path);
+	if ( project->apk_settings.app_name ) g_free(project->apk_settings.app_name);
+	if ( project->apk_settings.game_circle_api_key ) g_free(project->apk_settings.game_circle_api_key);
+	if ( project->apk_settings.keystore_path ) g_free(project->apk_settings.keystore_path);
+	if ( project->apk_settings.output_path ) g_free(project->apk_settings.output_path);
+	if ( project->apk_settings.ouya_icon_path ) g_free(project->apk_settings.ouya_icon_path);
+	if ( project->apk_settings.package_name ) g_free(project->apk_settings.package_name);
+	if ( project->apk_settings.play_app_id ) g_free(project->apk_settings.play_app_id);
+	if ( project->apk_settings.shared_user_id ) g_free(project->apk_settings.shared_user_id);
+	if ( project->apk_settings.version_name ) g_free(project->apk_settings.version_name);
+}
+
+void free_ios_settings( GeanyProject* project )
+{
+	if ( project->ipa_settings.app_icon_path ) g_free(project->ipa_settings.app_icon_path);
+	if ( project->ipa_settings.app_name ) g_free(project->ipa_settings.app_name);
+	if ( project->ipa_settings.build_number ) g_free(project->ipa_settings.build_number);
+	if ( project->ipa_settings.facebook_id ) g_free(project->ipa_settings.facebook_id);
+	if ( project->ipa_settings.output_path ) g_free(project->ipa_settings.output_path);
+	if ( project->ipa_settings.prov_profile_path ) g_free(project->ipa_settings.prov_profile_path);
+	if ( project->ipa_settings.splash_1136_path ) g_free(project->ipa_settings.splash_1136_path);
+	if ( project->ipa_settings.splash_2048_path ) g_free(project->ipa_settings.splash_2048_path);
+	if ( project->ipa_settings.splash_960_path ) g_free(project->ipa_settings.splash_960_path);
+	if ( project->ipa_settings.version_number ) g_free(project->ipa_settings.version_number);
+}
+
+void free_html5_settings( GeanyProject* project )
+{
+	if ( project->html5_settings.output_path ) g_free(project->html5_settings.output_path);
+}
+
+void save_android_settings( GKeyFile *config, GeanyProject* project )
+{
+	g_key_file_set_string( config, "apk_settings", "alias", FALLBACK(project->apk_settings.alias,"") );
+	g_key_file_set_string( config, "apk_settings", "app_icon_path", FALLBACK(project->apk_settings.app_icon_path,"") );
+	g_key_file_set_string( config, "apk_settings", "app_name", FALLBACK(project->apk_settings.app_name,"") );
+	g_key_file_set_integer( config, "apk_settings", "app_type", project->apk_settings.app_type ); 
+	g_key_file_set_string( config, "apk_settings", "game_circle_api_key", FALLBACK(project->apk_settings.game_circle_api_key,"") );
+	g_key_file_set_string( config, "apk_settings", "keystore_path", FALLBACK(project->apk_settings.keystore_path,"") );
+	g_key_file_set_integer( config, "apk_settings", "orientation", project->apk_settings.orientation );
+	g_key_file_set_string( config, "apk_settings", "output_path", FALLBACK(project->apk_settings.output_path,"") );
+	g_key_file_set_string( config, "apk_settings", "ouya_icon_path", FALLBACK(project->apk_settings.ouya_icon_path,"") );
+	g_key_file_set_string( config, "apk_settings", "package_name", FALLBACK(project->apk_settings.package_name,"") );
+	g_key_file_set_integer( config, "apk_settings", "permission_flags", project->apk_settings.permission_flags );
+	g_key_file_set_string( config, "apk_settings", "play_app_id", FALLBACK(project->apk_settings.play_app_id,"") );
+	g_key_file_set_integer( config, "apk_settings", "sdk_version", project->apk_settings.sdk_version ); 
+	g_key_file_set_string( config, "apk_settings", "shared_user_id", FALLBACK(project->apk_settings.shared_user_id,"") );
+	g_key_file_set_string( config, "apk_settings", "version_name", FALLBACK(project->apk_settings.version_name,"") );
+	g_key_file_set_integer( config, "apk_settings", "version_number", project->apk_settings.version_number );
+}
+
+void save_ios_settings( GKeyFile *config, GeanyProject* project )
+{
+	g_key_file_set_string( config, "ipa_settings", "app_icon_path", FALLBACK(project->ipa_settings.app_icon_path,"") );
+	g_key_file_set_string( config, "ipa_settings", "app_name", FALLBACK(project->ipa_settings.app_name,"") );
+	g_key_file_set_string( config, "ipa_settings", "build_number", FALLBACK(project->ipa_settings.build_number,"") );
+	g_key_file_set_integer( config, "ipa_settings", "device_type", project->ipa_settings.device_type );
+	g_key_file_set_string( config, "ipa_settings", "facebook_id", FALLBACK(project->ipa_settings.facebook_id,"") );
+	g_key_file_set_integer( config, "ipa_settings", "orientation", project->ipa_settings.orientation );
+	g_key_file_set_string( config, "ipa_settings", "output_path", FALLBACK(project->ipa_settings.output_path,"") );
+	g_key_file_set_string( config, "ipa_settings", "prov_profile_path", FALLBACK(project->ipa_settings.prov_profile_path,"") );
+	g_key_file_set_string( config, "ipa_settings", "splash_1136_path", FALLBACK(project->ipa_settings.splash_1136_path,"") );
+	g_key_file_set_string( config, "ipa_settings", "splash_2048_path", FALLBACK(project->ipa_settings.splash_2048_path,"") );
+	g_key_file_set_string( config, "ipa_settings", "splash_960_path", FALLBACK(project->ipa_settings.splash_960_path,"") );
+	g_key_file_set_integer( config, "ipa_settings", "uses_ads", project->ipa_settings.uses_ads );
+	g_key_file_set_string( config, "ipa_settings", "version_number", FALLBACK(project->ipa_settings.version_number,"") );
+}
+
+void save_html5_settings( GKeyFile *config, GeanyProject* project )
+{
+	g_key_file_set_integer( config, "html5_settings", "commands_used", project->html5_settings.commands_used );
+	g_key_file_set_integer( config, "html5_settings", "dynamic_memory", project->html5_settings.dynamic_memory );
+	g_key_file_set_string( config, "html5_settings", "output_path", FALLBACK(project->html5_settings.output_path,"") );
+}
+
+void load_android_settings( GKeyFile *config, GeanyProject* project )
+{
+	project->apk_settings.alias = g_key_file_get_string( config, "apk_settings", "alias", 0 );
+	project->apk_settings.app_icon_path = g_key_file_get_string( config, "apk_settings", "app_icon_path", 0 );
+	project->apk_settings.app_name = g_key_file_get_string( config, "apk_settings", "app_name", 0 );
+	project->apk_settings.app_type = utils_get_setting_integer( config, "apk_settings", "app_type", 0 ); 
+	project->apk_settings.game_circle_api_key = g_key_file_get_string( config, "apk_settings", "game_circle_api_key", 0 );
+	project->apk_settings.keystore_path = g_key_file_get_string( config, "apk_settings", "keystore_path", 0 );
+	project->apk_settings.orientation = utils_get_setting_integer( config, "apk_settings", "orientation", 0 );
+	project->apk_settings.output_path = g_key_file_get_string( config, "apk_settings", "output_path", 0 );
+	project->apk_settings.ouya_icon_path = g_key_file_get_string( config, "apk_settings", "ouya_icon_path", 0 );
+	project->apk_settings.package_name = g_key_file_get_string( config, "apk_settings", "package_name", 0 );
+	project->apk_settings.permission_flags = utils_get_setting_integer( config, "apk_settings", "permission_flags", AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE );
+	project->apk_settings.play_app_id = g_key_file_get_string( config, "apk_settings", "play_app_id", 0 );
+	project->apk_settings.sdk_version = utils_get_setting_integer( config, "apk_settings", "sdk_version", 0 );
+	project->apk_settings.shared_user_id = g_key_file_get_string( config, "apk_settings", "shared_user_id", 0 );
+	project->apk_settings.version_name = g_key_file_get_string( config, "apk_settings", "version_name", 0 );
+	project->apk_settings.version_number = utils_get_setting_integer( config, "apk_settings", "version_number", 0 );
+}
+
+void load_ios_settings( GKeyFile *config, GeanyProject* project )
+{
+	project->ipa_settings.app_icon_path = g_key_file_get_string( config, "ipa_settings", "app_icon_path", 0 );
+	project->ipa_settings.app_name = g_key_file_get_string( config, "ipa_settings", "app_name", 0 );
+	project->ipa_settings.build_number = g_key_file_get_string( config, "ipa_settings", "build_number", 0 );
+	project->ipa_settings.device_type = utils_get_setting_integer( config, "ipa_settings", "device_type", 0 );
+	project->ipa_settings.facebook_id = g_key_file_get_string( config, "ipa_settings", "facebook_id", 0 );
+	project->ipa_settings.orientation = utils_get_setting_integer( config, "ipa_settings", "orientation", 0 );
+	project->ipa_settings.output_path = g_key_file_get_string( config, "ipa_settings", "output_path", 0 );
+	project->ipa_settings.prov_profile_path = g_key_file_get_string( config, "ipa_settings", "prov_profile_path", 0 );
+	project->ipa_settings.splash_1136_path = g_key_file_get_string( config, "ipa_settings", "splash_1136_path", 0 );
+	project->ipa_settings.splash_2048_path = g_key_file_get_string( config, "ipa_settings", "splash_2048_path", 0 );
+	project->ipa_settings.splash_960_path = g_key_file_get_string( config, "ipa_settings", "splash_960_path", 0 );
+	project->ipa_settings.uses_ads = utils_get_setting_integer( config, "ipa_settings", "uses_ads", 0 );
+	project->ipa_settings.version_number = g_key_file_get_string( config, "ipa_settings", "version_number", 0 );
+}
+
+void load_html5_settings( GKeyFile *config, GeanyProject* project )
+{
+	project->html5_settings.commands_used = utils_get_setting_integer( config, "html5_settings", "commands_used", 0 );
+	project->html5_settings.dynamic_memory = utils_get_setting_integer( config, "html5_settings", "dynamic_memory", 0 );
+	project->html5_settings.output_path = g_key_file_get_string( config, "html5_settings", "output_path", 0 );
+}
+
+
 /* open_default will make function reload default session files on close */
 gboolean project_close(GeanyProject *project, gboolean open_default)
 {
@@ -3417,6 +4009,15 @@ gboolean project_close(GeanyProject *project, gboolean open_default)
 	//build_remove_menu_item(GEANY_BCS_PROJ, GEANY_GBG_EXEC, -1);
 
 	project->is_valid = FALSE;
+
+	free_android_settings(project);
+	init_android_settings(project);
+
+	free_ios_settings(project);
+	init_ios_settings(project);	
+
+	free_html5_settings(project);
+	init_html5_settings(project);
 
 	g_free(project->name);
 	g_free(project->description);
@@ -3702,6 +4303,10 @@ static GeanyProject *create_project(void)
 	project->index = new_idx;
 	project->project_files = g_ptr_array_new();
 	project->project_groups = g_ptr_array_new();
+
+	init_android_settings(project);
+	init_ios_settings(project);
+	init_html5_settings(project);
 
 	app->project = project;
 	return project;
@@ -4147,6 +4752,10 @@ static gboolean load_config(const gchar *filename)
 		configuration_load_session_files(config, p);
 	}
 
+	load_android_settings( config, p );
+	load_ios_settings( config, p );
+	load_html5_settings( config, p );
+
 	g_signal_emit_by_name(geany_object, "project-open", config);
 	g_key_file_free(config);
 
@@ -4198,6 +4807,10 @@ static gboolean write_config(GeanyProject *project, gboolean emit_signal)
 	/* store the session files into the project too */
 	if (project_prefs.project_session)
 		configuration_save_session_files(config,project);
+
+	save_android_settings( config, project );
+	save_ios_settings( config, project );
+	save_html5_settings( config, project );
 	
 	if (emit_signal)
 	{

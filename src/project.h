@@ -49,6 +49,62 @@ struct GeanyProjectFile
 typedef struct GeanyProjectGroup GeanyProjectGroup;
 typedef struct GeanyProjectFile GeanyProjectFile;
 
+#define AGK_ANDROID_PERMISSION_WRITE		0x01
+#define AGK_ANDROID_PERMISSION_INTERNET		0x02
+#define AGK_ANDROID_PERMISSION_WAKE			0x04
+#define AGK_ANDROID_PERMISSION_GPS			0x08
+#define AGK_ANDROID_PERMISSION_IAP			0x10
+#define AGK_ANDROID_PERMISSION_EXPANSION	0x20
+#define AGK_ANDROID_PERMISSION_LOCATION		0x40
+#define AGK_ANDROID_PERMISSION_PUSH			0x80
+
+typedef struct GeanyProjectAPKSettings
+{
+	gchar* output_path;
+	int app_type;
+	gchar* app_name;
+	gchar* package_name;
+	gchar* shared_user_id;
+	gchar* app_icon_path;
+	gchar* ouya_icon_path;
+	int orientation;
+	int sdk_version;
+	unsigned int permission_flags;
+	gchar* play_app_id;
+	gchar* game_circle_api_key;
+	gchar* keystore_path;
+	gchar* version_name;
+	int version_number;
+	gchar* alias;
+}
+GeanyProjectAPKSettings;
+
+typedef struct GeanyProjectIPASettings
+{
+	gchar* output_path;
+	gchar* app_name;
+	gchar* app_icon_path;
+	gchar* prov_profile_path;
+	gchar* splash_960_path;
+	gchar* splash_1136_path;
+	gchar* splash_2048_path;
+	int orientation;
+	gchar* version_number;
+	gchar* build_number;
+	gchar* facebook_id;
+	int device_type;
+	int uses_ads;
+}
+GeanyProjectIPASettings;
+
+typedef struct GeanyProjectHTML5Settings
+{
+	gchar* output_path;
+	int commands_used;
+	int dynamic_memory;
+}
+GeanyProjectHTML5Settings;
+
 /** Structure for representing a project. */
 typedef struct GeanyProject
 {
@@ -65,6 +121,10 @@ typedef struct GeanyProject
 	GtkTreeIter iter;
 	GPtrArray *project_files;	/**< Array of GeanyProjectFile. */
 	GPtrArray *project_groups;  /**< Array of GeanyProjectGroup. */
+
+	struct GeanyProjectAPKSettings apk_settings;
+	struct GeanyProjectIPASettings ipa_settings;
+	struct GeanyProjectHTML5Settings html5_settings;
 }
 GeanyProject;
 
@@ -93,6 +153,21 @@ typedef struct GlobalProjectPrefs
 
 extern GlobalProjectPrefs global_project_prefs;
 
+void init_android_settings( GeanyProject* project );
+void init_ios_settings( GeanyProject* project );
+void init_html5_settings( GeanyProject* project );
+
+void free_android_settings( GeanyProject* project );
+void free_ios_settings( GeanyProject* project );
+void free_html5_settings( GeanyProject* project );
+
+void save_android_settings( GKeyFile *config, GeanyProject* project );
+void save_ios_settings( GKeyFile *config, GeanyProject* project );
+void save_html5_settings( GKeyFile *config, GeanyProject* project );
+
+void load_android_settings( GKeyFile *config, GeanyProject* project );
+void load_ios_settings( GKeyFile *config, GeanyProject* project );
+void load_html5_settings( GKeyFile *config, GeanyProject* project );
 
 void project_init(void);
 
