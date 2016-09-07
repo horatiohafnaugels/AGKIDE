@@ -892,6 +892,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry");
 		AGK_CLEAR_STR(app->project->apk_settings.app_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.notif_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
 		AGK_CLEAR_STR(app->project->apk_settings.ouya_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
@@ -901,21 +904,18 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		if ( strcmp(app_orientation,"Portrait") == 0 ) app->project->apk_settings.orientation = 1;
 		else if ( strcmp(app_orientation,"All") == 0 ) app->project->apk_settings.orientation = 2;
 		g_free(app_orientation);
-				
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		app->project->apk_settings.sdk_version = 0;
-		if ( strcmp(app_sdk,"3.2") == 0 ) app->project->apk_settings.sdk_version = 1;
+		if ( strcmp(app_sdk,"4.0.3") == 0 ) app->project->apk_settings.sdk_version = 1;
 		g_free(app_sdk);
-		
+				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
 		AGK_CLEAR_STR(app->project->apk_settings.game_circle_api_key) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		AGK_CLEAR_STR(app->project->apk_settings.play_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
-
-		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_shared_user_id");
-		AGK_CLEAR_STR(app->project->apk_settings.shared_user_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		// permissions
 		app->project->apk_settings.permission_flags = 0;
@@ -940,6 +940,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
 		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_PUSH;
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera");
+		if ( gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_CAMERA;
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
 		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_EXPANSION;
@@ -996,6 +999,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry");
 		gchar *app_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_entry");
+		gchar *notif_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
 		gchar *ouya_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
@@ -1007,23 +1013,20 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		g_free(app_orientation);
 		gchar szOrientation[ 20 ];
 		sprintf( szOrientation, "%d", orientation );
-		
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		int sdk = 10;
-		if ( strcmp(app_sdk,"3.2") == 0 ) sdk = 13;
+		if ( strcmp(app_sdk,"4.0.3") == 0 ) sdk = 15;
 		g_free(app_sdk);
 		gchar szSDK[ 20 ];
 		sprintf( szSDK, "%d", sdk );
-
+		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
 		gchar *gamecircle_api_key = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gchar *google_play_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
-
-		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_shared_user_id");
-		gchar *shared_user_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -1046,6 +1049,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
 		int permission_push = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera");
+		int permission_camera = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
 		int permission_expansion = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
@@ -1141,29 +1147,18 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			last = package_name[i];
 		}
 
-		// check shared user id
-		/*
-		if ( strlen(shared_user_id) > 50 ) { SHOW_ERR("Shared User ID must be less than 50 characters"); goto android_dialog_clean_up; }
-
-		for( i = 0; i < strlen(shared_user_id); i++ )
-		{
-			if ( (shared_user_id[i] < 97 || shared_user_id[i] > 122)
-			  && (shared_user_id[i] < 65 || shared_user_id[i] > 90) ) 
-			{ 
-				SHOW_ERR("Shared User ID contains invalid characters, must be A-Z only");
-				goto android_dialog_clean_up; 
-			}
-
-			last = package_name[i];
-		}
-		*/
-
 		// check icon
 		//if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto android_dialog_clean_up; }
 		if ( app_icon && *app_icon )
 		{
 			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto android_dialog_clean_up; }
 			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto android_dialog_clean_up; }
+		}
+
+		if ( notif_icon && *notif_icon )
+		{
+			if ( !strrchr( notif_icon, '.' ) || utils_str_casecmp( strrchr( notif_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("Notification icon must be a PNG file"); goto android_dialog_clean_up; }
+			if ( !g_file_test( notif_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find notification icon location"); goto android_dialog_clean_up; }
 		}
 
 		if ( app_type == 2 )
@@ -1212,9 +1207,9 @@ android_dialog_clean_up:
 		if ( app_name ) g_free(app_name);
 		if ( package_name ) g_free(package_name);
 		if ( app_icon ) g_free(app_icon);
+		if ( notif_icon ) g_free(notif_icon);
 		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
 		if ( google_play_app_id ) g_free(google_play_app_id);
-		if ( shared_user_id ) g_free(shared_user_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -1236,8 +1231,8 @@ android_dialog_continue:
 
 		// CHECKS COMPLETE, START EXPORT
 
-		const char* androidJar = "android13.jar";
-		if ( app_type == 0 ) androidJar = "android21.jar";
+		const char* androidJar = "android23.jar";
+		//if ( app_type == 0 ) androidJar = "android21.jar";
 
 #ifdef G_OS_WIN32
 		gchar* path_to_aapt = g_build_path( "/", app->datadir, "android", "aapt.exe", NULL );
@@ -1345,22 +1340,19 @@ android_dialog_continue:
 		strcat( newcontents, "\" package=\"" );
 		strcat( newcontents, package_name );
 		strcat( newcontents, "\"" );
-		if( shared_user_id )
-		{
-			strcat( newcontents, " android:sharedUserId=\"" );
-			strcat( newcontents, shared_user_id );
-			strcat( newcontents, "\"" );
-		}
-
 		strcat( newcontents, " android:installLocation=\"auto\">\n\
     <uses-feature android:glEsVersion=\"0x00020000\"></uses-feature>\n\
     <uses-sdk android:minSdkVersion=\"" );
-		strcat( newcontents, szSDK );
-		strcat( newcontents, "\" android:targetSdkVersion=\"" );
-		if ( app_type != 0 )
+		if ( app_type == 0 || app_type == 1 )
 			strcat( newcontents, szSDK );
+		else 
+			strcat( newcontents, "15" );
+			
+		strcat( newcontents, "\" android:targetSdkVersion=\"" );
+		if ( app_type == 0 )
+			strcat( newcontents, "22" );
 		else
-			strcat( newcontents, "19" );
+			strcat( newcontents, "15" );
 		strcat( newcontents, "\" />\n\n" );
 
 		if ( permission_external_storage ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"></uses-permission>\n" );
@@ -1374,6 +1366,7 @@ android_dialog_continue:
 		if ( permission_location_coarse && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"></uses-permission>\n" );
 		if ( permission_location_fine && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"></uses-permission>\n" );
 		if ( permission_billing && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.BILLING\"></uses-permission>\n" );
+		if ( permission_camera ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.CAMERA\"></uses-permission>\n" );
 		if ( permission_push && app_type == 0 ) 
 		{
 			strcat( newcontents, "    <uses-permission android:name=\"com.google.android.c2dm.permission.RECEIVE\" />\n" );
@@ -1518,6 +1511,7 @@ android_dialog_continue:
 		// load icon file
 		if ( app_icon && *app_icon )
 		{
+			if ( icon_image ) gdk_pixbuf_unref(icon_image);
 			icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
 			if ( !icon_image || error )
 			{
@@ -1528,7 +1522,7 @@ android_dialog_continue:
 			}
 
 			// scale it and save it
-			if ( app_type == 0 )
+			if ( app_type == 0 || app_type == 1 )
 			{
 				// 192x192
 				image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxxhdpi", "icon.png", NULL );
@@ -1619,9 +1613,112 @@ android_dialog_continue:
 			image_filename = NULL;
 		}
 
+		// load notification icon file
+		if ( notif_icon && *notif_icon && (app_type == 0 || app_type == 1) )
+		{
+			if ( icon_image ) gdk_pixbuf_unref(icon_image);
+			icon_image = gdk_pixbuf_new_from_file( notif_icon, &error );
+			if ( !icon_image || error )
+			{
+				SHOW_ERR1( "Failed to load notification icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+
+			// scale it and save it
+			// 96x96
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxxhdpi", "icon_white.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save xxxhdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 72x72
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxhdpi", "icon_white.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save xxhdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			const gchar* szDrawable_xhdpi = (app_type == 2) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
+			const gchar* szDrawable_hdpi = (app_type == 2) ? "drawable-hdpi-v4" : "drawable-hdpi";
+			const gchar* szDrawable_mdpi = (app_type == 2) ? "drawable-mdpi-v4" : "drawable-mdpi";
+			const gchar* szDrawable_ldpi = (app_type == 2) ? "drawable-ldpi-v4" : "drawable-ldpi";
+
+			// 48x48
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_xhdpi, "icon_white.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 36x36
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_hdpi, "icon_white.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save hdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 24x24
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_mdpi, "icon_white.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 24, 24, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save mdpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 24x24
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_ldpi, "icon_white.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 24, 24, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save ldpi icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+					
+			gdk_pixbuf_unref( icon_scaled_image );
+			icon_scaled_image = NULL;
+
+			g_free( image_filename );
+			image_filename = NULL;
+		}
+
 		// load ouya icon and check size
 		if ( app_type == 2 )
 		{
+			if ( icon_image ) gdk_pixbuf_unref(icon_image);
 			icon_image = gdk_pixbuf_new_from_file( ouya_icon, &error );
 			if ( !icon_image || error )
 			{
@@ -1695,7 +1792,14 @@ android_dialog_continue:
 			}
 			else
 			{
-				SHOW_ERR1( "Package tool returned error code: %d", status );
+				if ( status == 0 )
+				{
+					SHOW_ERR( "Package tool failed to write to the output folder" );
+				}
+				else
+				{
+					SHOW_ERR1( "Package tool returned error code: %d", status );
+				}
 			}
 			goto android_dialog_cleanup2;
 		}
@@ -1767,13 +1871,21 @@ android_dialog_continue:
 		argv2[3] = g_strdup("-digestalg");
 		argv2[4] = g_strdup("SHA1");
 		argv2[5] = g_strdup("-storepass");
-		argv2[6] = g_strdup(keystore_password);
+#ifdef G_OS_WIN32
+		argv2[6] = g_strconcat( "\"", keystore_password, "\"", NULL );
+#else
+		argv2[6] = g_strdup( keystore_password );
+#endif
 		argv2[7] = g_strdup("-keystore");
 		argv2[8] = g_strdup(keystore_file);
 		argv2[9] = g_strdup(output_file_zip);
 		argv2[10] = g_strdup(alias_name);
 		argv2[11] = g_strdup("-keypass");
-		argv2[12] = g_strdup(alias_password);
+#ifdef G_OS_WIN32
+		argv2[12] = g_strconcat( "\"", alias_password, "\"", NULL );
+#else
+		argv2[12] = g_strdup( alias_password );
+#endif
 		argv2[13] = NULL;
 
 		if ( !utils_spawn_sync( tmp_folder, argv2, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
@@ -1861,7 +1973,6 @@ android_dialog_cleanup2:
 		if ( ouya_icon ) g_free(ouya_icon);
 		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
 		if ( google_play_app_id ) g_free(google_play_app_id);
-		if ( shared_user_id ) g_free(shared_user_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -1897,6 +2008,8 @@ void project_export_apk()
 
 		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_entry")));
 		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry")));
 		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_path"), NULL,
@@ -1926,23 +2039,23 @@ void project_export_apk()
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.app_icon_path, "") );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.notif_icon_path, "") );
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.ouya_icon_path, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
 		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.orientation );
-						
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.sdk_version );
-		
+								
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.game_circle_api_key, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
-
-		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_shared_user_id");
-		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.shared_user_id, "") );
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -1971,6 +2084,10 @@ void project_export_apk()
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
 		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_PUSH) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_CAMERA) ? 1 : 0;
 		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
@@ -3818,6 +3935,7 @@ void init_android_settings( GeanyProject* project )
 {
 	project->apk_settings.alias = 0;
 	project->apk_settings.app_icon_path = 0;
+	project->apk_settings.notif_icon_path = 0;
 	project->apk_settings.app_name = 0;
 	project->apk_settings.app_type = 0; // Google
 	project->apk_settings.game_circle_api_key = 0;
@@ -3829,7 +3947,6 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.permission_flags = AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE;
 	project->apk_settings.play_app_id = 0;
 	project->apk_settings.sdk_version = 0; // 2.3.1
-	project->apk_settings.shared_user_id = 0;
 	project->apk_settings.version_name = 0;
 	project->apk_settings.version_number = 0;
 }
@@ -3862,6 +3979,7 @@ void free_android_settings( GeanyProject* project )
 {
 	if ( project->apk_settings.alias ) g_free(project->apk_settings.alias);
 	if ( project->apk_settings.app_icon_path ) g_free(project->apk_settings.app_icon_path);
+	if ( project->apk_settings.notif_icon_path ) g_free(project->apk_settings.notif_icon_path);
 	if ( project->apk_settings.app_name ) g_free(project->apk_settings.app_name);
 	if ( project->apk_settings.game_circle_api_key ) g_free(project->apk_settings.game_circle_api_key);
 	if ( project->apk_settings.keystore_path ) g_free(project->apk_settings.keystore_path);
@@ -3869,7 +3987,6 @@ void free_android_settings( GeanyProject* project )
 	if ( project->apk_settings.ouya_icon_path ) g_free(project->apk_settings.ouya_icon_path);
 	if ( project->apk_settings.package_name ) g_free(project->apk_settings.package_name);
 	if ( project->apk_settings.play_app_id ) g_free(project->apk_settings.play_app_id);
-	if ( project->apk_settings.shared_user_id ) g_free(project->apk_settings.shared_user_id);
 	if ( project->apk_settings.version_name ) g_free(project->apk_settings.version_name);
 }
 
@@ -3896,6 +4013,7 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 {
 	g_key_file_set_string( config, "apk_settings", "alias", FALLBACK(project->apk_settings.alias,"") );
 	g_key_file_set_string( config, "apk_settings", "app_icon_path", FALLBACK(project->apk_settings.app_icon_path,"") );
+	g_key_file_set_string( config, "apk_settings", "notif_icon_path", FALLBACK(project->apk_settings.notif_icon_path,"") );
 	g_key_file_set_string( config, "apk_settings", "app_name", FALLBACK(project->apk_settings.app_name,"") );
 	g_key_file_set_integer( config, "apk_settings", "app_type", project->apk_settings.app_type ); 
 	g_key_file_set_string( config, "apk_settings", "game_circle_api_key", FALLBACK(project->apk_settings.game_circle_api_key,"") );
@@ -3907,7 +4025,6 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_integer( config, "apk_settings", "permission_flags", project->apk_settings.permission_flags );
 	g_key_file_set_string( config, "apk_settings", "play_app_id", FALLBACK(project->apk_settings.play_app_id,"") );
 	g_key_file_set_integer( config, "apk_settings", "sdk_version", project->apk_settings.sdk_version ); 
-	g_key_file_set_string( config, "apk_settings", "shared_user_id", FALLBACK(project->apk_settings.shared_user_id,"") );
 	g_key_file_set_string( config, "apk_settings", "version_name", FALLBACK(project->apk_settings.version_name,"") );
 	g_key_file_set_integer( config, "apk_settings", "version_number", project->apk_settings.version_number );
 }
@@ -3940,6 +4057,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 {
 	project->apk_settings.alias = g_key_file_get_string( config, "apk_settings", "alias", 0 );
 	project->apk_settings.app_icon_path = g_key_file_get_string( config, "apk_settings", "app_icon_path", 0 );
+	project->apk_settings.notif_icon_path = g_key_file_get_string( config, "apk_settings", "notif_icon_path", 0 );
 	project->apk_settings.app_name = g_key_file_get_string( config, "apk_settings", "app_name", 0 );
 	project->apk_settings.app_type = utils_get_setting_integer( config, "apk_settings", "app_type", 0 ); 
 	project->apk_settings.game_circle_api_key = g_key_file_get_string( config, "apk_settings", "game_circle_api_key", 0 );
@@ -3951,7 +4069,6 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.permission_flags = utils_get_setting_integer( config, "apk_settings", "permission_flags", AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE );
 	project->apk_settings.play_app_id = g_key_file_get_string( config, "apk_settings", "play_app_id", 0 );
 	project->apk_settings.sdk_version = utils_get_setting_integer( config, "apk_settings", "sdk_version", 0 );
-	project->apk_settings.shared_user_id = g_key_file_get_string( config, "apk_settings", "shared_user_id", 0 );
 	project->apk_settings.version_name = g_key_file_get_string( config, "apk_settings", "version_name", 0 );
 	project->apk_settings.version_number = utils_get_setting_integer( config, "apk_settings", "version_number", 0 );
 }

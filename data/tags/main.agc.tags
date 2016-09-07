@@ -499,6 +499,7 @@ TweenBounce|Integer|()|
 TweenOvershoot|Integer|()|
 DeleteTween||(Integer tweenID)|
 GetTweenExists|Integer|(Integer tweenID)|
+SetTweenDuration||(Integer tweenID, Float duration)|
 CreateTweenCustom||(Integer tweenID, Float duration)|
 CreateTweenCustom|Integer|(Float duration)|
 GetTweenCustomExists|Integer|(Integer tweenID)|
@@ -694,6 +695,7 @@ GetMusicLoopCountOGG|Integer|(Integer musicID)|
 GetMusicDurationOGG|Float|(Integer musicID)|
 GetMusicPositionOGG|Float|(Integer musicID)|
 SeekMusicOGG||(Integer musicID, Float seconds, Integer mode)|
+SetMusicSystemVolumeOGG||(Integer vol)|
 RecordSound||(String szFilename)|
 StopSoundRecording||()|
 IsSoundRecording|Integer|()|
@@ -727,6 +729,8 @@ Str|String|(Float valueFloat)|
 Str|String|(Float valueFloat, Integer decimals)|
 Bin|String|(Integer i)|
 Hex|String|(Integer i)|
+StringToBase64|String|(String input)|
+HexToBase64|String|(String input)|
 Val|Integer|(String str)|
 Val|Integer|(String str, Integer base)|
 ValFloat|Float|(String str)|
@@ -1058,6 +1062,8 @@ InAppPurchaseAddProductID||(String szID, Integer type)|
 InAppPurchaseSetup||()|
 GetInAppPurchaseAvailable|Integer|(Integer iID)|
 InAppPurchaseActivate||(Integer iID)|
+GetInAppPurchaseLocalPrice|String|(Integer iID)|
+GetInAppPurchaseDescription|String|(Integer iID)|
 GetInAppPurchaseState|Integer|()|
 InAppPurchaseRestore||()|
 TwitterSetup||(String szKey, String szSecret)|
@@ -1066,6 +1072,7 @@ FacebookSetup||(String szID)|
 GetFacebookLoggedIn|Integer|()|
 FacebookGetUserID|String|()|
 FacebookGetUserName|String|()|
+FacebookGetAccessToken|String|()|
 FacebookLogin||()|
 FacebookLogout||()|
 FacebookPostOnMyWall||(String szLink, String szPicture, String szName, String szCaption, String szDescription)|
@@ -1567,6 +1574,7 @@ SetWindowSize||(Integer width, Integer height, Integer fullscreen)|
 SetWindowAllowResize||(Integer mode)|
 MinimizeApp||()|
 RestoreApp||()|
+SetImmersiveMode||(Integer mode)|
 SetScreenResolution||(Integer width, Integer height)|
 GetDeviceName|String|()|
 GetDeviceBaseName|String|()|
@@ -1610,9 +1618,12 @@ Mod|Integer|(Integer a, Integer b)|
 FMod|Float|(Float a, Float b)|
 Pow|Float|(Float a, Float b)|
 Log|Float|(Float a)|
+GetNumDeviceCameras|Integer|()|
+SetDeviceCameraToImage|Integer|(Integer cameraID, Integer imageID)|
 LoadVideo|Integer|(String szFilename)|
 DeleteVideo||()|
 SetVideoDimensions||(Float x, Float y, Float width, Float height)|
+PlayVideoToImage||(Integer imageID)|
 PlayVideo||()|
 PauseVideo||()|
 StopVideo||()|
@@ -1622,6 +1633,7 @@ GetVideoDuration|Float|()|
 SetVideoVolume||(Float volume)|
 GetVideoWidth|Float|()|
 GetVideoHeight|Float|()|
+SetVideoPosition||(Float seconds)|
 SetRawWritePath||(String str)|
 GetWritePath|String|()|
 GetReadPath|String|()|
@@ -1672,7 +1684,4 @@ GameCenterAchievementsReset||()|
 SaveSharedVariable||(String varName, String varValue)|
 LoadSharedVariable|String|(String varName, String defaultValue)|
 DeleteSharedVariable||(String varName)|
-GetInAppPurchaseLocalPrice|String|(Integer iID)|
-GetInAppPurchaseDescription|String|(Integer iID)|
-SetTweenDuration||(Integer tweenID, Float duration)|
-FacebookGetAccessToken|String|()|
+GetDeviceCameraType|Integer|(Integer cameraID)|

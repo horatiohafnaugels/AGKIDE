@@ -843,6 +843,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), TRUE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion"), TRUE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
@@ -857,6 +858,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), FALSE );
@@ -871,6 +873,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications"), FALSE );
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry"), TRUE );
@@ -2230,8 +2233,12 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
 		gchar *cmdline = g_strconcat("\"", pathDLC, "\\", item_name, "\\AppGameKit Official Beginners Guide.pdf", "\"", NULL);
 		win32_open_file( cmdline );
 		g_free(cmdline);
-#else
+#elif __APPLE__
 		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/AppGameKit Official Beginners Guide.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#else
+		gchar *cmdline = g_strconcat("see", " \"", pathDLC, "/", item_name, "/AppGameKit Official Beginners Guide.pdf", "\"", NULL);
 		g_spawn_command_line_async(cmdline, NULL);
 		g_free(cmdline);
 #endif
@@ -2243,8 +2250,12 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
 		gchar *cmdline = g_strconcat("\"", pathDLC, "\\", item_name, "\\AppGameKit Official User Guide.pdf", "\"", NULL);
 		win32_open_file( cmdline );
 		g_free(cmdline);
-#else
+#elif __APPLE__
 		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/AppGameKit Official User Guide.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#else
+		gchar *cmdline = g_strconcat("see", " \"", pathDLC, "/", item_name, "/AppGameKit Official User Guide.pdf", "\"", NULL);
 		g_spawn_command_line_async(cmdline, NULL);
 		g_free(cmdline);
 #endif
@@ -2256,8 +2267,12 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
 		gchar *cmdline = g_strconcat("\"", pathDLC, "\\", item_name, "\\AppGameKit Official Tutorial Guide.pdf", "\"", NULL);
 		win32_open_file( cmdline );
 		g_free(cmdline);
-#else
+#elif __APPLE__
 		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/AppGameKit Official Tutorial Guide.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#else
+		gchar *cmdline = g_strconcat("see", " \"", pathDLC, "/", item_name, "/AppGameKit Official Tutorial Guide.pdf", "\"", NULL);
 		g_spawn_command_line_async(cmdline, NULL);
 		g_free(cmdline);
 #endif

@@ -6,6 +6,6 @@ This folder should contain the following files
 The following are optional if you modify the paths in project.c:on_android_dialog_response() to point to a local Java installation and Android SDK installation
  -a copy of the JRE
  -aapt.exe
- -android13.jar
+ -android23.jar
  -debug.keystore
  -zipalign.exe
