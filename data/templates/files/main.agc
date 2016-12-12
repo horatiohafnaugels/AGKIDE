@@ -13,6 +13,7 @@ SetWindowSize( 1024, 768, 0 )
 SetVirtualResolution( 1024, 768 )
 SetOrientationAllowed( 1, 1, 1, 1 )
 SetSyncRate( 30, 0 ) // 30fps instead of 60 to save battery
+UseNewDefaultFonts( 1 ) // since version 2.0.20 we can use nicer default fonts
 
 
 

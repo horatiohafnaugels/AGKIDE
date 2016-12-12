@@ -812,7 +812,7 @@ html5_dialog_cleanup2:
 
 void project_export_html5()
 {
-	static GeanyProject *last_proj = 0;
+	static gchar *last_proj_path = 0;
 
 	if ( !app->project ) 
 	{
@@ -841,10 +841,11 @@ void project_export_html5()
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.html5_dialog, "html5_commands_combo")), 0 );
 	}
 
-	if ( app->project != last_proj )
+	if ( strcmp( FALLBACK(last_proj_path,""), FALLBACK(app->project->file_name,"") ) != 0 )
 	{
-		last_proj = app->project;
-
+		if ( last_proj_path ) g_free(last_proj_path);
+		last_proj_path = g_strdup( FALLBACK(app->project->file_name,"") );
+	
 		GtkWidget *widget;
 
 		// set defaults for this project
@@ -879,7 +880,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 	running = 1;
 
 	// save default settings
-	if ( app->project )
+	if ( app->project && user_data == 0 )
 	{
 		GtkWidget *widget;
 
@@ -897,6 +898,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
 		AGK_CLEAR_STR(app->project->apk_settings.ouya_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_entry");
+		AGK_CLEAR_STR(app->project->apk_settings.firebase_config_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
 		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
@@ -976,7 +980,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 	if ( response != 1 )
 	{
-		gtk_widget_hide(GTK_WIDGET(dialog));
+		if ( dialog ) gtk_widget_hide(GTK_WIDGET(dialog));
 	}
 	else
 	{
@@ -1004,6 +1008,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
 		gchar *ouya_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_entry");
+		gchar *firebase_config = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
 		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
@@ -1088,6 +1095,33 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		int app_type = 0;
 		if ( strcmp(output_type,"Amazon") == 0 ) app_type = 1;
 		else if ( strcmp(output_type,"Ouya") == 0 ) app_type = 2;
+		
+		gchar *percent = 0;
+		while ( (percent = strchr(output_file, '%')) != 0 )
+		{
+			if ( strncmp( percent+1, "[version]", strlen("[version]") ) == 0 )
+			{
+				*percent = 0;
+				percent += strlen("[version]") + 1;
+				gchar *new_output = g_strconcat( output_file, szBuildNum, percent, NULL );
+				g_free(output_file);
+				output_file = new_output;
+				continue;
+			}
+
+			if ( strncmp( percent+1, "[type]", strlen("[type]") ) == 0 )
+			{
+				*percent = 0;
+				percent += strlen("[type]") + 1;
+				gchar *new_output = g_strconcat( output_file, output_type, percent, NULL );
+				g_free(output_file);
+				output_file = new_output;
+				continue;
+			}
+
+			break;
+		}
+
 		g_free(output_type);
 
 		// START CHECKS
@@ -1167,6 +1201,13 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			if ( !strrchr( ouya_icon, '.' ) || utils_str_casecmp( strrchr( ouya_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("Ouya large icon must be a PNG file"); goto android_dialog_clean_up; }
 			if ( !g_file_test( ouya_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find ouya large icon location"); goto android_dialog_clean_up; }
 		}
+
+		// check firebase config file
+		if ( firebase_config && *firebase_config )
+		{
+			if ( !strrchr( firebase_config, '.' ) || utils_str_casecmp( strrchr( firebase_config, '.' ), ".json" ) != 0 ) { SHOW_ERR("Google services config file must be a .json file"); goto android_dialog_clean_up; }
+			if ( !g_file_test( firebase_config, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find Google services config file"); goto android_dialog_clean_up; }
+		}
 				
 		// check version
 		if ( version_number && *version_number )
@@ -1207,7 +1248,9 @@ android_dialog_clean_up:
 		if ( app_name ) g_free(app_name);
 		if ( package_name ) g_free(package_name);
 		if ( app_icon ) g_free(app_icon);
+		if ( ouya_icon ) g_free(ouya_icon);
 		if ( notif_icon ) g_free(notif_icon);
+		if ( firebase_config ) g_free(firebase_config);
 		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 
@@ -1291,7 +1334,7 @@ android_dialog_continue:
 			}
 		}
 
-		// decalrations
+		// declarations
 		gchar *newcontents = g_new0( gchar, 150000 );
 		gchar* manifest_file = NULL;
 		gchar *contents = NULL;
@@ -1312,6 +1355,8 @@ android_dialog_continue:
 		gchar *zip_add_file = 0;
 		gchar *str_out = NULL;
 		gsize resLength = 0;
+		gchar* aapt_output = 0;
+		gchar* aapt_error = 0;
 
 		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
 		{
@@ -1383,6 +1428,12 @@ android_dialog_continue:
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
 		}
 
+		// supports FireTV
+		if ( 0 )
+		{
+			strcat( newcontents, "    <uses-feature android:name=\"android.hardware.touchscreen\" android:required=\"false\" />\n" );
+		}
+
 		contents2 = contents;
 		contents3 = 0;
 
@@ -1427,11 +1478,16 @@ android_dialog_continue:
 				case 6: strcat( newcontents, "screenOrientation=\"sensorLandscape" ); break;
 				case 7: 
 				{
+					// all now use API 23
+					strcat( newcontents, "screenOrientation=\"sensorPortrait" ); 
+
 					// Google compiles with API 21 which fixes a spelling mistake, Amazon and Ouya compile with API 13 which still has the mistake
+					/*
 					if ( app_type == 0 )
 						strcat( newcontents, "screenOrientation=\"sensorPortrait" ); 
 					else
 						strcat( newcontents, "screenOrientation=\"sensorPortait" ); 
+						*/
 					break;
 				}
 				default: strcat( newcontents, "screenOrientation=\"fullSensor" ); break;
@@ -1506,6 +1562,137 @@ android_dialog_continue:
 			g_error_free(error);
 			error = NULL;
 			goto android_dialog_cleanup2;
+		}
+
+		if ( contents ) g_free(contents);
+		contents = 0;
+
+		// firebase
+		if ( firebase_config && *firebase_config )
+		{
+			// read json values
+			if ( !g_file_get_contents( firebase_config, &contents, &resLength, &error ) )
+			{
+				SHOW_ERR1( "Failed to read firebase config file: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+
+			// find project_number value
+			contents2 = strstr( contents, "\"project_number\": \"" );
+			if ( !contents2 )
+			{
+				SHOW_ERR( "Could not find project_number entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+
+			contents2 += strlen("\"project_number\": \"");
+			contents3 = strstr( contents2, "\"" );
+			if ( !contents3 )
+			{
+				SHOW_ERR( "Could not find end of project_number entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+			*contents3 = 0;
+			
+			// start xml output with project_number value
+			strcpy( newcontents, "<?xml version='1.0' encoding='utf-8'?>\n<resources>\n  <string name=\"gcm_defaultSenderId\" translatable=\"false\">" );
+			strcat( newcontents, contents2 );
+			strcat( newcontents, "</string>\n" );
+
+			*contents3 = 32; // doesn't repair the string correctly but good enough to get rid of the null value
+
+			// find firebase_url value
+			contents2 = strstr( contents, "\"firebase_url\": \"" );
+			if ( !contents2 )
+			{
+				SHOW_ERR( "Could not find firebase_url entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+
+			contents2 += strlen("\"firebase_url\": \"");
+			contents3 = strstr( contents2, "\"" );
+			if ( !contents3 )
+			{
+				SHOW_ERR( "Could not find end of firebase_url entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+			*contents3 = 0;
+
+			// write firebase_url value
+			strcat( newcontents, "  <string name=\"firebase_database_url\" translatable=\"false\">" );
+			strcat( newcontents, contents2 );
+			strcat( newcontents, "</string>\n" );
+
+			*contents3 = 32; // doesn't repair the string correctly but good enough to get rid of the null value
+
+			// find mobilesdk_app_id value
+			contents2 = strstr( contents, "\"mobilesdk_app_id\": \"" );
+			if ( !contents2 )
+			{
+				SHOW_ERR( "Could not find mobilesdk_app_id entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+
+			contents2 += strlen("\"mobilesdk_app_id\": \"");
+			contents3 = strstr( contents2, "\"" );
+			if ( !contents3 )
+			{
+				SHOW_ERR( "Could not find end of mobilesdk_app_id entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+			*contents3 = 0;
+
+			// write mobilesdk_app_id value
+			strcat( newcontents, "  <string name=\"google_app_id\" translatable=\"false\">" );
+			strcat( newcontents, contents2 );
+			strcat( newcontents, "</string>\n" );
+
+			*contents3 = 32; // doesn't repair the string correctly but good enough to get rid of the null value
+
+			// find current_key value
+			contents2 = strstr( contents, "\"current_key\": \"" );
+			if ( !contents2 )
+			{
+				SHOW_ERR( "Could not find current_key entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+
+			contents2 += strlen("\"current_key\": \"");
+			contents3 = strstr( contents2, "\"" );
+			if ( !contents3 )
+			{
+				SHOW_ERR( "Could not find end of current_key entry in Firebase config file" );
+				goto android_dialog_cleanup2;
+			}
+			*contents3 = 0;
+
+			// write current_key values
+			strcat( newcontents, "  <string name=\"google_api_key\" translatable=\"false\">" );
+			strcat( newcontents, contents2 );
+			strcat( newcontents, "</string>\n" );
+
+			strcat( newcontents, "  <string name=\"google_crash_reporting_api_key\" translatable=\"false\">" );
+			strcat( newcontents, contents2 );
+			strcat( newcontents, "</string>\n" );
+
+			// end file
+			strcat( newcontents, "</resources>\n" );
+
+			// write googleservices.xml file
+			if ( resources_file ) g_free(resources_file);
+			resources_file = g_build_path( "/", tmp_folder, "resMerged", "values", "googleservices.xml", NULL );
+			if ( !g_file_set_contents( resources_file, newcontents, strlen(newcontents), &error ) )
+			{
+				SHOW_ERR1( "Failed to write googleservices.xml file: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+			
+			if ( contents ) g_free(contents);
+			contents = 0;
 		}
 
 		// load icon file
@@ -1758,7 +1945,7 @@ android_dialog_continue:
 		argv[11] = g_strdup( output_file );
 		argv[12] = NULL;
 
-		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, NULL, NULL, &status, &error) )
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &aapt_output, &aapt_error, &status, &error) )
 		{
 			SHOW_ERR1( "Failed to run packaging tool: %s", error->message );
 			g_error_free(error);
@@ -1794,15 +1981,18 @@ android_dialog_continue:
 			{
 				if ( status == 0 )
 				{
-					SHOW_ERR( "Package tool failed to write to the output folder" );
+					SHOW_ERR( "Failed to write output files, check that your project directory is not in a write protected location" );
 				}
 				else
 				{
-					SHOW_ERR1( "Package tool returned error code: %d", status );
+					dialogs_show_msgbox( GTK_MESSAGE_ERROR, "packaging tool returned error code: %d - %s", status, FALLBACK(aapt_error,"") );
 				}
 			}
 			goto android_dialog_cleanup2;
 		}
+
+		if ( aapt_output ) g_free(aapt_output); aapt_output = 0;
+		if ( aapt_error ) g_free(aapt_error); aapt_error = 0;
 
 		while (gtk_events_pending())
 			gtk_main_iteration();
@@ -1933,7 +2123,7 @@ android_dialog_continue:
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
-		gtk_widget_hide(GTK_WIDGET(dialog));
+		if ( dialog ) gtk_widget_hide(GTK_WIDGET(dialog));
 
 android_dialog_cleanup2:
         
@@ -1971,6 +2161,7 @@ android_dialog_cleanup2:
 		if ( package_name ) g_free(package_name);
 		if ( app_icon ) g_free(app_icon);
 		if ( ouya_icon ) g_free(ouya_icon);
+		if ( firebase_config ) g_free(firebase_config);
 		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 
@@ -1979,15 +2170,18 @@ android_dialog_cleanup2:
 		if ( version_number ) g_free(version_number);
 		if ( alias_name ) g_free(alias_name);
 		if ( alias_password ) g_free(alias_password);
+
+		if ( aapt_output ) g_free(aapt_output);
+		if ( aapt_error ) g_free(aapt_error);
 	}
 
 	running = 0;
 }
 
+static gchar *last_proj_path_android = 0;
+
 void project_export_apk()
 {
-	static GeanyProject *last_proj = 0;
-
 	if ( !app->project ) 
 	{
 		SHOW_ERR( "You must have a project open to export it" );
@@ -2014,6 +2208,8 @@ void project_export_apk()
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry")));
 		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_entry")));
 
 		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")));
@@ -2023,9 +2219,11 @@ void project_export_apk()
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 0 ); 
 	}
 
-	if ( app->project != last_proj )
+	// pointers could be the same even if the project is different, so check project path instead
+	if ( strcmp( FALLBACK(last_proj_path_android,""), FALLBACK(app->project->file_name,"") ) != 0 )
 	{
-		last_proj = app->project;
+		if ( last_proj_path_android ) g_free(last_proj_path_android);
+		last_proj_path_android = g_strdup( FALLBACK(app->project->file_name,"") );
 		
 		GtkWidget *widget;
 
@@ -2044,6 +2242,176 @@ void project_export_apk()
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.ouya_icon_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.firebase_config_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.orientation );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.sdk_version );
+								
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.game_circle_api_key, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
+
+		// permissions
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
+		int mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_WRITE) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_GPS) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_LOCATION) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_internet");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_INTERNET) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_wake");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_WAKE) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_billing");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_IAP) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_push_notifications");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_PUSH) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_CAMERA) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_EXPANSION) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		// signing
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.keystore_path, "") );
+
+		// keep old password and assume it is the same for all projects to save time
+		//widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_password_entry");
+		//gtk_entry_set_text( GTK_ENTRY(widget), "" );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_version_number_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.version_name, "") );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_build_number_entry");
+		if ( app->project->apk_settings.version_number == 0 )
+		{
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+		}
+		else
+		{
+			char szBuildNum[ 20 ];
+			sprintf( szBuildNum, "%d", app->project->apk_settings.version_number );
+			gtk_entry_set_text( GTK_ENTRY(widget), szBuildNum );
+		}
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.alias, "") );
+
+		// keep old password and assume it is the same for all projects to save time
+		//widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_password_entry");
+		//gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.app_type );
+		
+		if ( !app->project->apk_settings.output_path || !*app->project->apk_settings.output_path )
+		{
+			gchar *filename = g_strconcat( app->project->name, ".apk", NULL );
+			gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
+			gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")), apk_path );
+			g_free(apk_path);
+			g_free(filename);
+		}
+		else
+		{
+			widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), app->project->apk_settings.output_path );
+		}
+	}
+
+	gtk_window_present(GTK_WINDOW(ui_widgets.android_dialog));
+}
+
+void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	if ( response != 1 )
+	{
+		if ( dialog ) gtk_widget_hide(GTK_WIDGET(dialog));
+		return;
+	}
+
+	GeanyProject *orig_project = app->project;
+
+	// export all output folder
+	GtkWidget *widget = ui_lookup_widget(ui_widgets.android_all_dialog, "export_all_android_output_file_entry");
+	gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+	if ( !*output_file ) 
+	{
+		g_free(output_file);
+		SHOW_ERR("You must choose an output folder to save your APKs");
+		return;
+	}
+
+	// get export all options
+	widget = ui_lookup_widget(ui_widgets.android_all_dialog, "export_all_android_keystore_password_entry");
+	gchar *keystore_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+	widget = ui_lookup_widget(ui_widgets.android_all_dialog, "export_all_android_version_number_entry");
+	gchar *version_number = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+	if ( !*version_number ) SETPTR( version_number, g_strdup("1.0.0") );
+
+	widget = ui_lookup_widget(ui_widgets.android_all_dialog, "export_all_android_build_number_entry");
+	gchar* build_number = gtk_entry_get_text(GTK_ENTRY(widget));
+	if ( !*build_number ) SETPTR( build_number, g_strdup("1") );
+	
+	int i;
+	for ( i = 0; i < projects_array->len; i++ )
+	{
+		if ( !projects[i]->is_valid ) continue;
+		
+		GtkWidget *export_all_progress = ui_lookup_widget(ui_widgets.android_all_dialog, "export_all_android_progress");
+		gchar *text = g_strconcat( "Exporting: ", projects[i]->name, " - Google", NULL );
+		gtk_label_set_text( GTK_LABEL(export_all_progress), text );
+		g_free(text);
+
+		while (gtk_events_pending()) gtk_main_iteration();
+
+		// change current project
+		app->project = projects[i];
+
+		// set up the android export dialog
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_name_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.app_name, "") );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_package_name_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.package_name, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.app_icon_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.notif_icon_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.ouya_icon_path, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_entry");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.firebase_config_path, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
 		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.orientation );
@@ -2099,48 +2467,109 @@ void project_export_apk()
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.keystore_path, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_password_entry");
-		gtk_entry_set_text( GTK_ENTRY(widget), "" );
+		gtk_entry_set_text( GTK_ENTRY(widget), keystore_password );
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_version_number_entry");
-		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.version_name, "") );
+		gtk_entry_set_text( GTK_ENTRY(widget), version_number );
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_build_number_entry");
-		if ( app->project->apk_settings.version_number == 0 )
-		{
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-		}
-		else
-		{
-			char szBuildNum[ 20 ];
-			sprintf( szBuildNum, "%d", app->project->apk_settings.version_number );
-			gtk_entry_set_text( GTK_ENTRY(widget), szBuildNum );
-		}
-		
+		gtk_entry_set_text( GTK_ENTRY(widget), build_number );
+				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_entry");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.alias, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_alias_password_entry");
-		gtk_entry_set_text( GTK_ENTRY(widget), "" );
+		gtk_entry_set_text( GTK_ENTRY(widget), keystore_password );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
-		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.app_type );
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 ); // Google
 		
-		if ( !app->project->apk_settings.output_path || !*app->project->apk_settings.output_path )
-		{
-			gchar *filename = g_strconcat( app->project->name, ".apk", NULL );
-			gchar* apk_path = g_build_filename( app->project->base_path, filename, NULL );
-			gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")), apk_path );
-			g_free(apk_path);
-			g_free(filename);
-		}
-		else
-		{
-			widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), app->project->apk_settings.output_path );
-		}
+		gchar *filename = g_strconcat( app->project->name, "-Google-", version_number, ".apk", NULL );
+		gchar* apk_path = g_build_filename( output_file, filename, NULL );
+		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")), apk_path );
+		g_free(apk_path);
+		g_free(filename);
+
+		on_android_dialog_response( 0, 1, 1 ); // no dialog, export response, don't save settings
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 1 ); // Amazon
+
+		filename = g_strconcat( app->project->name, "-Amazon-", version_number, ".apk", NULL );
+		apk_path = g_build_filename( output_file, filename, NULL );
+		gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")), apk_path );
+		g_free(apk_path);
+		g_free(filename);
+
+		text = g_strconcat( "Exporting: ", projects[i]->name, " - Amazon", NULL );
+		gtk_label_set_text( GTK_LABEL(export_all_progress), text );
+		g_free(text);
+
+		while (gtk_events_pending()) gtk_main_iteration();
+
+		on_android_dialog_response( 0, 1, 1 ); // no dialog, export response, don't save settings
 	}
 
-	gtk_window_present(GTK_WINDOW(ui_widgets.android_dialog));
+	gtk_widget_hide(GTK_WIDGET(dialog));
+
+	// reset current project and set future exports to reload normal settings
+	app->project = orig_project;
+	if ( last_proj_path_android ) g_free(last_proj_path_android);
+	last_proj_path_android = g_strdup( "" );
+}
+
+void project_export_apk_all()
+{
+	if ( projects_array->len <= 0 ) 
+	{
+		SHOW_ERR( "You must have at least one project open to export all" );
+		return;
+	}
+
+	// make sure original android dialog exists
+	if (ui_widgets.android_dialog == NULL)
+	{
+		ui_widgets.android_dialog = create_android_dialog();
+		gtk_widget_set_name(ui_widgets.android_dialog, "Export APK");
+		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.android_dialog), GTK_WINDOW(main_widgets.window));
+
+		g_signal_connect(ui_widgets.android_dialog, "response", G_CALLBACK(on_android_dialog_response), NULL);
+        g_signal_connect(ui_widgets.android_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_app_icon_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_notif_icon_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry")));
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_firebase_config_entry")));
+
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_dialog, "android_output_file_entry")));
+
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo")), 0 );
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo")), 0 );
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 0 ); 
+	}
+
+	// make sure export all dialog exists
+	if (ui_widgets.android_all_dialog == NULL)
+	{
+		ui_widgets.android_all_dialog = create_android_all_dialog();
+		gtk_widget_set_name(ui_widgets.android_all_dialog, "Export APK (All Projects)");
+		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.android_all_dialog), GTK_WINDOW(main_widgets.window));
+
+		g_signal_connect(ui_widgets.android_all_dialog, "response", G_CALLBACK(on_android_all_dialog_response), NULL);
+        g_signal_connect(ui_widgets.android_all_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+		ui_setup_open_button_callback_android(ui_lookup_widget(ui_widgets.android_all_dialog, "export_all_android_output_file_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, GTK_ENTRY(ui_lookup_widget(ui_widgets.android_all_dialog, "export_all_android_output_file_entry")));
+	}
+
+	gtk_window_present(GTK_WINDOW(ui_widgets.android_all_dialog));
 }
 
 static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
@@ -2253,10 +2682,10 @@ static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpoint
 
 		// country
 		if ( strlen(country) > 0 && strlen(country) != 2 ) { SHOW_ERR("Country code must be 2 characters"); goto keystore_dialog_clean_up; }
-		for( i = 0; i < strlen(city); i++ )
+		for( i = 0; i < strlen(country); i++ )
 		{
-			if ( (city[i] < 97 || city[i] > 122)
-			  && (city[i] < 65 || city[i] > 90) ) 
+			if ( (country[i] < 97 || country[i] > 122)
+			  && (country[i] < 65 || country[i] > 90) ) 
 			{ 
 				SHOW_ERR("Country code contains invalid characters, must be A-Z only"); 
 				goto keystore_dialog_clean_up; 
@@ -2443,6 +2872,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.app_icon_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.firebase_config_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		// splash screens
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.splash_960_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -2510,6 +2942,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
 		gchar *app_icon = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_entry");
+		gchar *firebase_config = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		// splash screens
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
 		gchar *app_splash1 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -2553,6 +2988,22 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry");
 		gchar *output_file = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		gchar *percent = 0;
+		while ( (percent = strchr(output_file, '%')) != 0 )
+		{
+			if ( strncmp( percent+1, "[version]", strlen("[version]") ) == 0 )
+			{
+				*percent = 0;
+				percent += strlen("[version]") + 1;
+				gchar *new_output = g_strconcat( output_file, build_number, percent, NULL );
+				g_free(output_file);
+				output_file = new_output;
+				continue;
+			}
+
+			break;
+		}
+
 
 		// START CHECKS
 
@@ -2594,6 +3045,12 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		{
 			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto ios_dialog_clean_up; }
 			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto ios_dialog_clean_up; }
+		}
+
+		if ( firebase_config && *firebase_config )
+		{
+			if ( !strrchr( firebase_config, '.' ) || utils_str_casecmp( strrchr( firebase_config, '.' ), ".plist" ) != 0 ) { SHOW_ERR("Firebase config file must be a .plist file"); goto ios_dialog_clean_up; }
+			if ( !g_file_test( firebase_config, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find Firebase config file"); goto ios_dialog_clean_up; }
 		}
 
 		// check splash screens
@@ -2650,6 +3107,7 @@ ios_dialog_clean_up:
 		if ( app_name ) g_free(app_name);
 		if ( profile ) g_free(profile);
 		if ( app_icon ) g_free(app_icon);
+		if ( firebase_config ) g_free(firebase_config);
 		if ( app_splash1 ) g_free(app_splash1);
 		if ( app_splash2 ) g_free(app_splash2);
 		if ( app_splash3 ) g_free(app_splash3);
@@ -2703,6 +3161,7 @@ ios_dialog_continue:
 		gsize length = 0;
 		gchar *certificate_data = NULL;
 		gchar *bundle_id = NULL;
+		gchar *app_group_data = 0;
 		gchar *team_id = NULL;
 		gchar *cert_hash = NULL;
 		gchar *cert_temp = NULL;
@@ -2831,6 +3290,54 @@ ios_dialog_continue:
             else 
                 pushNotifications = 2;
         }
+
+		// look for app groups
+		certificate = strstr( contents+100, "<key>com.apple.security.application-groups</key>" );
+		if ( certificate )
+		{
+			certificate = strstr( certificate, "<array>" );
+			if ( !certificate )
+			{
+				SHOW_ERR( "Failed to read App Group data from provisioning profile" );
+				goto ios_dialog_cleanup2;
+			}
+
+			app_group_data = strstr( certificate, "</array>" );
+			if ( !app_group_data )
+			{
+				SHOW_ERR( "Failed to read App Group end data from provisioning profile" );
+				goto ios_dialog_cleanup2;
+			}
+
+			// quick hack to prevent next search going beyond the array list
+			*app_group_data = 0;
+
+			// check there is at least one string
+			certificate_end = strstr( certificate, "<string>" );
+
+			// repair the string
+			*app_group_data = '<'; 
+			app_group_data = 0;
+
+			if ( certificate_end )
+			{
+				// find the end of the list
+				certificate_end = strstr( certificate, "</array>" );
+				if ( !certificate_end )
+				{
+					SHOW_ERR( "Failed to read App Group end data from provisioning profile" );
+					goto ios_dialog_cleanup2;
+				}
+
+				certificate_end += strlen( "</array>" );
+				
+				// copy App Group strings to local storage
+				cert_length = (gint) (certificate_end - certificate);
+				app_group_data = g_new0( gchar, cert_length+1 );
+				strncpy( app_group_data, certificate, cert_length );
+				app_group_data[ cert_length ] = 0;
+			}
+		}
 		
 		// extract team ID, reuse variables
 		certificate = strstr( contents+100, "<key>com.apple.developer.team-identifier</key>" );
@@ -3027,9 +3534,15 @@ ios_dialog_continue:
 			strcat( newcontents, "	<key>aps-environment</key>\n	<string>production</string>\n" );
 
 		strcat( newcontents, "	<key>get-task-allow</key>\n	<false/>\n" );
-		strcat( newcontents, "	<key>keychain-access-groups</key>\n	<array>\n		<string>" );
-		strcat( newcontents, bundle_id );
-		strcat( newcontents, "</string>\n	</array>\n</dict>\n</plist>" );
+
+		if ( app_group_data ) 
+		{
+			strcat( newcontents, "	<key>com.apple.security.application-groups</key>\n" );
+			strcat( newcontents, app_group_data );
+			strcat( newcontents, "\n" );
+		}
+
+		strcat( newcontents, "</dict>\n</plist>" );
 
 		entitlements_file = g_build_filename( tmp_folder, "entitlements.xcent", NULL );
 
@@ -3046,10 +3559,16 @@ ios_dialog_continue:
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n\
 <plist version=\"1.0\">\n<dict>\n	<key>application-identifier</key>\n	<string>" );
 		strcat( newcontents, bundle_id );
-		
-		strcat( newcontents, "</string>\n	<key>keychain-access-groups</key>\n	<array>\n		<string>" );
-		strcat( newcontents, bundle_id );
-		strcat( newcontents, "</string>\n	</array>\n</dict>\n</plist>" );
+		strcat( newcontents, "</string>\n" );
+
+		if ( app_group_data )
+		{
+			strcat( newcontents, "	<key>com.apple.security.application-groups</key>\n" );
+			strcat( newcontents, app_group_data );
+			strcat( newcontents, "\n" );
+		}
+
+		strcat( newcontents, "</dict>\n</plist>" );
 
 		expanded_entitlements_file = g_build_filename( app_folder, "archived-expanded-entitlements.xcent", NULL );
 
@@ -3059,6 +3578,14 @@ ios_dialog_continue:
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
+		}
+
+		// copy Firebase config file
+		if ( firebase_config && *firebase_config )
+		{
+			temp_filename1 = g_build_filename( app_folder, "GoogleService-Info.plist", NULL );
+			utils_copy_file( firebase_config, temp_filename1, TRUE, NULL );
+			g_free(temp_filename1);
 		}
 
 		// copy provisioning profile
@@ -3705,6 +4232,7 @@ ios_dialog_cleanup2:
 		if ( bundle_id ) g_free(bundle_id);
 		if ( cert_hash ) g_free(cert_hash);
 		if ( cert_temp ) g_free(cert_temp);
+		if ( app_group_data ) g_free(app_group_data);
 
 		if ( entitlements_file ) g_free(entitlements_file);
 		if ( expanded_entitlements_file ) g_free(expanded_entitlements_file);
@@ -3722,6 +4250,7 @@ ios_dialog_cleanup2:
 		if ( app_name ) g_free(app_name);
 		if ( profile ) g_free(profile);
 		if ( app_icon ) g_free(app_icon);
+		if ( firebase_config ) g_free(firebase_config);
 		if ( facebook_id ) g_free(facebook_id);
 		if ( version_number ) g_free(version_number);
 		if ( build_number ) g_free(build_number);
@@ -3734,6 +4263,7 @@ ios_dialog_cleanup2:
 void project_export_ipa()
 {
 	static GeanyProject *last_proj = -1;
+	static gchar *last_proj_path_ios = 0;
 
 	if ( app->project )
 	{
@@ -3761,6 +4291,9 @@ void project_export_ipa()
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2")));
 		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_path3"), NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3")));
+
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_path"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_entry")));
 		
 		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")));
@@ -3769,12 +4302,70 @@ void project_export_ipa()
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo")), 0 );
 	}
 
-	if ( app->project != last_proj )
+	if ( app->project == 0 )
 	{
+		// AGK Player
+
+		if ( last_proj != 0 )
+		{
+			last_proj = app->project;
+
+			GtkWidget *widget; 
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_name_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			// splash screens
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
+			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+			
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_build_number_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
+			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
+			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), 0 );
+
+			gchar* apk_path = g_build_filename( global_project_prefs.project_file_path, "AGK Player.ipa", NULL );
+			gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
+			g_free(apk_path);
+		}
+	}
+	else
+	{	
 		last_proj = app->project;
 
-        if ( app->project )
+        if ( strcmp( FALLBACK(last_proj_path_ios,""), FALLBACK(app->project->file_name,"") ) != 0 )
         {
+			if ( last_proj_path_ios ) g_free(last_proj_path_ios);
+			last_proj_path_ios = g_strdup( FALLBACK(app->project->file_name,"") );
+
 			GtkWidget *widget; 
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_name_entry");
@@ -3785,6 +4376,9 @@ void project_export_ipa()
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.app_icon_path, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.firebase_config_path, "") );
 
 			// splash screens
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
@@ -3827,51 +4421,6 @@ void project_export_ipa()
 				widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry");
 				gtk_entry_set_text( GTK_ENTRY(widget), app->project->ipa_settings.output_path );
 			}
-        }
-        else
-        {
-			GtkWidget *widget; 
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_name_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-			
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_provisioning_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_icon_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-
-			// splash screens
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
-			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
-			
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-			
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_build_number_entry");
-			gtk_entry_set_text( GTK_ENTRY(widget), "" );
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
-			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
-
-			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), 0 );
-
-            gchar* apk_path = g_build_filename( global_project_prefs.project_file_path, "AGK Player.ipa", NULL );
-            gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
-            g_free(apk_path);
         }
 	}
 
@@ -3949,6 +4498,7 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.sdk_version = 0; // 2.3.1
 	project->apk_settings.version_name = 0;
 	project->apk_settings.version_number = 0;
+	project->apk_settings.firebase_config_path = 0;
 }
 
 void init_ios_settings( GeanyProject* project )
@@ -3966,6 +4516,7 @@ void init_ios_settings( GeanyProject* project )
 	project->ipa_settings.splash_960_path = 0;
 	project->ipa_settings.uses_ads = 0;
 	project->ipa_settings.version_number = 0;
+	project->ipa_settings.firebase_config_path = 0;
 }
 
 void init_html5_settings( GeanyProject* project )
@@ -3988,6 +4539,7 @@ void free_android_settings( GeanyProject* project )
 	if ( project->apk_settings.package_name ) g_free(project->apk_settings.package_name);
 	if ( project->apk_settings.play_app_id ) g_free(project->apk_settings.play_app_id);
 	if ( project->apk_settings.version_name ) g_free(project->apk_settings.version_name);
+	if ( project->apk_settings.firebase_config_path ) g_free(project->apk_settings.firebase_config_path);
 }
 
 void free_ios_settings( GeanyProject* project )
@@ -4002,6 +4554,7 @@ void free_ios_settings( GeanyProject* project )
 	if ( project->ipa_settings.splash_2048_path ) g_free(project->ipa_settings.splash_2048_path);
 	if ( project->ipa_settings.splash_960_path ) g_free(project->ipa_settings.splash_960_path);
 	if ( project->ipa_settings.version_number ) g_free(project->ipa_settings.version_number);
+	if ( project->ipa_settings.firebase_config_path ) g_free(project->ipa_settings.firebase_config_path);
 }
 
 void free_html5_settings( GeanyProject* project )
@@ -4027,6 +4580,7 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_integer( config, "apk_settings", "sdk_version", project->apk_settings.sdk_version ); 
 	g_key_file_set_string( config, "apk_settings", "version_name", FALLBACK(project->apk_settings.version_name,"") );
 	g_key_file_set_integer( config, "apk_settings", "version_number", project->apk_settings.version_number );
+	g_key_file_set_string( config, "apk_settings", "firebase_config_path", FALLBACK(project->apk_settings.firebase_config_path,"") );
 }
 
 void save_ios_settings( GKeyFile *config, GeanyProject* project )
@@ -4044,6 +4598,7 @@ void save_ios_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "ipa_settings", "splash_960_path", FALLBACK(project->ipa_settings.splash_960_path,"") );
 	g_key_file_set_integer( config, "ipa_settings", "uses_ads", project->ipa_settings.uses_ads );
 	g_key_file_set_string( config, "ipa_settings", "version_number", FALLBACK(project->ipa_settings.version_number,"") );
+	g_key_file_set_string( config, "ipa_settings", "firebase_config_path", FALLBACK(project->ipa_settings.firebase_config_path,"") );
 }
 
 void save_html5_settings( GKeyFile *config, GeanyProject* project )
@@ -4071,6 +4626,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.sdk_version = utils_get_setting_integer( config, "apk_settings", "sdk_version", 0 );
 	project->apk_settings.version_name = g_key_file_get_string( config, "apk_settings", "version_name", 0 );
 	project->apk_settings.version_number = utils_get_setting_integer( config, "apk_settings", "version_number", 0 );
+	project->apk_settings.firebase_config_path = g_key_file_get_string( config, "apk_settings", "firebase_config_path", 0 );
 }
 
 void load_ios_settings( GKeyFile *config, GeanyProject* project )
@@ -4088,6 +4644,7 @@ void load_ios_settings( GKeyFile *config, GeanyProject* project )
 	project->ipa_settings.splash_960_path = g_key_file_get_string( config, "ipa_settings", "splash_960_path", 0 );
 	project->ipa_settings.uses_ads = utils_get_setting_integer( config, "ipa_settings", "uses_ads", 0 );
 	project->ipa_settings.version_number = g_key_file_get_string( config, "ipa_settings", "version_number", 0 );
+	project->ipa_settings.firebase_config_path = g_key_file_get_string( config, "ipa_settings", "firebase_config_path", 0 );
 }
 
 void load_html5_settings( GKeyFile *config, GeanyProject* project )

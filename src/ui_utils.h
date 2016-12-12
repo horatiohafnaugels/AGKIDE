@@ -154,6 +154,7 @@ typedef struct UIWidgets
 	GtkWidget	*prefs_dialog;
 	GtkWidget   *html5_dialog;
 	GtkWidget	*android_dialog;
+	GtkWidget	*android_all_dialog;
 	GtkWidget	*ios_dialog;
 	GtkWidget	*keystore_dialog;
 	GtkWidget	*install_dialog;
@@ -240,6 +241,7 @@ GtkWidget *create_edit_menu1(void);
 GtkWidget *create_prefs_dialog(void);
 GtkWidget *create_html5_dialog(void);
 GtkWidget *create_android_dialog(void);
+GtkWidget *create_android_all_dialog(void);
 GtkWidget *create_ios_dialog(void);
 GtkWidget *create_keystore_dialog(void);
 GtkWidget *create_install_dialog(void);

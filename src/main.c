@@ -281,6 +281,7 @@ static void main_init(void)
 	ui_widgets.prefs_dialog		= NULL;
 	ui_widgets.html5_dialog		= NULL;
 	ui_widgets.android_dialog	= NULL;
+	ui_widgets.android_all_dialog	= NULL;
 	ui_widgets.ios_dialog		= NULL;
 	ui_widgets.keystore_dialog		= NULL;
 	ui_widgets.install_dialog		= NULL;
@@ -1630,6 +1631,7 @@ void main_quit(void)
 	if (ui_widgets.prefs_dialog && GTK_IS_WIDGET(ui_widgets.prefs_dialog)) gtk_widget_destroy(ui_widgets.prefs_dialog);
 	if (ui_widgets.html5_dialog && GTK_IS_WIDGET(ui_widgets.html5_dialog)) gtk_widget_destroy(ui_widgets.html5_dialog);
 	if (ui_widgets.android_dialog && GTK_IS_WIDGET(ui_widgets.android_dialog)) gtk_widget_destroy(ui_widgets.android_dialog);
+	if (ui_widgets.android_all_dialog && GTK_IS_WIDGET(ui_widgets.android_all_dialog)) gtk_widget_destroy(ui_widgets.android_all_dialog);
 	if (ui_widgets.ios_dialog && GTK_IS_WIDGET(ui_widgets.ios_dialog)) gtk_widget_destroy(ui_widgets.ios_dialog);
 	if (ui_widgets.keystore_dialog && GTK_IS_WIDGET(ui_widgets.keystore_dialog)) gtk_widget_destroy(ui_widgets.keystore_dialog);
 	if (ui_widgets.install_dialog && GTK_IS_WIDGET(ui_widgets.install_dialog)) gtk_widget_destroy(ui_widgets.install_dialog);

@@ -2056,7 +2056,19 @@ G_MODULE_EXPORT void on_project_export_apk_activate(GtkMenuItem *menuitem, gpoin
 	#ifdef __arm__
 		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Unfortunately exporting is not supported on Raspberry Pi");
 	#else
-		project_export_apk();
+		GdkEvent* event = gtk_get_current_event();
+		int shift = 0;
+		if ( event->type == 7 )
+		{
+			GdkEventButton *event_btn = (GdkEventButton*)event;
+			shift = (event_btn->state & GDK_SHIFT_MASK) ? 1 : 0;
+		}
+		gdk_event_free(event);
+
+		if ( shift )
+			project_export_apk_all();
+		else
+			project_export_apk();
 	#endif
 #endif
 }

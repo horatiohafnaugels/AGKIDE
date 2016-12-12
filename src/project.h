@@ -77,6 +77,7 @@ typedef struct GeanyProjectAPKSettings
 	gchar* version_name;
 	int version_number;
 	gchar* alias;
+	gchar* firebase_config_path;
 }
 GeanyProjectAPKSettings;
 
@@ -95,6 +96,7 @@ typedef struct GeanyProjectIPASettings
 	gchar* facebook_id;
 	int device_type;
 	int uses_ads;
+	gchar* firebase_config_path;
 }
 GeanyProjectIPASettings;
 

@@ -1685,3 +1685,28 @@ SaveSharedVariable||(String varName, String varValue)|
 LoadSharedVariable|String|(String varName, String defaultValue)|
 DeleteSharedVariable||(String varName)|
 GetDeviceCameraType|Integer|(Integer cameraID)|
+SetMusicLoopTimesOGG||(Integer musicID, Float startTime, Float endTime)|
+SetMusicLoopCountOGG||(Integer musicID, Integer loop)|
+SetSharedVariableAppGroup||(String group)|
+FirebaseSetup||()|
+FirebaseLogEvent||(String event_name)|
+Sha256|String|(String str)|
+Sha512|String|(String str)|
+GetFilePos|Integer|(Integer iFileID)|
+SetFilePos||(Integer iFileID, Integer pos)|
+GetInAppPurchaseSignature|String|(Integer iID)|
+GetDeviceDPI|Integer|()|
+GetAppPackageName|String|()|
+GetDevicePlatform|Integer|()|
+GetObjectName|String|(Integer objID)|
+UseNewDefaultFonts||(Integer mode)|
+SetTextAngle||(Integer iTextIndex, Float fAngle)|
+SetTextAngleRad||(Integer iTextIndex, Float fAngleRad)|
+SetTextCharBold||(Integer iTextIndex, Integer iCharIndex, Integer bold)|
+SetTextFont||(Integer iTextIndex, Integer iFontID)|
+SetTextBold||(Integer iTextIndex, Integer bold)|
+LoadFont|Integer|(String szFontFile)|
+LoadFont||(Integer iFontID, String szFontFile)|
+GetFontExists|Integer|(Integer iFontID)|
+GetSystemFontExists|Integer|(String szFontFile)|
+DeleteFont||(Integer iFontID)|

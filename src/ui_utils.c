@@ -86,6 +86,7 @@ static GtkWidget* edit_menu1 = NULL;
 static GtkWidget* prefs_dialog = NULL;
 static GtkWidget* html5_dialog = NULL;
 static GtkWidget* android_dialog = NULL;
+static GtkWidget* android_all_dialog = NULL;
 static GtkWidget* ios_dialog = NULL;
 static GtkWidget* keystore_dialog = NULL;
 static GtkWidget* install_dialog = NULL;
@@ -2114,6 +2115,45 @@ static void ui_path_box_open_clicked_android(GtkButton *button, gpointer user_da
 	}
 }
 
+static void ui_path_box_open_clicked_android_all(GtkButton *button, gpointer user_data)
+{
+	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
+	GtkEntry *entry = user_data;
+	const gchar *title = g_object_get_data(G_OBJECT(button), "title");
+	gchar *utf8_path = NULL;
+
+	/* TODO: extend for other actions */
+	g_return_if_fail(action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+
+	if (title == NULL)
+		title = (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ?
+			_("Select Folder") : _("Select File");
+
+	if (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)
+	{
+		gchar *path = g_path_get_dirname(gtk_entry_get_text(GTK_ENTRY(entry)));
+#ifdef G_OS_WIN32
+		if ( interface_prefs.use_native_windows_dialogs )
+		{
+			utf8_path = win32_show_folder_dialog(ui_widgets.android_all_dialog, title,
+							gtk_entry_get_text(GTK_ENTRY(entry)));
+		}
+		else
+#endif
+		{
+			utf8_path = run_file_chooser(title, action, path);
+		}
+
+		g_free(path);
+	}
+	
+	if (utf8_path != NULL)
+	{
+		gtk_entry_set_text(GTK_ENTRY(entry), utf8_path);
+		g_free(utf8_path);
+	}
+}
+
 static void ui_path_box_open_clicked_ios(GtkButton *button, gpointer user_data)
 {
 	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
@@ -2617,6 +2657,11 @@ GtkWidget *create_android_dialog(void)
 	return android_dialog;
 }
 
+GtkWidget *create_android_all_dialog(void)
+{
+	return android_all_dialog;
+}
+
 GtkWidget *create_ios_dialog(void)
 {
 	return ios_dialog;
@@ -2714,6 +2759,7 @@ void ui_init_builder(void)
 	prefs_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_dialog"));
 	html5_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "html5_dialog"));
 	android_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "android_dialog"));
+	android_all_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "export_all_android_dialog"));
 	ios_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "ios_dialog"));
 	keystore_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "keystore_dialog"));
 	install_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "installation_dialog"));
@@ -2726,6 +2772,7 @@ void ui_init_builder(void)
 	g_object_set_data(G_OBJECT(prefs_dialog), "prefs_dialog", prefs_dialog);
 	g_object_set_data(G_OBJECT(html5_dialog), "html5_dialog", html5_dialog);
 	g_object_set_data(G_OBJECT(android_dialog), "android_dialog", android_dialog);
+	g_object_set_data(G_OBJECT(android_all_dialog), "export_all_android_dialog", android_all_dialog);
 	g_object_set_data(G_OBJECT(ios_dialog), "ios_dialog", ios_dialog);
 	g_object_set_data(G_OBJECT(keystore_dialog), "keystore_dialog", keystore_dialog);
 	g_object_set_data(G_OBJECT(install_dialog), "installation_dialog", install_dialog);
@@ -2850,6 +2897,8 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(html5_dialog);
 	if (GTK_IS_WIDGET(android_dialog))
 		gtk_widget_destroy(android_dialog);
+	if (GTK_IS_WIDGET(android_all_dialog))
+		gtk_widget_destroy(android_all_dialog);
 	if (GTK_IS_WIDGET(ios_dialog))
 		gtk_widget_destroy(ios_dialog);
 	if (GTK_IS_WIDGET(keystore_dialog))
