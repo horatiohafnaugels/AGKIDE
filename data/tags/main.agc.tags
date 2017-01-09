@@ -1710,3 +1710,6 @@ LoadFont||(Integer iFontID, String szFontFile)|
 GetFontExists|Integer|(Integer iFontID)|
 GetSystemFontExists|Integer|(String szFontFile)|
 DeleteFont||(Integer iFontID)|
+SetPrintFont||(Integer fontID)|
+SetEditBoxFont||(Integer index, Integer fontID)|
+GetImageMemoryUsage|Float|()|

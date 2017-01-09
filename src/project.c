@@ -1334,12 +1334,18 @@ android_dialog_continue:
 			}
 		}
 
+#define AGK_NEW_CONTENTS_SIZE 150000
+
 		// declarations
-		gchar *newcontents = g_new0( gchar, 150000 );
+		gchar *newcontents = g_new0( gchar, AGK_NEW_CONTENTS_SIZE );
+		gchar *newcontents2 = g_new0( gchar, AGK_NEW_CONTENTS_SIZE );
 		gchar* manifest_file = NULL;
 		gchar *contents = NULL;
 		gchar *contents2 = NULL;
 		gchar *contents3 = NULL;
+		gchar *contentsOther = NULL;
+		gchar *contentsOther2 = NULL;
+		gchar *contentsOther3 = NULL;
 		gsize length = 0;
 		gchar* resources_file = NULL;
 		GError *error = NULL;
@@ -1412,9 +1418,9 @@ android_dialog_continue:
 		if ( permission_location_fine && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"></uses-permission>\n" );
 		if ( permission_billing && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.BILLING\"></uses-permission>\n" );
 		if ( permission_camera ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.CAMERA\"></uses-permission>\n" );
+		if ( ((google_play_app_id && *google_play_app_id) || permission_push) && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"com.google.android.c2dm.permission.RECEIVE\" />\n" );
 		if ( permission_push && app_type == 0 ) 
 		{
-			strcat( newcontents, "    <uses-permission android:name=\"com.google.android.c2dm.permission.RECEIVE\" />\n" );
 			strcat( newcontents, "    <permission android:name=\"" );
 			strcat( newcontents, package_name );
 			strcat( newcontents, ".permission.C2D_MESSAGE\" android:protectionLevel=\"signature\" />\n" );
@@ -1427,7 +1433,7 @@ android_dialog_continue:
 			strcat( newcontents, "    <uses-permission android:name=\"android.permission.GET_ACCOUNTS\"></uses-permission>\n" );
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
 		}
-
+		
 		// supports FireTV
 		if ( 0 )
 		{
@@ -1510,6 +1516,74 @@ android_dialog_continue:
 
 		// write the rest of the manifest file
 		strcat( newcontents, contents2 );
+
+		// IAP Purchase Activity
+		if ( permission_billing && app_type == 0 )
+		{
+			strcat( newcontents, "\n\
+        <activity android:name=\"com.google.android.gms.ads.purchase.InAppPurchaseActivity\" \n\
+                  android:theme=\"@style/Theme.IAPTheme\" />" );
+		}
+
+		// Google API Activity - for Game Services
+		if ( google_play_app_id && *google_play_app_id && app_type == 0 )
+		{
+			strcat( newcontents, "\n\
+        <activity android:name=\"com.google.android.gms.common.api.GoogleApiActivity\" \n\
+                  android:exported=\"false\" \n\
+                  android:theme=\"@android:style/Theme.Translucent.NoTitleBar\" />" );
+		}
+
+		// Firebase Init Provider - for Game Services and Firebase
+		if ( ((google_play_app_id && *google_play_app_id) 
+		      || (firebase_config && *firebase_config)) 
+		     && (app_type == 0 || app_type == 1) )
+		{
+			strcat( newcontents, "\n        <provider android:authorities=\"" );
+			strcat( newcontents, package_name );
+			strcat( newcontents, ".firebaseinitprovider\"\n\
+                  android:name=\"com.google.firebase.provider.FirebaseInitProvider\"\n\
+                  android:exported=\"false\"\n\
+                  android:initOrder=\"100\" />\n" );
+		}
+
+		// Firebase activities
+		if ( firebase_config && *firebase_config && (app_type == 0 || app_type == 1) )
+		{
+			strcat( newcontents, "\n\
+        <receiver android:name=\"com.google.android.gms.measurement.AppMeasurementReceiver\"\n\
+                  android:enabled=\"true\">\n\
+            <intent-filter>\n\
+                <action android:name=\"com.google.android.gms.measurement.UPLOAD\"/>\n\
+            </intent-filter>\n\
+        </receiver>\n\
+\n\
+        <service android:name=\"com.google.android.gms.measurement.AppMeasurementService\"\n\
+                 android:enabled=\"true\"\n\
+                 android:exported=\"false\"/>\n\
+\n\
+        <receiver android:name=\"com.google.firebase.iid.FirebaseInstanceIdReceiver\" \n\
+                  android:exported=\"true\" \n\
+                  android:permission=\"com.google.android.c2dm.permission.SEND\" > \n\
+            <intent-filter> \n\
+                <action android:name=\"com.google.android.c2dm.intent.RECEIVE\" /> \n\
+                <action android:name=\"com.google.android.c2dm.intent.REGISTRATION\" /> \n\
+                <category android:name=\"" ); 
+			strcat( newcontents, package_name );
+			strcat( newcontents, "\" />\n\
+            </intent-filter> \n\
+        </receiver>\n\
+        <receiver android:name=\"com.google.firebase.iid.FirebaseInstanceIdInternalReceiver\" \n\
+                  android:exported=\"false\" /> \n\
+        <service android:name=\"com.google.firebase.iid.FirebaseInstanceIdService\" \n\
+                 android:exported=\"true\" > \n\
+            <intent-filter android:priority=\"-500\" > \n\
+                <action android:name=\"com.google.firebase.INSTANCE_ID_EVENT\" /> \n\
+            </intent-filter> \n\
+        </service>" );
+		}
+
+		strcat( newcontents, "\n    </application>\n</manifest>\n" );
 	
 		// write new Android Manifest.xml file
 		if ( !g_file_set_contents( manifest_file, newcontents, strlen(newcontents), &error ) )
@@ -1542,9 +1616,10 @@ android_dialog_continue:
 
 		contents2 += strlen("<string name=\"app_name\"");
 		*contents2 = 0;
-		contents2++;
-		contents2 = strstr( contents2, "</string>" );
-		if ( !contents2 )
+		contents3 = contents2;
+		contents3++;
+		contents3 = strstr( contents3, "</string>" );
+		if ( !contents3 )
 		{
 			SHOW_ERR( "Could not find end of app name entry in values.xml file" );
 			goto android_dialog_cleanup2;
@@ -1554,7 +1629,248 @@ android_dialog_continue:
 		strcpy( newcontents, contents );
 		strcat( newcontents, ">" );
 		strcat( newcontents, app_name );
-		strcat( newcontents, contents2 );		
+		strcat( newcontents, contents3 );
+
+		// repair original file
+		*contents2 = '>';
+
+		// firebase
+		if ( firebase_config && *firebase_config && (app_type == 0 || app_type == 1) ) // Google and Amazon only
+		{
+			// read json values
+			if ( !g_file_get_contents( firebase_config, &contentsOther, &resLength, &error ) )
+			{
+				SHOW_ERR1( "Failed to read firebase config file: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+
+			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+
+			// find project_number value
+			{
+				contentsOther2 = strstr( contentsOther, "\"project_number\": \"" );
+				if ( !contentsOther2 )
+				{
+					SHOW_ERR( "Could not find project_number entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contentsOther2 += strlen("\"project_number\": \"");
+				contentsOther3 = strstr( contentsOther2, "\"" );
+				if ( !contentsOther3 )
+				{
+					SHOW_ERR( "Could not find end of project_number entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+				*contentsOther3 = 0;
+
+				// find entry in newcontents2
+				contents2 = strstr( newcontents2, "<string name=\"gcm_defaultSenderId\" translatable=\"false\"" );
+				if ( !contents2 )
+				{
+					SHOW_ERR( "Could not find gcm_defaultSenderId entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contents2 += strlen("<string name=\"gcm_defaultSenderId\" translatable=\"false\"");
+				*contents2 = 0;
+				contents3 = contents2;
+				contents3++;
+				contents3 = strstr( contents3, "</string>" );
+				if ( !contents3 )
+				{
+					SHOW_ERR( "Could not find end of gcm_defaultSenderId entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				// write resources file
+				strcpy( newcontents, newcontents2 );
+				strcat( newcontents, ">" );
+				strcat( newcontents, contentsOther2 );
+				strcat( newcontents, contents3 );
+
+				*contents2 = '>'; // repair file
+				*contentsOther3 = '"'; // repair file
+				memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+			}
+			
+			// find firebase_url value
+			{
+				contentsOther2 = strstr( contentsOther, "\"firebase_url\": \"" );
+				if ( !contentsOther2 )
+				{
+					SHOW_ERR( "Could not find firebase_url entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contentsOther2 += strlen("\"firebase_url\": \"");
+				contentsOther3 = strstr( contentsOther2, "\"" );
+				if ( !contentsOther3 )
+				{
+					SHOW_ERR( "Could not find end of firebase_url entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+				*contentsOther3 = 0;
+
+				// find entry in newcontents2
+				contents2 = strstr( newcontents2, "<string name=\"firebase_database_url\" translatable=\"false\"" );
+				if ( !contents2 )
+				{
+					SHOW_ERR( "Could not find firebase_database_url entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contents2 += strlen("<string name=\"firebase_database_url\" translatable=\"false\"");
+				*contents2 = 0;
+				contents3 = contents2;
+				contents3++;
+				contents3 = strstr( contents3, "</string>" );
+				if ( !contents3 )
+				{
+					SHOW_ERR( "Could not find end of firebase_database_url entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				// write resources file
+				strcpy( newcontents, newcontents2 );
+				strcat( newcontents, ">" );
+				strcat( newcontents, contentsOther2 );
+				strcat( newcontents, contents3 );
+
+				*contents2 = '>'; // repair file
+				*contentsOther3 = '"'; // repair file
+				memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+			}
+
+			// find mobilesdk_app_id value
+			{
+				contentsOther2 = strstr( contentsOther, "\"mobilesdk_app_id\": \"" );
+				if ( !contentsOther2 )
+				{
+					SHOW_ERR( "Could not find mobilesdk_app_id entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contentsOther2 += strlen("\"mobilesdk_app_id\": \"");
+				contentsOther3 = strstr( contentsOther2, "\"" );
+				if ( !contentsOther3 )
+				{
+					SHOW_ERR( "Could not find end of mobilesdk_app_id entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+				*contentsOther3 = 0;
+
+				// find entry in newcontents2
+				contents2 = strstr( newcontents2, "<string name=\"google_app_id\" translatable=\"false\"" );
+				if ( !contents2 )
+				{
+					SHOW_ERR( "Could not find google_app_id entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contents2 += strlen("<string name=\"google_app_id\" translatable=\"false\"");
+				*contents2 = 0;
+				contents3 = contents2;
+				contents3++;
+				contents3 = strstr( contents3, "</string>" );
+				if ( !contents3 )
+				{
+					SHOW_ERR( "Could not find end of google_app_id entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				// write resources file
+				strcpy( newcontents, newcontents2 );
+				strcat( newcontents, ">" );
+				strcat( newcontents, contentsOther2 );
+				strcat( newcontents, contents3 );
+
+				*contents2 = '>'; // repair file
+				*contentsOther3 = '"'; // repair file
+				memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+			}
+
+			// find current_key value
+			{
+				contentsOther2 = strstr( contentsOther, "\"current_key\": \"" );
+				if ( !contentsOther2 )
+				{
+					SHOW_ERR( "Could not find current_key entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contentsOther2 += strlen("\"current_key\": \"");
+				contentsOther3 = strstr( contentsOther2, "\"" );
+				if ( !contentsOther3 )
+				{
+					SHOW_ERR( "Could not find end of current_key entry in Firebase config file" );
+					goto android_dialog_cleanup2;
+				}
+				*contentsOther3 = 0;
+
+				// find entry in newcontents2
+				contents2 = strstr( newcontents2, "<string name=\"google_api_key\" translatable=\"false\"" );
+				if ( !contents2 )
+				{
+					SHOW_ERR( "Could not find google_api_key entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contents2 += strlen("<string name=\"google_api_key\" translatable=\"false\"");
+				*contents2 = 0;
+				contents3 = contents2;
+				contents3++;
+				contents3 = strstr( contents3, "</string>" );
+				if ( !contents3 )
+				{
+					SHOW_ERR( "Could not find end of google_api_key entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				// write resources file
+				strcpy( newcontents, newcontents2 );
+				strcat( newcontents, ">" );
+				strcat( newcontents, contentsOther2 );
+				strcat( newcontents, contents3 );
+
+				*contents2 = '>'; // repair file
+				memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+
+				// also copy it to google_crash_reporting_api_key
+				contents2 = strstr( newcontents2, "<string name=\"google_crash_reporting_api_key\" translatable=\"false\"" );
+				if ( !contents2 )
+				{
+					SHOW_ERR( "Could not find google_crash_reporting_api_key entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				contents2 += strlen("<string name=\"google_crash_reporting_api_key\" translatable=\"false\"");
+				*contents2 = 0;
+				contents3 = contents2;
+				contents3++;
+				contents3 = strstr( contents3, "</string>" );
+				if ( !contents3 )
+				{
+					SHOW_ERR( "Could not find end of google_crash_reporting_api_key entry in values.xml file" );
+					goto android_dialog_cleanup2;
+				}
+
+				// write resources file
+				strcpy( newcontents, newcontents2 );
+				strcat( newcontents, ">" );
+				strcat( newcontents, contentsOther2 );
+				strcat( newcontents, contents3 );
+
+				*contents2 = '>'; // repair file
+				*contentsOther3 = '"'; // repair file
+				memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+			}
+
+			if ( contentsOther ) g_free(contentsOther);
+			contentsOther = 0;
+		}
 
 		if ( !g_file_set_contents( resources_file, newcontents, strlen(newcontents), &error ) )
 		{
@@ -1564,136 +1880,10 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 
+		SHOW_ERR( "Pause" );
+
 		if ( contents ) g_free(contents);
 		contents = 0;
-
-		// firebase
-		if ( firebase_config && *firebase_config )
-		{
-			// read json values
-			if ( !g_file_get_contents( firebase_config, &contents, &resLength, &error ) )
-			{
-				SHOW_ERR1( "Failed to read firebase config file: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto android_dialog_cleanup2;
-			}
-
-			// find project_number value
-			contents2 = strstr( contents, "\"project_number\": \"" );
-			if ( !contents2 )
-			{
-				SHOW_ERR( "Could not find project_number entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-
-			contents2 += strlen("\"project_number\": \"");
-			contents3 = strstr( contents2, "\"" );
-			if ( !contents3 )
-			{
-				SHOW_ERR( "Could not find end of project_number entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-			*contents3 = 0;
-			
-			// start xml output with project_number value
-			strcpy( newcontents, "<?xml version='1.0' encoding='utf-8'?>\n<resources>\n  <string name=\"gcm_defaultSenderId\" translatable=\"false\">" );
-			strcat( newcontents, contents2 );
-			strcat( newcontents, "</string>\n" );
-
-			*contents3 = 32; // doesn't repair the string correctly but good enough to get rid of the null value
-
-			// find firebase_url value
-			contents2 = strstr( contents, "\"firebase_url\": \"" );
-			if ( !contents2 )
-			{
-				SHOW_ERR( "Could not find firebase_url entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-
-			contents2 += strlen("\"firebase_url\": \"");
-			contents3 = strstr( contents2, "\"" );
-			if ( !contents3 )
-			{
-				SHOW_ERR( "Could not find end of firebase_url entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-			*contents3 = 0;
-
-			// write firebase_url value
-			strcat( newcontents, "  <string name=\"firebase_database_url\" translatable=\"false\">" );
-			strcat( newcontents, contents2 );
-			strcat( newcontents, "</string>\n" );
-
-			*contents3 = 32; // doesn't repair the string correctly but good enough to get rid of the null value
-
-			// find mobilesdk_app_id value
-			contents2 = strstr( contents, "\"mobilesdk_app_id\": \"" );
-			if ( !contents2 )
-			{
-				SHOW_ERR( "Could not find mobilesdk_app_id entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-
-			contents2 += strlen("\"mobilesdk_app_id\": \"");
-			contents3 = strstr( contents2, "\"" );
-			if ( !contents3 )
-			{
-				SHOW_ERR( "Could not find end of mobilesdk_app_id entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-			*contents3 = 0;
-
-			// write mobilesdk_app_id value
-			strcat( newcontents, "  <string name=\"google_app_id\" translatable=\"false\">" );
-			strcat( newcontents, contents2 );
-			strcat( newcontents, "</string>\n" );
-
-			*contents3 = 32; // doesn't repair the string correctly but good enough to get rid of the null value
-
-			// find current_key value
-			contents2 = strstr( contents, "\"current_key\": \"" );
-			if ( !contents2 )
-			{
-				SHOW_ERR( "Could not find current_key entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-
-			contents2 += strlen("\"current_key\": \"");
-			contents3 = strstr( contents2, "\"" );
-			if ( !contents3 )
-			{
-				SHOW_ERR( "Could not find end of current_key entry in Firebase config file" );
-				goto android_dialog_cleanup2;
-			}
-			*contents3 = 0;
-
-			// write current_key values
-			strcat( newcontents, "  <string name=\"google_api_key\" translatable=\"false\">" );
-			strcat( newcontents, contents2 );
-			strcat( newcontents, "</string>\n" );
-
-			strcat( newcontents, "  <string name=\"google_crash_reporting_api_key\" translatable=\"false\">" );
-			strcat( newcontents, contents2 );
-			strcat( newcontents, "</string>\n" );
-
-			// end file
-			strcat( newcontents, "</resources>\n" );
-
-			// write googleservices.xml file
-			if ( resources_file ) g_free(resources_file);
-			resources_file = g_build_path( "/", tmp_folder, "resMerged", "values", "googleservices.xml", NULL );
-			if ( !g_file_set_contents( resources_file, newcontents, strlen(newcontents), &error ) )
-			{
-				SHOW_ERR1( "Failed to write googleservices.xml file: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto android_dialog_cleanup2;
-			}
-			
-			if ( contents ) g_free(contents);
-			contents = 0;
-		}
 
 		// load icon file
 		if ( app_icon && *app_icon )
@@ -2140,7 +2330,9 @@ android_dialog_cleanup2:
 		if ( zip_add_file ) g_free(zip_add_file);
 		if ( manifest_file ) g_free(manifest_file);
 		if ( newcontents ) g_free(newcontents);
+		if ( newcontents2 ) g_free(newcontents2);
 		if ( contents ) g_free(contents);
+		if ( contentsOther ) g_free(contentsOther);
 		if ( resources_file ) g_free(resources_file);
 		if ( error ) g_error_free(error);
 		if ( icon_image ) gdk_pixbuf_unref(icon_image);

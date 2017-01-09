@@ -2058,12 +2058,12 @@ G_MODULE_EXPORT void on_project_export_apk_activate(GtkMenuItem *menuitem, gpoin
 	#else
 		GdkEvent* event = gtk_get_current_event();
 		int shift = 0;
-		if ( event->type == 7 )
+		if ( event && event->type == 7 )
 		{
 			GdkEventButton *event_btn = (GdkEventButton*)event;
 			shift = (event_btn->state & GDK_SHIFT_MASK) ? 1 : 0;
 		}
-		gdk_event_free(event);
+		if ( event ) gdk_event_free(event);
 
 		if ( shift )
 			project_export_apk_all();
