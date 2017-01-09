@@ -1880,8 +1880,6 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 
-		SHOW_ERR( "Pause" );
-
 		if ( contents ) g_free(contents);
 		contents = 0;
 
