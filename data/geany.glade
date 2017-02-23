@@ -8808,43 +8808,6 @@ To generate a keystore file you need to submit some information about you or you
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkHBox" id="hbox55">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <child>
-                                      <object class="GtkEntry" id="entry_direct_ip">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="tooltip_text" translatable="yes">Enter the IP of a device to broadcast apps directly to it, this is useful if AGK has trouble detecting the device</property>
-                                        <property name="invisible_char">●</property>
-                                        <property name="width_chars">20</property>
-                                        <property name="invisible_char_set">True</property>
-                                        <property name="caps_lock_warning">False</property>
-                                        <property name="primary_icon_activatable">False</property>
-                                        <property name="secondary_icon_activatable">False</property>
-                                        <property name="primary_icon_sensitive">True</property>
-                                        <property name="secondary_icon_sensitive">True</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">False</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">1</property>
-                                    <property name="right_attach">2</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
-                                    <property name="x_options">GTK_FILL</property>
-                                    <property name="y_options"/>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkLabel" id="label56">
                                     <property name="width_request">120</property>
                                     <property name="visible">True</property>
@@ -8889,6 +8852,27 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="bottom_attach">3</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="entry_direct_ip">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Enter the IP of a device to broadcast apps directly to it, this is useful if AGK has trouble detecting the device. This can be IPv4 or IPv6</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="width_chars">20</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="caps_lock_warning">False</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                   </packing>
                                 </child>
                               </object>
@@ -8942,38 +8926,22 @@ To generate a keystore file you need to submit some information about you or you
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkHBox" id="hbox58">
+                                  <object class="GtkEntry" id="entry_debug_ip">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <child>
-                                      <object class="GtkEntry" id="entry_debug_ip">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="tooltip_text" translatable="yes">Enter the IP of a device to use for debugging, leaving it blank will debug on the local machine</property>
-                                        <property name="invisible_char">●</property>
-                                        <property name="width_chars">20</property>
-                                        <property name="invisible_char_set">True</property>
-                                        <property name="caps_lock_warning">False</property>
-                                        <property name="primary_icon_activatable">False</property>
-                                        <property name="secondary_icon_activatable">False</property>
-                                        <property name="primary_icon_sensitive">True</property>
-                                        <property name="secondary_icon_sensitive">True</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">False</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Enter the IP of a device to use for debugging, leaving it blank will debug on the local machine. This can be IPv4 or IPv6</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="width_chars">20</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="caps_lock_warning">False</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="x_options">GTK_FILL</property>
-                                    <property name="y_options"/>
                                   </packing>
                                 </child>
                               </object>
@@ -9417,6 +9385,18 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9437,6 +9417,18 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -12926,21 +12918,21 @@ To generate a keystore file you need to submit some information about you or you
                           </object>
                         </child>
                         <child>
+                          <object class="GtkMenuItem" id="video_tutorials">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Video Tutorials</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_video_tutorials_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkMenuItem" id="keyboard_shortcuts1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">_Keyboard Shortcuts</property>
                             <property name="use_underline">True</property>
                             <signal name="activate" handler="on_help_shortcuts1_activate" swapped="no"/>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkMenuItem" id="debug_messages1">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Debug _Messages</property>
-                            <property name="use_underline">True</property>
-                            <signal name="activate" handler="on_debug_messages1_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>
@@ -12953,7 +12945,7 @@ To generate a keystore file you need to submit some information about you or you
                           <object class="GtkMenuItem" id="website1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">AGK _Website</property>
+                            <property name="label" translatable="yes">AppGameKit _Website</property>
                             <property name="use_underline">True</property>
                             <signal name="activate" handler="on_website1_activate" swapped="no"/>
                           </object>
@@ -12989,6 +12981,15 @@ To generate a keystore file you need to submit some information about you or you
                           <object class="GtkSeparatorMenuItem" id="separator16">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="debug_messages1">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Debug _Messages</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_debug_messages1_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>

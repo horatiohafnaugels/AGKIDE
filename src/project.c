@@ -1127,6 +1127,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		// START CHECKS
 
 		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your APK"); goto android_dialog_clean_up; }
+		if ( strchr(output_file, '.') == 0 ) { SHOW_ERR("The output location must be a file not a directory"); goto android_dialog_clean_up; }
 
 		// check app name
 		if ( !app_name || !*app_name ) { SHOW_ERR("You must enter an app name"); goto android_dialog_clean_up; }
@@ -1363,6 +1364,8 @@ android_dialog_continue:
 		gsize resLength = 0;
 		gchar* aapt_output = 0;
 		gchar* aapt_error = 0;
+		gint package_count = 0;
+		gint package_index = 0;
 
 		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
 		{
@@ -1446,27 +1449,33 @@ android_dialog_continue:
 		// the order of these relacements is important, they must occur in the same order as they occur in the file
 
 		// replace GameCircle API key
-		contents3 = strstr( contents2, "GAMECIRCLE_API_KEY" );
+		contents3 = strstr( contents2, "<!--GAMECIRCLE_API_KEY-->" );
 		if ( contents3 )
 		{
 			*contents3 = 0;
-			contents3 += strlen("GAMECIRCLE_API_KEY");
+			contents3 += strlen("<!--GAMECIRCLE_API_KEY-->");
 
 			strcat( newcontents, contents2 );
-			strcat( newcontents, gamecircle_api_key );
+			strcat( newcontents, "<meta-data android:name=\"APIKey\" android:value=\"" );
+        	strcat( newcontents, gamecircle_api_key );
+			strcat( newcontents, "\" />" );
 			contents2 = contents3;
 		}
 
 		// replace Google Play application ID
-		contents3 = strstr( contents2, "GOOGLE_PLAY_APPLICATION_ID" );
+		contents3 = strstr( contents2, "<!--GOOGLE_PLAY_APPLICATION_ID-->" );
 		if ( contents3 )
 		{
 			*contents3 = 0;
-			contents3 += strlen("GOOGLE_PLAY_APPLICATION_ID");
+			contents3 += strlen("<!--GOOGLE_PLAY_APPLICATION_ID-->");
 
 			strcat( newcontents, contents2 );
-			strcat( newcontents, "\\ " );
-			strcat( newcontents, google_play_app_id );
+			strcat( newcontents, "<meta-data android:name=\"com.google.android.gms.games.APP_ID\" android:value=\"\\ " );
+			if ( google_play_app_id && *google_play_app_id )
+				strcat( newcontents, google_play_app_id );
+			else
+				strcat( newcontents, "900475732431" );
+			strcat( newcontents, "\" />" );
 			contents2 = contents3;
 		}
 
@@ -1745,11 +1754,44 @@ android_dialog_continue:
 			}
 
 			// find mobilesdk_app_id value
+			// if the config file contains multiple Android apps then there will be multiple mobilesdk_app_id's, and only the corect one will work
+			// look for the corresponding package_name that matches this export
 			{
-				contentsOther2 = strstr( contentsOther, "\"mobilesdk_app_id\": \"" );
-				if ( !contentsOther2 )
+				// find package_name that matches the current package_name provided by the user
+				package_count = 0;
+				contentsOther2 = contentsOther;
+				while( *contentsOther2 && (contentsOther2 = strstr( contentsOther2, "\"package_name\": \"" )) )
 				{
-					SHOW_ERR( "Could not find mobilesdk_app_id entry in Firebase config file" );
+					package_count++;
+					contentsOther2 += strlen("\"package_name\": \"");
+					if ( strncmp( contentsOther2, package_name, strlen(package_name) ) == 0 )
+					{
+						contentsOther2 += strlen(package_name);
+						if ( *contentsOther2 == '\"' ) package_index = package_count;
+					}
+				}
+				
+				if ( package_index == 0 )
+				{
+					SHOW_ERR1( "Could not find android package_name \"%s\" in the Firebase config file", package_name );
+					goto android_dialog_cleanup2;
+				}
+
+				package_index = (package_index + 1) / 2; // two package_name's for every mobilesdk_app_id
+
+				// now find matching mobilesdk_app_id
+				package_count = 0;
+				contentsOther2 = contentsOther;
+				while( *contentsOther2 && (contentsOther2 = strstr( contentsOther2, "\"mobilesdk_app_id\": \"" )) )
+				{
+					package_count++;
+					if ( package_count == package_index ) break;
+					contentsOther2++;
+				}
+
+				if ( package_count != package_index )
+				{
+					SHOW_ERR( "Could not find matching mobilesdk_app_id entry in Firebase config file" );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1931,8 +1973,10 @@ android_dialog_continue:
 			const gchar* szDrawable_mdpi = (app_type == 2) ? "drawable-mdpi-v4" : "drawable-mdpi";
 			const gchar* szDrawable_ldpi = (app_type == 2) ? "drawable-ldpi-v4" : "drawable-ldpi";
 
+			const gchar* szMainIcon = (app_type == 2) ? "app_icon.png" : "icon.png";
+			
 			// 96x96
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_xhdpi, "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_xhdpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -1945,7 +1989,7 @@ android_dialog_continue:
 			g_free( image_filename );
 
 			// 72x72
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_hdpi, "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_hdpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -1958,7 +2002,7 @@ android_dialog_continue:
 			g_free( image_filename );
 
 			// 48x48
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_mdpi, "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_mdpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -1971,7 +2015,7 @@ android_dialog_continue:
 			g_free( image_filename );
 
 			// 36x36
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_ldpi, "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_ldpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -2112,6 +2156,29 @@ android_dialog_continue:
 			// copy it to the res folder
 			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xhdpi-v4", "ouya_icon.png", NULL );
 			utils_copy_file( ouya_icon, image_filename, TRUE, NULL );
+			g_free( image_filename );
+
+			// make folder
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable", NULL );
+			g_mkdir_with_parents( image_filename, 0777 );
+			g_free( image_filename );
+			
+			// 320x180
+			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable", "icon.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 320, 180, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save lean back icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+					
+			gdk_pixbuf_unref( icon_scaled_image );
+			icon_scaled_image = NULL;
+
+			g_free( image_filename );
+			image_filename = NULL;
 		}
 
 		while (gtk_events_pending())
@@ -2204,9 +2271,9 @@ android_dialog_continue:
 		mz_zip_writer_add_file( &zip_archive, "classes.dex", zip_add_file, NULL, 0, 9 );
 		g_free( zip_add_file );
 
-		zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi", "libandroid_player.so", NULL );
-		mz_zip_writer_add_file( &zip_archive, "lib/armeabi/libandroid_player.so", zip_add_file, NULL, 0, 9 );
-		g_free( zip_add_file );
+		//zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi", "libandroid_player.so", NULL );
+		//mz_zip_writer_add_file( &zip_archive, "lib/armeabi/libandroid_player.so", zip_add_file, NULL, 0, 9 );
+		//g_free( zip_add_file );
 
 		zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libandroid_player.so", NULL );
 		mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libandroid_player.so", zip_add_file, NULL, 0, 9 );
@@ -3198,6 +3265,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		// START CHECKS
 
 		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your IPA"); goto ios_dialog_clean_up; }
+		if ( strchr(output_file, '.') == 0 ) { SHOW_ERR("The output location must be a file not a directory"); goto ios_dialog_clean_up; }
 
 		// check app name
 		if ( !app_name || !*app_name ) { SHOW_ERR("You must enter an app name"); goto ios_dialog_clean_up; }

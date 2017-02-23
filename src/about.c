@@ -36,7 +36,7 @@
 #include "gb.c"
 
 
-#define HEADER "<span size=\"larger\" weight=\"bold\">AGK IDE %s</span>"
+#define HEADER "<span size=\"larger\" weight=\"bold\">AppGameKit IDE %s</span>"
 #define INFO "<span size=\"larger\" weight=\"bold\">%s</span>"
 #define CODENAME "<span>Built on Geany 1.24.1</span>"
 #define BUILDDATE "<span size=\"smaller\">%s</span>"
@@ -111,7 +111,7 @@ static GtkWidget *create_dialog(void)
 	/* configure dialog */
 	gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(main_widgets.window));
 	gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER_ON_PARENT);
-	gtk_window_set_title(GTK_WINDOW(dialog), _("About AGK"));
+	gtk_window_set_title(GTK_WINDOW(dialog), _("About AppGameKit"));
 	gtk_window_set_icon_name(GTK_WINDOW(dialog), "agk");
 	gtk_widget_set_name(dialog, "GeanyDialog");
 	gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
@@ -214,7 +214,7 @@ static GtkWidget *create_dialog(void)
 
 	row = 0;
 	g_snprintf(buffer, sizeof(buffer),
-		"<span size=\"larger\" weight=\"bold\">%s</span>", _("AGK Credits"));
+		"<span size=\"larger\" weight=\"bold\">%s</span>", _("AppGameKit Credits"));
 	label = gtk_label_new(buffer);
 	gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row + 1, GTK_FILL, 0, 0, 5);
 	gtk_label_set_use_markup(GTK_LABEL(label), TRUE);

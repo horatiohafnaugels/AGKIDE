@@ -1713,3 +1713,7 @@ DeleteFont||(Integer iFontID)|
 SetPrintFont||(Integer fontID)|
 SetEditBoxFont||(Integer index, Integer fontID)|
 GetImageMemoryUsage|Float|()|
+GetDeviceIPv6|String|()|
+MaximizeWindow||()|
+CreateBroadcastListener|Integer|(String szIP, Integer port)|
+SetWindowSize||(Integer width, Integer height, Integer fullscreen, Integer allowOverSized)|

@@ -1473,6 +1473,11 @@ G_MODULE_EXPORT void on_help1_activate(GtkMenuItem *menuitem, gpointer user_data
 	g_free(uri);
 }
 
+G_MODULE_EXPORT void on_video_tutorials_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	utils_open_browser( "https://www.youtube.com/playlist?list=PLlLxfPB9MrBtN8vFOZIUhotV9cs3VCV5Z" );
+}
+
 G_MODULE_EXPORT void on_trial_image_event_button_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
 	utils_open_browser("https://www.thegamecreators.com/agk/trial/register?s=fv98dxs34a");
