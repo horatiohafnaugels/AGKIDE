@@ -1717,3 +1717,5 @@ GetDeviceIPv6|String|()|
 MaximizeWindow||()|
 CreateBroadcastListener|Integer|(String szIP, Integer port)|
 SetWindowSize||(Integer width, Integer height, Integer fullscreen, Integer allowOverSized)|
+GetGameCenterPlayerID|String|()|
+GetGameCenterPlayerDisplayName|String|()|
