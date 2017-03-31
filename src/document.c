@@ -1235,6 +1235,8 @@ GeanyDocument *document_open_file_full(GeanyDocument *doc, const gchar *filename
 			/* show the doc before reload dialog */
 			document_show_tab(doc);
 			document_check_disk_status(doc, TRUE);	/* force a file changed check */
+			if ( !doc->is_valid ) 
+				return NULL;
 		}
 	}
 	if (reload || doc == NULL)

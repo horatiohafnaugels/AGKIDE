@@ -1369,38 +1369,9 @@ gint main(gint argc, gchar **argv)
 #endif
 	setup_window_position();
 
-#ifdef AGK_TRIAL_POPUP
-  #ifdef G_OS_WIN32
-	gchar *install_dir = win32_get_installation_dir();
-	if ( strstr( install_dir, "SteamApps\\common" ) == 0 && strstr( install_dir, "SteamApps/common" ) == 0 ) 
-	{
-		GtkWidget *menu_register = ui_lookup_widget(main_widgets.window, "help_menu_item_register");
-		gtk_widget_hide(menu_register);
-	}
-	g_free(install_dir);
-  #elif __APPLE__
-	char szRoot[ 1024 ];
-	uint32_t size = 1024;
-	if ( _NSGetExecutablePath(szRoot, &size) == 0 )
-	{
-		if ( strstr( szRoot, "SteamApps/common" ) == 0 )
-		{
-			GtkWidget *menu_register = ui_lookup_widget(main_widgets.window, "help_menu_item_register");
-			gtk_widget_hide(menu_register);
-		}
-	}
-  #else
-	gchar szExePath[1024];
-	for ( int i = 0; i < 1024; i++ ) szExePath[i] = 0;
-	readlink( "/proc/self/exe", szExePath, 1024 );
-	if ( strstr( szExePath, "SteamApps/common" ) == 0 ) 
-	{
-		GtkWidget *menu_register = ui_lookup_widget(main_widgets.window, "help_menu_item_register");
-		gtk_widget_hide(menu_register);
-	}
-  #endif
-#else
-	GtkWidget *menu_register = ui_lookup_widget(main_widgets.window, "help_menu_item_register");
+#ifndef AGK_TRIAL_POPUP
+	// if not trial version then hide upgrade option
+	GtkWidget *menu_register = ui_lookup_widget(main_widgets.window, "help_menu_item_upgrade");
 	gtk_widget_hide(menu_register);
 #endif
 
@@ -1531,12 +1502,6 @@ gint main(gint argc, gchar **argv)
 				install_thread = 0;
 			}
 		}
-	}
-	else
-	{
-#ifdef AGK_TRIAL_POPUP
-		on_help_menu_item_register_activate( NULL, NULL );
-#endif
 	}
 
 #ifdef G_OS_WIN32

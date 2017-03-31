@@ -9397,6 +9397,15 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9417,6 +9426,15 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -12969,12 +12987,12 @@ To generate a keystore file you need to submit some information about you or you
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem" id="help_menu_item_register">
+                          <object class="GtkMenuItem" id="help_menu_item_upgrade">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Register Your Interest</property>
+                            <property name="label" translatable="yes">_Upgrade To Full Version</property>
                             <property name="use_underline">True</property>
-                            <signal name="activate" handler="on_help_menu_item_register_activate" swapped="no"/>
+                            <signal name="activate" handler="on_help_menu_item_upgrade_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>
@@ -14943,29 +14961,28 @@ To generate a keystore file you need to submit some information about you or you
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
-            <property name="layout_style">end</property>
+            <property name="layout_style">edge</property>
             <child>
-              <object class="GtkCheckButton" id="trial_check_show_again">
-                <property name="label" translatable="yes">Do not show this again</property>
+              <object class="GtkButton" id="trial_button_upgrade">
+                <property name="label">_Upgrade Now</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="receives_default">False</property>
-                <property name="draw_indicator">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_underline">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="position">0</property>
-                <property name="secondary">True</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="trial_button_ok">
-                <property name="label">gtk-ok</property>
+              <object class="GtkButton" id="trial_button_continue">
+                <property name="label">_Continue With Trial</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
+                <property name="use_underline">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -15002,8 +15019,8 @@ To generate a keystore file you need to submit some information about you or you
       </object>
     </child>
     <action-widgets>
-      <action-widget response="-1">trial_check_show_again</action-widget>
-      <action-widget response="0">trial_button_ok</action-widget>
+      <action-widget response="1">trial_button_upgrade</action-widget>
+      <action-widget response="0">trial_button_continue</action-widget>
     </action-widgets>
   </object>
   <object class="GtkListStore" id="variable_store">

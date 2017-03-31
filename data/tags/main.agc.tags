@@ -12,6 +12,7 @@ SetRenderToScreen||()|
 GetCL|String|()|
 SetScissor||(Float x, Float y, Float x2, Float y2)|
 SetIntendedDeviceSize||(Integer width, Integer height)|
+UseNewDefaultFonts||(Integer mode)|
 GetDeviceWidth|Integer|()|
 GetDeviceHeight|Integer|()|
 SetVirtualResolution||(Integer iWidth, Integer iHeight)|
@@ -59,6 +60,8 @@ GetMilliseconds|Integer|()|
 GetDeviceID|String|()|
 GetNumProcessors|Integer|()|
 Sha1|String|(String str)|
+Sha256|String|(String str)|
+Sha512|String|(String str)|
 HTTPEncode|String|(String str)|
 HTTPDecode|String|(String str)|
 SetRandomSeed||(Integer seed)|
@@ -121,6 +124,7 @@ DecodeQRCode|String|(Integer image)|
 EncodeQRCode|Integer|(String text, Integer errormode)|
 PrintImage||(Integer image, Float size)|
 SetImageSavePixels||(Integer mode)|
+GetSpritePtr|Pointer|(Integer iSpriteIndex)|
 GetSpriteImageID|Integer|(Integer iSpriteIndex)|
 CreateSprite||(Integer iSpriteIndex, Integer iImageIndex)|
 CreateSprite|Integer|(Integer iImageIndex)|
@@ -386,6 +390,8 @@ SetTextString||(Integer iTextIndex, String string)|
 SetTextPosition||(Integer iTextIndex, Float fX, Float fY)|
 SetTextX||(Integer iTextIndex, Float fX)|
 SetTextY||(Integer iTextIndex, Float fY)|
+SetTextAngle||(Integer iTextIndex, Float fAngle)|
+SetTextAngleRad||(Integer iTextIndex, Float fAngleRad)|
 SetTextAlignment||(Integer iTextIndex, Integer iMode)|
 SetTextSize||(Integer iTextIndex, Float fSize)|
 SetTextSpacing||(Integer iTextIndex, Float fSpacing)|
@@ -411,6 +417,7 @@ SetTextCharColorRed||(Integer iTextIndex, Integer iCharIndex, Integer red)|
 SetTextCharColorGreen||(Integer iTextIndex, Integer iCharIndex, Integer green)|
 SetTextCharColorBlue||(Integer iTextIndex, Integer iCharIndex, Integer blue)|
 SetTextCharColorAlpha||(Integer iTextIndex, Integer iCharIndex, Integer alpha)|
+SetTextCharBold||(Integer iTextIndex, Integer iCharIndex, Integer bold)|
 GetTextCharX|Float|(Integer iTextIndex, Integer iCharIndex)|
 GetTextCharY|Float|(Integer iTextIndex, Integer iCharIndex)|
 GetTextCharAngle|Float|(Integer iTextIndex, Integer iCharIndex)|
@@ -427,6 +434,7 @@ GetTextTotalHeight|Float|(Integer iTextIndex)|
 GetTextHitTest|Integer|(Integer iTextIndex, Float x, Float y)|
 SetTextFontImage||(Integer iTextIndex, Integer iImageID)|
 SetTextExtendedFontImage||(Integer iTextIndex, Integer iImageID)|
+SetTextFont||(Integer iTextIndex, Integer iFontID)|
 SetTextDefaultFontImage||(Integer iImageID)|
 SetTextDefaultExtendedFontImage||(Integer iImageID)|
 SetTextDefaultMinFilter||(Integer mode)|
@@ -435,12 +443,18 @@ FixTextToScreen||(Integer iTextIndex, Integer mode)|
 SetTextMaxWidth||(Integer iTextIndex, Float width)|
 SetTextScissor||(Integer iTextIndex, Float x, Float y, Float x2, Float y2)|
 SetTextTransparency||(Integer iTextIndex, Integer mode)|
+SetTextBold||(Integer iTextIndex, Integer bold)|
 GetTextVisible|Integer|(Integer iTextIndex)|
 GetTextDepth|Integer|(Integer iTextIndex)|
 GetTextSize|Float|(Integer iTextIndex)|
 GetTextSpacing|Float|(Integer iTextIndex)|
 GetTextLineSpacing|Float|(Integer iTextIndex)|
 GetTextString|String|(Integer iTextIndex)|
+LoadFont|Integer|(String szFontFile)|
+LoadFont||(Integer iFontID, String szFontFile)|
+GetFontExists|Integer|(Integer iFontID)|
+GetSystemFontExists|Integer|(String szFontFile)|
+DeleteFont||(Integer iFontID)|
 Print||(String szString)|
 Print||(Integer i)|
 Print||(Float f)|
@@ -451,6 +465,7 @@ SetPrintSize||(Float fSize)|
 SetPrintSpacing||(Float fSpacing)|
 SetPrintColor||(Integer iRed, Integer iGreen, Integer iBlue)|
 SetPrintColor||(Integer iRed, Integer iGreen, Integer iBlue, Integer iAlpha)|
+SetPrintFont||(Integer fontID)|
 CreateSkeleton2D||(Integer iSkeleton)|
 CreateSkeleton2D|Integer|()|
 GetSkeleton2DExists|Integer|(Integer iSkeleton)|
@@ -696,6 +711,8 @@ GetMusicDurationOGG|Float|(Integer musicID)|
 GetMusicPositionOGG|Float|(Integer musicID)|
 SeekMusicOGG||(Integer musicID, Float seconds, Integer mode)|
 SetMusicSystemVolumeOGG||(Integer vol)|
+SetMusicLoopTimesOGG||(Integer musicID, Float startTime, Float endTime)|
+SetMusicLoopCountOGG||(Integer musicID, Integer loop)|
 RecordSound||(String szFilename)|
 StopSoundRecording||()|
 IsSoundRecording|Integer|()|
@@ -712,6 +729,8 @@ FileIsOpen|Integer|(Integer iFileID)|
 CloseFile||(Integer iFileID)|
 FileEOF|Integer|(Integer iFileID)|
 GetFileSize|Integer|(Integer iFileID)|
+GetFilePos|Integer|(Integer iFileID)|
+SetFilePos||(Integer iFileID, Integer pos)|
 WriteByte||(Integer iFileID, Integer b)|
 WriteInteger||(Integer iFileID, Integer i)|
 WriteFloat||(Integer iFileID, Float f)|
@@ -769,6 +788,7 @@ GetFirstFile|String|()|
 GetNextFile|String|()|
 GetFileCount|Integer|()|
 CreateBroadcastListener|Integer|(Integer port)|
+CreateBroadcastListener|Integer|(String szIP, Integer port)|
 GetBroadcastMessage|Integer|(Integer iID)|
 DeleteBroadcastListener||(Integer iID)|
 ConnectSocket|Integer|(String szIP, Integer port, Integer timeout)|
@@ -797,6 +817,7 @@ JoinNetwork|Integer|(String szNetworkName, String szMyName)|
 JoinNetwork|Integer|(String szIP, Integer port, String szMyName)|
 IsNetworkActive|Integer|(Integer iNetID)|
 GetDeviceIP|String|()|
+GetDeviceIPv6|String|()|
 CloseNetwork||(Integer iNetID)|
 SetNetworkLatency||(Integer iNetID, Integer latency)|
 GetNetworkMyClientID|Integer|(Integer iNetID)|
@@ -978,6 +999,7 @@ SetEditBoxTextColor||(Integer index, Integer red, Integer green, Integer blue)|
 SetEditBoxCursorColor||(Integer index, Integer red, Integer green, Integer blue)|
 SetEditBoxFontImage||(Integer index, Integer image)|
 SetEditBoxExtendedFontImage||(Integer index, Integer image)|
+SetEditBoxFont||(Integer index, Integer fontID)|
 SetEditBoxTextSize||(Integer index, Float size)|
 SetEditBoxCursorPosition||(Integer index, Integer pos)|
 SetEditBoxFocus||(Integer index, Integer focus)|
@@ -1019,6 +1041,7 @@ GetDrawingTime|Float|()|
 GetLoadedImages|Integer|()|
 GetUnassignedImages|Integer|()|
 GetUnassignedImageFileName|String|(Integer index)|
+GetImageMemoryUsage|Float|()|
 GetLeapYear|Integer|(Integer year)|
 GetUnixFromDate|Integer|(Integer year, Integer month, Integer days, Integer hours, Integer minutes, Integer seconds)|
 GetYearFromUnix|Integer|(Integer unixtime)|
@@ -1066,6 +1089,7 @@ GetInAppPurchaseLocalPrice|String|(Integer iID)|
 GetInAppPurchaseDescription|String|(Integer iID)|
 GetInAppPurchaseState|Integer|()|
 InAppPurchaseRestore||()|
+GetInAppPurchaseSignature|String|(Integer iID)|
 TwitterSetup||(String szKey, String szSecret)|
 TwitterMessage||(String szMessage)|
 FacebookSetup||(String szID)|
@@ -1314,6 +1338,7 @@ GetObjectTransparency|Integer|(Integer objID)|
 GetObjectCullMode|Integer|(Integer objID)|
 GetObjectVisible|Integer|(Integer objID)|
 GetObjectInScreen|Integer|(Integer objID)|
+GetObjectName|String|(Integer objID)|
 SetObjectShaderConstantByName||(Integer objID, String szName, Float value1, Float value2, Float value3, Float value4)|
 SetObjectShaderConstantArrayByName||(Integer objID, String szName, Integer arrayIndex, Float value1, Float value2, Float value3, Float value4)|
 SetObjectShaderConstantDefault||(Integer objID, String szName)|
@@ -1571,7 +1596,9 @@ Debug3DPhysicsCharacterController||(Integer objID, Integer isDebug)|
 Set3DPhysicsCharacterControllerPosition||(Integer objID, Float posX, Float posY, Float posZ)|
 SetWindowPosition||(Integer x, Integer y)|
 SetWindowSize||(Integer width, Integer height, Integer fullscreen)|
+SetWindowSize||(Integer width, Integer height, Integer fullscreen, Integer allowOverSized)|
 SetWindowAllowResize||(Integer mode)|
+MaximizeWindow||()|
 MinimizeApp||()|
 RestoreApp||()|
 SetImmersiveMode||(Integer mode)|
@@ -1582,18 +1609,19 @@ GetDeviceType|String|()|
 GetAppName|String|()|
 GetDeviceLanguage|String|()|
 SetSleepMode||(Integer mode)|
-SetAntialiasMode||(Integer mode)|
 SetExpansionFileKey||(String key)|
 SetExpansionFileVersion||(Integer version)|
 GetExpansionFileState|Integer|()|
 DownloadExpansionFile||()|
 GetExpansionFileProgress|Float|()|
 SetWindowTitle||(String szTitle)|
-IsSupportedDepthTexture|Integer|()|
 Sleep||(Integer milliseconds)|
 SetVSync||(Integer mode)|
 GetMaxDeviceWidth|Integer|()|
 GetMaxDeviceHeight|Integer|()|
+GetDeviceDPI|Integer|()|
+GetAppPackageName|String|()|
+GetDevicePlatform|Integer|()|
 Sin|Float|(Float a)|
 Cos|Float|(Float a)|
 Tan|Float|(Float a)|
@@ -1620,6 +1648,7 @@ Pow|Float|(Float a, Float b)|
 Log|Float|(Float a)|
 GetNumDeviceCameras|Integer|()|
 SetDeviceCameraToImage|Integer|(Integer cameraID, Integer imageID)|
+GetDeviceCameraType|Integer|(Integer cameraID)|
 LoadVideo|Integer|(String szFilename)|
 DeleteVideo||()|
 SetVideoDimensions||(Float x, Float y, Float width, Float height)|
@@ -1676,46 +1705,19 @@ GetGameCenterExists|Integer|()|
 GameCenterSetup||()|
 GameCenterLogin||()|
 GetGameCenterLoggedIn|Integer|()|
+GetGameCenterPlayerID|String|()|
+GetGameCenterPlayerDisplayName|String|()|
 GameCenterSubmitScore||(Integer iScore, String szBoardID)|
 GameCenterShowLeaderBoard||(String szBoardID)|
 GameCenterSubmitAchievement||(String szAchievementID, Integer iPercentageComplete)|
 GameCenterAchievementsShow||()|
 GameCenterAchievementsReset||()|
+SetSharedVariableAppGroup||(String group)|
 SaveSharedVariable||(String varName, String varValue)|
 LoadSharedVariable|String|(String varName, String defaultValue)|
 DeleteSharedVariable||(String varName)|
-GetDeviceCameraType|Integer|(Integer cameraID)|
-SetMusicLoopTimesOGG||(Integer musicID, Float startTime, Float endTime)|
-SetMusicLoopCountOGG||(Integer musicID, Integer loop)|
-SetSharedVariableAppGroup||(String group)|
 FirebaseSetup||()|
 FirebaseLogEvent||(String event_name)|
-Sha256|String|(String str)|
-Sha512|String|(String str)|
-GetFilePos|Integer|(Integer iFileID)|
-SetFilePos||(Integer iFileID, Integer pos)|
-GetInAppPurchaseSignature|String|(Integer iID)|
-GetDeviceDPI|Integer|()|
-GetAppPackageName|String|()|
-GetDevicePlatform|Integer|()|
-GetObjectName|String|(Integer objID)|
-UseNewDefaultFonts||(Integer mode)|
-SetTextAngle||(Integer iTextIndex, Float fAngle)|
-SetTextAngleRad||(Integer iTextIndex, Float fAngleRad)|
-SetTextCharBold||(Integer iTextIndex, Integer iCharIndex, Integer bold)|
-SetTextFont||(Integer iTextIndex, Integer iFontID)|
-SetTextBold||(Integer iTextIndex, Integer bold)|
-LoadFont|Integer|(String szFontFile)|
-LoadFont||(Integer iFontID, String szFontFile)|
-GetFontExists|Integer|(Integer iFontID)|
-GetSystemFontExists|Integer|(String szFontFile)|
-DeleteFont||(Integer iFontID)|
-SetPrintFont||(Integer fontID)|
-SetEditBoxFont||(Integer index, Integer fontID)|
-GetImageMemoryUsage|Float|()|
-GetDeviceIPv6|String|()|
-MaximizeWindow||()|
-CreateBroadcastListener|Integer|(String szIP, Integer port)|
-SetWindowSize||(Integer width, Integer height, Integer fullscreen, Integer allowOverSized)|
-GetGameCenterPlayerID|String|()|
-GetGameCenterPlayerDisplayName|String|()|
+IsSupportedDepthTexture|Integer|()|
+SetAntialiasMode||(Integer mode)|
+SetVirtualButtonSize||(Integer index, Float sizeX, Float sizeY)|
