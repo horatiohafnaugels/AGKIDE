@@ -3402,10 +3402,10 @@ ios_dialog_continue:
 		utils_str_replace_char( ios_folder, '\\', '/' );
 		utils_str_replace_char( tmp_folder, '\\', '/' );
 		
-		gchar* src_folder = g_build_path( "/", app->datadir, "ios", "source", "AGK 2 Player.app", NULL );
+		gchar* src_folder = g_build_path( "/", app->datadir, "ios", "source", "AppGameKit.app", NULL );
 		utils_str_replace_char( src_folder, '\\', '/' );
 
-		gchar* no_ads_binary = g_build_path( "/", app->datadir, "ios", "source", "AGK 2 Player No Ads", NULL );
+		gchar* no_ads_binary = g_build_path( "/", app->datadir, "ios", "source", "AppGameKit No Ads", NULL );
 		utils_str_replace_char( no_ads_binary, '\\', '/' );
 
 		gchar *output_file_zip = g_strdup( output_file );
@@ -3451,14 +3451,14 @@ ios_dialog_continue:
 
 		if ( !uses_ads )
 		{
-			gchar *binary_path = g_build_filename( app_folder, "AGK 2 Player", NULL );
+			gchar *binary_path = g_build_filename( app_folder, "AppGameKit", NULL );
 			utils_copy_file( no_ads_binary, binary_path, TRUE, NULL );
 			g_free( binary_path );
 		}
 		
 		// rename executable
 		g_chdir( app_folder );
-		g_rename( "AGK 2 Player", app_name );
+		g_rename( "AppGameKit", app_name );
 		
 		while (gtk_events_pending())
 			gtk_main_iteration();
@@ -4610,7 +4610,7 @@ void project_export_ipa()
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
 			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), 0 );
 
-			gchar* apk_path = g_build_filename( global_project_prefs.project_file_path, "AGK Player.ipa", NULL );
+			gchar* apk_path = g_build_filename( global_project_prefs.project_file_path, "AppGameKit Player.ipa", NULL );
 			gtk_entry_set_text( GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_output_file_entry")), apk_path );
 			g_free(apk_path);
 		}

@@ -104,7 +104,7 @@ void win32_check_xinput()
 	HMODULE lib_xinput = LoadLibrary( "XInput1_4.dll" ); // Windows 8 and 10
 	if ( !lib_xinput ) lib_xinput = LoadLibrary( "XInput1_3.dll" ); // Everything else needs the DirectX End-User Runtime
 	if ( !lib_xinput )
-		dialogs_show_msgbox( GTK_MESSAGE_WARNING, "AGK could not detect the latest version of DirectX, please make sure you have the \"DirectX End-User Runtime\" installed or apps may not run properly on this machine" );
+		dialogs_show_msgbox( GTK_MESSAGE_WARNING, "AppGameKit could not detect the latest version of DirectX, please make sure you have the \"DirectX End-User Runtime\" installed or apps may not run properly on this machine" );
 	else
 		FreeLibrary(lib_xinput);
 }

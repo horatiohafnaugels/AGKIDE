@@ -10,10 +10,10 @@ cp ../../CompilerNew/build/Release/AGKCompiler /Users/paulj/Projects/Geany-Compi
 cp ../../CompilerNew/CommandList.dat /Users/paulj/Projects/Geany-Compiled/share/applications/CommandList.dat
 cp ../../Broadcaster/AGKBroadcaster/build/Release/AGKBroadcaster /Users/paulj/Projects/Geany-Compiled/share/applications/AGKBroadcaster
 mkdir /Users/paulj/Projects/Geany-Compiled/share/applications/interpreters
-cp -R ../../apps/interpreter_mac/build/Release/AGK\ Player.app /Users/paulj/Projects/Geany-Compiled/share/applications/interpreters/Mac.app
+cp -R ../../apps/interpreter_mac/build/Release/AppGameKit\ Player.app /Users/paulj/Projects/Geany-Compiled/share/applications/interpreters/Mac.app
 cp -R /Volumes/Shared/Help /Users/paulj/Projects/Geany-Compiled/share/Help
 cd /Users/paulj/Projects/GeanyBundle
 export PATH=$PREFIX/bin:~/.local/bin:$PATH
-~/.local/bin/jhbuild run gtk-mac-bundler AGK2.bundle
+~/.local/bin/jhbuild run gtk-mac-bundler AppGameKit.bundle
 cd /Users/paulj/Projects
 rm -rf Geany-Compiled

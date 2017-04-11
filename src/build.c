@@ -1238,7 +1238,7 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 #ifdef G_OS_WIN32
 	gchar *main_path = g_strconcat( project->base_path, name, ".exe", NULL );
 #elif __APPLE__
-    gchar *main_path = g_strconcat( project->base_path, name, ".app/Contents/MacOS/AGK Player", NULL );
+    gchar *main_path = g_strconcat( project->base_path, name, ".app/Contents/MacOS/AppGameKit Player", NULL );
 #else
     gchar *main_path = g_strconcat( project->base_path, name, NULL );
 #endif
@@ -1530,7 +1530,7 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 #ifdef G_OS_WIN32
 		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/Windows.exe", NULL );
 #elif __APPLE__
-		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/Mac.app/Contents/MacOS/AGK Player", NULL );
+		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/Mac.app/Contents/MacOS/AppGameKit Player", NULL );
 #else
 		#ifdef __x86_64__
 			path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/LinuxPlayer64", NULL );
