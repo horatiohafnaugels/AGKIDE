@@ -55,8 +55,8 @@ G_BEGIN_DECLS
 
 // check these three for new versions
 //#define AGK_FREE_VERSION
-#define AGK_VERSION_TEXT "2017.04.11"
-#define AGK_VERSION_INT 26
+#define AGK_VERSION_TEXT "2017.04.24"
+#define AGK_VERSION_INT 27
 
 
 #ifdef AGK_FREE_VERSION

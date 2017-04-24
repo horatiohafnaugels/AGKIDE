@@ -3402,10 +3402,10 @@ ios_dialog_continue:
 		utils_str_replace_char( ios_folder, '\\', '/' );
 		utils_str_replace_char( tmp_folder, '\\', '/' );
 		
-		gchar* src_folder = g_build_path( "/", app->datadir, "ios", "source", "AppGameKit.app", NULL );
+		gchar* src_folder = g_build_path( "/", app->datadir, "ios", "source", "AppGameKit Player.app", NULL );
 		utils_str_replace_char( src_folder, '\\', '/' );
 
-		gchar* no_ads_binary = g_build_path( "/", app->datadir, "ios", "source", "AppGameKit No Ads", NULL );
+		gchar* no_ads_binary = g_build_path( "/", app->datadir, "ios", "source", "AppGameKit Player No Ads", NULL );
 		utils_str_replace_char( no_ads_binary, '\\', '/' );
 
 		gchar *output_file_zip = g_strdup( output_file );
@@ -3451,14 +3451,14 @@ ios_dialog_continue:
 
 		if ( !uses_ads )
 		{
-			gchar *binary_path = g_build_filename( app_folder, "AppGameKit", NULL );
+			gchar *binary_path = g_build_filename( app_folder, "AppGameKit Player", NULL );
 			utils_copy_file( no_ads_binary, binary_path, TRUE, NULL );
 			g_free( binary_path );
 		}
 		
 		// rename executable
 		g_chdir( app_folder );
-		g_rename( "AppGameKit", app_name );
+		g_rename( "AppGameKit Player", app_name );
 		
 		while (gtk_events_pending())
 			gtk_main_iteration();
