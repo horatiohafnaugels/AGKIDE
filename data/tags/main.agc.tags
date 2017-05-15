@@ -1734,3 +1734,22 @@ ResetRewardChartboost||()|
 SetCameraBounds||(Integer cameraID, Float left, Float right, Float top, Float bottom)|
 SetCameraOffCenter||(Integer cameraID, Integer mode)|
 SetAdMobTesting||(Integer mode)|
+ChooseRawFile|String|(String ext, Integer returnFullPath)|
+SimplifyPath|String|(String szPath)|
+JoinPaths|String|(String szPath, String szPath2)|
+IsAbsolutePath|Integer|(String szPath)|
+CountWindowsDrives|Integer|()|
+GetWindowsDrive|String|(Integer index)|
+OpenRawFolder|Integer|(String szPath)|
+CloseRawFolder||(Integer ID)|
+GetRawFolderNumFiles|Integer|(Integer ID)|
+GetRawFolderNumFolders|Integer|(Integer ID)|
+GetRawFolderFileName|String|(Integer ID, Integer index)|
+GetRawFolderFolderName|String|(Integer ID, Integer index)|
+ByteLen|Integer|(String strin)|
+GetFirstFolder|String|(Integer mode)|
+GetFolderCount|Integer|(Integer mode)|
+GetFirstFile|String|(Integer mode)|
+GetFileCount|Integer|(Integer mode)|
+HostNetwork|Integer|(String szNetworkName, String szMyName, Integer port, Integer portv6)|
+VibrateDevice||(Float seconds)|

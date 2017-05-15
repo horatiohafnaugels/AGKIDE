@@ -951,6 +951,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
 		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_EXPANSION;
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_vibrate");
+		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_VIBRATE;
+
 		// signing
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
 		AGK_CLEAR_STR(app->project->apk_settings.keystore_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -1062,6 +1065,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
 		int permission_expansion = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_vibrate");
+		int permission_vibrate = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
 
 		// signing
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
@@ -1436,6 +1442,7 @@ android_dialog_continue:
 			strcat( newcontents, "    <uses-permission android:name=\"android.permission.GET_ACCOUNTS\"></uses-permission>\n" );
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
 		}
+		if ( permission_vibrate ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.VIBRATE\"></uses-permission>\n" );
 		
 		// supports FireTV
 		if ( 0 )
@@ -2552,6 +2559,10 @@ void project_export_apk()
 		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_EXPANSION) ? 1 : 0;
 		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_vibrate");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_VIBRATE) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
 		// signing
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.keystore_path, "") );
@@ -2717,6 +2728,10 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_expansion");
 		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_EXPANSION) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+		
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_vibrate");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_VIBRATE) ? 1 : 0;
 		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
 
 		// signing
@@ -3887,10 +3902,16 @@ ios_dialog_continue:
                 break;
             }
 		}
+		
+		/*
 		version_string = g_strconcat( "<string>", version_number, "</string>", NULL );
 		build_string = g_strconcat( "<string>", build_number, "</string>", NULL );
         utils_str_replace_all( &contents, "<string>1.0.0</string>", version_string );
 		utils_str_replace_all( &contents, "<string>1.0</string>", build_string );
+		*/
+
+		utils_str_replace_all( &contents, "${VERSION}", version_number );
+		utils_str_replace_all( &contents, "${BUILD}", build_number );
 
 		if ( device_type == 1 ) utils_str_replace_all( &contents, "\t\t<integer>2</integer>\n", "" );
 		else if ( device_type == 2 ) utils_str_replace_all( &contents, "\t\t<integer>1</integer>\n", "" );
@@ -3968,12 +3989,12 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
-			// 144x144
-			image_filename = g_build_path( "/", app_folder, "icon-144.png", NULL );
-			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
+			// 167x167
+			image_filename = g_build_path( "/", app_folder, "icon-167.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 167, 167, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 144x144 icon: %s", error->message );
+				SHOW_ERR1( "Failed to save 167x167 icon: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -3994,38 +4015,12 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
-			// 114x114
-			image_filename = g_build_path( "/", app_folder, "icon-114.png", NULL );
-			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 114, 114, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-			{
-				SHOW_ERR1( "Failed to save 114x114 icon: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto ios_dialog_cleanup2;
-			}
-			gdk_pixbuf_unref( icon_scaled_image );
-			g_free( image_filename );
-
 			// 76x76
 			image_filename = g_build_path( "/", app_folder, "icon-76.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 76, 76, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( "Failed to save 76x76 icon: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto ios_dialog_cleanup2;
-			}
-			gdk_pixbuf_unref( icon_scaled_image );
-			g_free( image_filename );
-
-			// 72x72
-			image_filename = g_build_path( "/", app_folder, "icon-72.png", NULL );
-			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-			{
-				SHOW_ERR1( "Failed to save 72x72 icon: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4046,19 +4041,6 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
-			// 57x57
-			image_filename = g_build_path( "/", app_folder, "icon-57.png", NULL );
-			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 57, 57, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-			{
-				SHOW_ERR1( "Failed to save 57x57 icon: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto ios_dialog_cleanup2;
-			}	
-			gdk_pixbuf_unref( icon_scaled_image );
-			g_free( image_filename );
-
 			icon_scaled_image = NULL;
 			image_filename = NULL;
 		}
@@ -4067,7 +4049,7 @@ ios_dialog_continue:
 			gtk_main_iteration();
 
 		// resize splash screens
-		// iPhone 3GS and 4
+		// iPhone 4
 		if ( app_splash1 && *app_splash1 )
 		{
 			splash_image = gdk_pixbuf_new_from_file( app_splash1, &error );
@@ -4088,19 +4070,6 @@ ios_dialog_continue:
 			}
 
 			// scale it and save it
-			// 320x480 Default.png
-			image_filename = g_build_path( "/", app_folder, "Default.png", NULL );
-			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 320, 480, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
-			{
-				SHOW_ERR1( "Failed to save Default.png splash screen: %s", error->message );
-				g_error_free(error);
-				error = NULL;
-				goto ios_dialog_cleanup2;
-			}
-			gdk_pixbuf_unref( icon_scaled_image );
-			g_free( image_filename );
-
 			// 640x960 Default@2x.png
 			image_filename = g_build_path( "/", app_folder, "Default@2x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 640, 960, GDK_INTERP_HYPER );
@@ -4155,12 +4124,12 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
-			// 750x1334 Default-667h@2x.png
-			image_filename = g_build_path( "/", app_folder, "Default-667h@2x.png", NULL );
+			// 750x1334 Default-375w-667h@2x.png
+			image_filename = g_build_path( "/", app_folder, "Default-375w-667h@2x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 750, 1334, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-667h@2x.png splash screen: %s", error->message );
+				SHOW_ERR1( "Failed to save Default-375w-667h@2x.png splash screen: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4168,12 +4137,12 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
-			// 1242x2208 Default-736h@3x.png
-			image_filename = g_build_path( "/", app_folder, "Default-736h@3x.png", NULL );
+			// 1242x2208 Default-414w-736h@3x.png
+			image_filename = g_build_path( "/", app_folder, "Default-414w-736h@3x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1242, 2208, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-736h@3x.png splash screen: %s", error->message );
+				SHOW_ERR1( "Failed to save Default-414w-736h@3x.png splash screen: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4209,7 +4178,7 @@ ios_dialog_continue:
 			}
 
 			// scale it and save it
-			// 768x1024 Default-Portrait~ipadx.png
+			// 768x1024 Default-Portrait~ipad.png
 			image_filename = g_build_path( "/", app_folder, "Default-Portrait~ipad.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 768, 1024, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
@@ -4228,6 +4197,19 @@ ios_dialog_continue:
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( "Failed to save Default-Portrait@2x~ipad.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 1536x2048 Default-Portrait-1366h@2x~ipad.png
+			image_filename = g_build_path( "/", app_folder, "Default-Portrait-1366h@2x~ipad.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 2048, 2732, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-Portrait-1366h@2x~ipad.png splash screen: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4258,6 +4240,21 @@ ios_dialog_continue:
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( "Failed to save Default-Landscape@2x~ipad.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			// 2048x1536 Default-Landscape-1366h@2x~ipad.png
+			image_filename = g_build_path( "/", app_folder, "Default-Landscape-1366h@2x~ipad.png", NULL );
+			temp_image = gdk_pixbuf_scale_simple( splash_image, 2048, 2732, GDK_INTERP_HYPER );
+			icon_scaled_image = gdk_pixbuf_rotate_simple( temp_image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE );
+			gdk_pixbuf_unref( temp_image );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-Landscape-1366h@2x~ipad.png splash screen: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
