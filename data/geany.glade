@@ -664,6 +664,12 @@
                                 <property name="n_rows">4</property>
                                 <property name="n_columns">3</property>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkCheckButton" id="android_permission_external_storage">
                                     <property name="label" translatable="yes">Write External Storage</property>
                                     <property name="visible">True</property>
@@ -795,12 +801,6 @@
                                     <property name="top_attach">2</property>
                                     <property name="bottom_attach">3</property>
                                   </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="android_permission_vibrate">
@@ -4062,7 +4062,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
-                                <property name="label" translatable="yes">Uses AdMob or Chartboost:</property>
+                                <property name="label" translatable="yes">Uses Adverts or Facebook 
+Install Tracking:</property>
                               </object>
                               <packing>
                                 <property name="top_attach">11</property>
@@ -4076,7 +4077,7 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
-                                <property name="tooltip_text" translatable="yes">Tick this box if your app uses the AdMob or Chartboost commands, this will include the Advertising Identifier (IDFA) in your exported app</property>
+                                <property name="tooltip_text" translatable="yes">Tick this box if your app uses the AdMob, Amazon Ads, or Chartboost commands, or the Facebook install tracking command. This will include the Advertising Identifier (IDFA) in your exported app. If you only use the Facebook comands but NOT the Facebook install tracking then you should not tick this box</property>
                                 <property name="draw_indicator">True</property>
                               </object>
                               <packing>
@@ -9430,6 +9431,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9450,6 +9454,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

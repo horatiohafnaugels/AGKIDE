@@ -1225,6 +1225,13 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 		g_free(path1);
 		g_free(path2);
 
+		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam/steam_api64.dll", NULL );
+		path2 = g_strconcat( project->base_path, "steam_api64.dll", NULL );
+		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )
+			utils_copy_file( path1, path2, TRUE, NULL );
+		g_free(path1);
+		g_free(path2);
+
 		path1 = g_build_filename( build_prefs.agk_compiler_path, "interpreters/steam/steam_appid.txt", NULL );
 		path2 = g_strconcat( project->base_path, "steam_appid.txt", NULL );
 		if ( g_file_test( path1, G_FILE_TEST_EXISTS ) )

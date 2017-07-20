@@ -719,6 +719,18 @@ IsSoundRecording|Integer|()|
 DeleteFile||(String szFile)|
 GetFileExists|Integer|(String szFile)|
 ChooseRawFile|String|(String ext)|
+ChooseRawFile|String|(String ext, Integer returnFullPath)|
+SimplifyPath|String|(String szPath)|
+JoinPaths|String|(String szPath, String szPath2)|
+IsAbsolutePath|Integer|(String szPath)|
+CountWindowsDrives|Integer|()|
+GetWindowsDrive|String|(Integer index)|
+OpenRawFolder|Integer|(String szPath)|
+CloseRawFolder||(Integer ID)|
+GetRawFolderNumFiles|Integer|(Integer ID)|
+GetRawFolderNumFolders|Integer|(Integer ID)|
+GetRawFolderFileName|String|(Integer ID, Integer index)|
+GetRawFolderFolderName|String|(Integer ID, Integer index)|
 OpenToWrite||(Integer ID, String szFile, Integer append)|
 OpenToWrite||(Integer ID, String szFile)|
 OpenToWrite|Integer|(String szFile, Integer append)|
@@ -758,6 +770,7 @@ Right|String|(String strin, Integer count)|
 Mid|String|(String strin, Integer position, Integer length)|
 Asc|Integer|(String strin)|
 Len|Integer|(String strin)|
+ByteLen|Integer|(String strin)|
 Chr|String|(Integer asciivalue)|
 Lower|String|(String strin)|
 Upper|String|(String strin)|
@@ -782,11 +795,15 @@ GetCurrentDir|String|()|
 GetFolder|String|()|
 SetFolder|Integer|(String str)|
 GetFirstFolder|String|()|
+GetFirstFolder|String|(Integer mode)|
 GetNextFolder|String|()|
 GetFolderCount|Integer|()|
+GetFolderCount|Integer|(Integer mode)|
 GetFirstFile|String|()|
+GetFirstFile|String|(Integer mode)|
 GetNextFile|String|()|
 GetFileCount|Integer|()|
+GetFileCount|Integer|(Integer mode)|
 CreateBroadcastListener|Integer|(Integer port)|
 CreateBroadcastListener|Integer|(String szIP, Integer port)|
 GetBroadcastMessage|Integer|(Integer iID)|
@@ -809,9 +826,10 @@ SendSocketFloat|Integer|(Integer socketID, Float value)|
 SendSocketString|Integer|(Integer socketID, String value)|
 CreateSocketListener|Integer|(String szIP, Integer port)|
 CreateSocketListener|Integer|(Integer listenerID, String szIP, Integer port)|
-GetSocketListnerConnection|Integer|(Integer listenerID)|
+GetSocketListenerConnection|Integer|(Integer listenerID)|
 DeleteSocketListener||(Integer listenerID)|
 HostNetwork|Integer|(String szNetworkName, String szMyName, Integer port)|
+HostNetwork|Integer|(String szNetworkName, String szMyName, Integer port, Integer portv6)|
 SetNetworkNoMoreClients||(Integer iNetID)|
 JoinNetwork|Integer|(String szNetworkName, String szMyName)|
 JoinNetwork|Integer|(String szIP, Integer port, String szMyName)|
@@ -946,6 +964,7 @@ SetVirtualButtonColor||(Integer index, Integer red, Integer green, Integer blue)
 SetVirtualButtonAlpha||(Integer index, Integer alpha)|
 SetVirtualButtonPosition||(Integer index, Float x, Float y)|
 SetVirtualButtonSize||(Integer index, Float size)|
+SetVirtualButtonSize||(Integer index, Float sizeX, Float sizeY)|
 SetVirtualButtonActive||(Integer index, Integer active)|
 SetVirtualButtonVisible||(Integer index, Integer visible)|
 SetVirtualButtonImageUp||(Integer index, Integer imageID)|
@@ -1052,15 +1071,26 @@ GetMinutesFromUnix|Integer|(Integer unixtime)|
 GetSecondsFromUnix|Integer|(Integer unixtime)|
 SetInneractiveDetails||(String szCode)|
 SetAdMobDetails||(String szID)|
+SetAdMobRewardAdDetails||(String szID)|
 SetChartboostDetails||(String szKey1, String szKey2)|
 SetAmazonAdDetails||(String szKey)|
 SetAmazonAdTesting||(Integer mode)|
+SetAdMobTesting||(Integer mode)|
 ShowFullscreenAdvertAdMob||()|
 ShowFullscreenAdvertChartboost||()|
 ShowFullscreenAdvertAmazon||()|
 GetFullscreenAdvertLoadedAdMob|Integer|()|
 GetFullscreenAdvertLoadedChartboost|Integer|()|
 GetFullscreenAdvertLoadedAmazon|Integer|()|
+ShowRewardAdAdMob||()|
+GetRewardAdLoadedAdMob|Integer|()|
+GetRewardAdRewardedAdMob|Integer|()|
+ResetRewardAdMob||()|
+ShowRewardAdChartboost||()|
+CacheRewardAdChartboost||()|
+GetRewardAdLoadedChartboost|Integer|()|
+GetRewardAdRewardedChartboost|Integer|()|
+ResetRewardChartboost||()|
 CreateFullscreenAdvert||()|
 CreateAdvert||(Integer type, Integer horz, Integer vert, Integer test)|
 CreateAdvertEx||(Integer type, Integer horz, Integer vert, Integer test, Float offsetx, Float offsety)|
@@ -1079,6 +1109,7 @@ Log||(String szMessage)|
 RateApp||(String szID)|
 RateApp||(String szID, String szTitle)|
 RateApp||(String szID, String szTitle, String szMessage)|
+RequestAppReview||()|
 InAppPurchaseSetKeys||(String szData1, String szData2)|
 InAppPurchaseSetTitle||(String szTitle)|
 InAppPurchaseAddProductID||(String szID, Integer type)|
@@ -1414,6 +1445,8 @@ SetCameraRange||(Integer cameraID, Float fNear, Float fFar)|
 SetCameraAspect||(Integer cameraID, Float aspect)|
 SetCameraFOV||(Integer cameraID, Float fov)|
 SetCameraOrthoWidth||(Integer cameraID, Float width)|
+SetCameraBounds||(Integer cameraID, Float left, Float right, Float top, Float bottom)|
+SetCameraOffCenter||(Integer cameraID, Integer mode)|
 GetCameraFOV|Float|(Integer cameraID)|
 CreatePointLight||(Integer lightID, Float x, Float y, Float z, Float radius, Integer red, Integer green, Integer blue)|
 GetPointLightExists|Integer|(Integer lightID)|
@@ -1649,6 +1682,7 @@ Log|Float|(Float a)|
 GetNumDeviceCameras|Integer|()|
 SetDeviceCameraToImage|Integer|(Integer cameraID, Integer imageID)|
 GetDeviceCameraType|Integer|(Integer cameraID)|
+VibrateDevice||(Float seconds)|
 LoadVideo|Integer|(String szFilename)|
 DeleteVideo||()|
 SetVideoDimensions||(Float x, Float y, Float width, Float height)|
@@ -1688,6 +1722,8 @@ TerminateApp||(Integer appID)|
 ViewFile||(String szFilename)|
 ShareText||(String szText)|
 ShareImage||(String szFilename)|
+ShareImageAndText||(String szFilename, String szText)|
+FacebookActivateAppTracking||()|
 GetInternetState|Integer|()|
 SetPushNotificationKeys||(String data1, String reserved)|
 PushNotificationSetup|Integer|()|
@@ -1720,36 +1756,71 @@ FirebaseSetup||()|
 FirebaseLogEvent||(String event_name)|
 IsSupportedDepthTexture|Integer|()|
 SetAntialiasMode||(Integer mode)|
-SetVirtualButtonSize||(Integer index, Float sizeX, Float sizeY)|
-SetAdMobRewardAdDetails||(String szID)|
-ShowRewardAdAdMob||()|
-GetRewardAdLoadedAdMob|Integer|()|
-GetRewardAdRewardedAdMob|Integer|()|
-ResetRewardAdMob||()|
-ShowRewardAdChartboost||()|
-CacheRewardAdChartboost||()|
-GetRewardAdLoadedChartboost|Integer|()|
-GetRewardAdRewardedChartboost|Integer|()|
-ResetRewardChartboost||()|
-SetCameraBounds||(Integer cameraID, Float left, Float right, Float top, Float bottom)|
-SetCameraOffCenter||(Integer cameraID, Integer mode)|
-SetAdMobTesting||(Integer mode)|
-ChooseRawFile|String|(String ext, Integer returnFullPath)|
-SimplifyPath|String|(String szPath)|
-JoinPaths|String|(String szPath, String szPath2)|
-IsAbsolutePath|Integer|(String szPath)|
-CountWindowsDrives|Integer|()|
-GetWindowsDrive|String|(Integer index)|
-OpenRawFolder|Integer|(String szPath)|
-CloseRawFolder||(Integer ID)|
-GetRawFolderNumFiles|Integer|(Integer ID)|
-GetRawFolderNumFolders|Integer|(Integer ID)|
-GetRawFolderFileName|String|(Integer ID, Integer index)|
-GetRawFolderFolderName|String|(Integer ID, Integer index)|
-ByteLen|Integer|(String strin)|
-GetFirstFolder|String|(Integer mode)|
-GetFolderCount|Integer|(Integer mode)|
-GetFirstFile|String|(Integer mode)|
-GetFileCount|Integer|(Integer mode)|
-HostNetwork|Integer|(String szNetworkName, String szMyName, Integer port, Integer portv6)|
-VibrateDevice||(Float seconds)|
+RenderShadowMap||()|
+SetNetworkAllowClients||(Integer iNetID)|
+KickNetworkClient||(Integer iNetID, Integer client)|
+SetObjectCastShadow||(Integer objID, Integer mode)|
+SetObjectReceiveShadow||(Integer objID, Integer mode)|
+GetObjectCastShadowMode|Integer|(Integer objID)|
+GetObjectReceiveShadowMode|Integer|(Integer objID)|
+GetShadowMappingSupported|Integer|()|
+SetShadowMappingMode||(Integer mode)|
+GetShadowMappingMode|Integer|()|
+SetShadowMapSize||(Integer width, Integer height)|
+SetShadowRange||(Float range)|
+SetShadowBias||(Float bias)|
+SetShadowLightStepSize||(Float step)|
+SetShadowSmoothing||(Integer mode)|
+GetShadowPolygonsDrawn|Integer|()|
+LoadShaderFromString|Integer|(String szVertexSource, String szPixelSource)|
+LoadShaderFromString||(Integer shaderID, String szVertexSource, String szPixelSource)|
+Create3DParticles||(Integer ID, Float x, Float y, Float z)|
+Create3DParticles|Integer|(Float x, Float y, Float z)|
+Get3DParticlesExists|Integer|(Integer ID)|
+Delete3DParticles||(Integer ID)|
+Set3DParticlesPosition||(Integer ID, Float x, Float y, Float z)|
+Set3DParticlesFrequency||(Integer ID, Float freq)|
+Set3DParticlesStartZone||(Integer ID, Float x1, Float y1, Float z1, Float x2, Float y2, Float z2)|
+Set3DParticlesDirection||(Integer ID, Float vx, Float vy, Float vz, Float roll)|
+Set3DParticlesVelocityRange||(Integer ID, Float v1, Float v2)|
+Set3DParticlesDirectionRange||(Integer ID, Float angle, Float angle2)|
+Set3DParticlesSize||(Integer ID, Float size)|
+Set3DParticlesLife||(Integer ID, Float time)|
+Set3DParticlesMax||(Integer ID, Integer max)|
+Reset3DParticleCount||(Integer ID)|
+Set3DParticlesImage||(Integer ID, Integer imageID)|
+Set3DParticlesVisible||(Integer ID, Integer visible)|
+Set3DParticlesActive||(Integer ID, Integer active)|
+Set3DParticlesTransparency||(Integer ID, Integer active)|
+Set3DParticlesColorInterpolation||(Integer ID, Integer mode)|
+Get3DParticlesX|Float|(Integer ID)|
+Get3DParticlesY|Float|(Integer ID)|
+Get3DParticlesZ|Float|(Integer ID)|
+Get3DParticlesVisible|Integer|(Integer ID)|
+Get3DParticlesActive|Integer|(Integer ID)|
+Get3DParticlesFrequency|Float|(Integer ID)|
+Get3DParticlesDirectionX|Float|(Integer ID)|
+Get3DParticlesDirectionY|Float|(Integer ID)|
+Get3DParticlesDirectionZ|Float|(Integer ID)|
+Get3DParticlesDirectionRange1|Float|(Integer ID)|
+Get3DParticlesDirectionRange2|Float|(Integer ID)|
+Get3DParticlesSize|Float|(Integer ID)|
+Get3DParticlesLife|Float|(Integer ID)|
+Get3DParticlesMaxReached|Integer|(Integer ID)|
+Add3DParticlesForce||(Integer ID, Float starttime, Float endtime, Float x, Float y, Float z)|
+Clear3DParticlesForces||(Integer ID)|
+Add3DParticlesColorKeyFrame||(Integer ID, Float time, Integer red, Integer green, Integer blue, Integer alpha)|
+Clear3DParticlesColors||(Integer ID)|
+Add3DParticlesScaleKeyFrame||(Integer ID, Float time, Float scale)|
+Clear3DParticlesScales||(Integer ID)|
+Update3DParticles||(Integer ID, Float time)|
+Offset3DParticles||(Integer ID, Float x, Float y, Float z)|
+SetMeshMemblockVertexColor||(Integer memID, Integer vertexIndex, Integer red, Integer green, Integer blue, Integer alpha)|
+GetMeshMemblockVertexRed|Integer|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexGreen|Integer|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexBlue|Integer|(Integer memID, Integer vertexIndex)|
+GetMeshMemblockVertexAlpha|Integer|(Integer memID, Integer vertexIndex)|
+SetObjectMeshNormalMap||(Integer objID, Integer meshIndex, Integer imageID)|
+SetObjectNormalMap||(Integer objID, Integer imageID)|
+SetObjectNormalMapScale||(Integer objID, Float scaleU, Float scaleV)|
+SetObjectMeshNormalMapScale||(Integer objID, Integer meshIndex, Float scaleU, Float scaleV)|
