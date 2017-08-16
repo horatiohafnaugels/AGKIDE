@@ -632,7 +632,7 @@ gchar *win32_show_file_dialog(GtkWindow *parent, const gchar *title, const gchar
 
 	w_file[0] = '\0';
 
-	if (initial_file != NULL)
+	if (initial_file != NULL && initial_file[0] != '/')
 		MultiByteToWideChar(CP_UTF8, 0, initial_file, -1, w_file, G_N_ELEMENTS(w_file));
 
 	MultiByteToWideChar(CP_UTF8, 0, title, -1, w_title, G_N_ELEMENTS(w_title));
@@ -689,7 +689,7 @@ gchar *win32_show_file_save_dialog(GtkWindow *parent, const gchar *title, const 
 
 	w_file[0] = '\0';
 
-	if (initial_file != NULL)
+	if (initial_file != NULL && initial_file[0] != '/')
 		MultiByteToWideChar(CP_UTF8, 0, initial_file, -1, w_file, G_N_ELEMENTS(w_file));
 
 	MultiByteToWideChar(CP_UTF8, 0, title, -1, w_title, G_N_ELEMENTS(w_title));

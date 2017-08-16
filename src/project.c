@@ -235,12 +235,16 @@ static void run_open_dialog(GtkDialog *dialog)
 		
 		if ( project_find_by_filename( filename ) )
 		{
+			/*
 			gchar *utf8_filename = utils_get_utf8_from_locale(filename);
 
 			SHOW_ERR1(_("Project file \"%s\" is already open"), utf8_filename);
 			g_free(utf8_filename);
 			g_free(filename);
 			continue;
+			*/
+			g_free(filename);
+			break;
 		}
 
 		/* try to load the config */

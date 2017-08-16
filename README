@@ -1,7 +1,7 @@
 AGK Changes
 ------------
 
-Included is a Visual Studio 2008 project used to edit the files but this is a GCC compiled project, VS2008 calls the external build programs make.exe and gcc.exe. You will need to have these installed and in your path variable.
+Included is a Visual Studio 2015 project used to edit the files but this is a GCC compiled project, VS2015 calls the external build programs make.exe and gcc.exe. You will need to have these installed and in your path variable.
 
 You will also need the GTK runtime files installed in C:\libs (or edit the makefile to point elsewhere), the runtime files used were from the all in one bundle located here http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.24/gtk+-bundle_2.24.10-20120208_win32.zip, note that for portability the source "bin" folder contains copies of these runtime files so end-users do not need to install them (not included on Git, copy from GTK 2.24 bundle).
 

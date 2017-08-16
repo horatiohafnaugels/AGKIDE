@@ -2274,6 +2274,37 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
 		g_free(cmdline);
 #endif
 	}
+	else if ( strcmp(item_name, "Visual Editor") == 0 )
+	{
+		// open Visual Editor
+		gchar **argv = NULL;
+		argv = g_new0(gchar *, 2);
+		argv[0] = NULL;
+		argv[1] = NULL;
+
+		GError *error = NULL;
+#ifdef G_OS_WIN32
+		argv[0] = g_strdup("Visual Editor.exe");
+		gchar *working_dir = g_strconcat(pathDLC, "\\", item_name, NULL);
+		if( !g_spawn_async(working_dir, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, NULL, &error) )
+		{
+			geany_debug("g_spawn_async() failed: %s", error->message);
+			ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
+			g_error_free(error);
+			error = NULL;
+		}
+		g_free(working_dir);
+#elif __APPLE__
+		//gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/Visual Editor", "\"", NULL);
+		//g_spawn_command_line_async(cmdline, NULL);
+		//g_free(cmdline);
+#else
+		//gchar *cmdline = g_strconcat("see", " \"", pathDLC, "/", item_name, "/Visual Editor", "\"", NULL);
+		//g_spawn_command_line_async(cmdline, NULL);
+		//g_free(cmdline);
+#endif
+		g_strfreev(argv);
+	}
 	else
 	{
 		// open DLC folder
