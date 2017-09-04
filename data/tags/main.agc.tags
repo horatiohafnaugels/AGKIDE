@@ -1824,3 +1824,6 @@ SetObjectMeshNormalMap||(Integer objID, Integer meshIndex, Integer imageID)|
 SetObjectNormalMap||(Integer objID, Integer imageID)|
 SetObjectNormalMapScale||(Integer objID, Float scaleU, Float scaleV)|
 SetObjectMeshNormalMapScale||(Integer objID, Integer meshIndex, Float scaleU, Float scaleV)|
+StartScreenRecording||(String szFilename, Integer microphone)|
+StopScreenRecording||()|
+IsScreenRecording|Integer|()|

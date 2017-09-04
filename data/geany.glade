@@ -667,15 +667,12 @@
                                   <placeholder/>
                                 </child>
                                 <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
                                   <object class="GtkCheckButton" id="android_permission_external_storage">
                                     <property name="label" translatable="yes">Write External Storage</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
-                                    <property name="tooltip_text" translatable="yes">Used for the data directory on Android 2.3.1, camera capture images, and shared variables</property>
+                                    <property name="tooltip_text" translatable="yes">Used for the data directory on Android 2.3.1, camera capture images, shared variables, and "raw:" file access</property>
                                     <property name="active">True</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
@@ -809,10 +806,25 @@
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="tooltip_text" translatable="yes">Used to allow vibration of the device</property>
-                                    <property name="active">True</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="android_permission_record_audio">
+                                    <property name="label" translatable="yes">Record Audio</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="tooltip_text" translatable="yes">Used to allow recording from the microphone when recording the screen</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
                                   </packing>
@@ -9437,6 +9449,12 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9457,6 +9475,12 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

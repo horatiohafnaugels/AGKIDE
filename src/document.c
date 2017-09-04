@@ -850,9 +850,11 @@ GeanyDocument *document_open_file(const gchar *locale_filename, gboolean readonl
 		{
 			if ( project_find_by_filename( locale_filename ) )
 			{
+				/*
 				gchar *utf8_filename = utils_get_utf8_from_locale(locale_filename);
 				dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Project file \"%s\" is already open"), utf8_filename);
 				g_free(utf8_filename);
+				*/
 				return NULL;
 			}
 

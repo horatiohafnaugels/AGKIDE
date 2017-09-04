@@ -235,16 +235,12 @@ static void run_open_dialog(GtkDialog *dialog)
 		
 		if ( project_find_by_filename( filename ) )
 		{
-			/*
 			gchar *utf8_filename = utils_get_utf8_from_locale(filename);
 
 			SHOW_ERR1(_("Project file \"%s\" is already open"), utf8_filename);
 			g_free(utf8_filename);
 			g_free(filename);
 			continue;
-			*/
-			g_free(filename);
-			break;
 		}
 
 		/* try to load the config */
@@ -321,10 +317,12 @@ void project_open(void)
 		{
 			if ( project_find_by_filename( file ) )
 			{
+				/*
 				gchar *utf8_filename = utils_get_utf8_from_locale(file);
 
 				SHOW_ERR1(_("Project file \"%s\" is already open"), utf8_filename);
 				g_free(utf8_filename);
+				*/
 				g_free(file);
 				return;
 			}
@@ -398,10 +396,12 @@ void project_import(void)
 			}
 			if ( project_find_by_filename( new_file ) )
 			{
+				/*
 				gchar *utf8_filename = utils_get_utf8_from_locale(file);
 
 				SHOW_ERR1(_("Project file \"%s\" is already open"), utf8_filename);
 				g_free(utf8_filename);
+				*/
 				g_free(new_file);
 				g_free(file);
 				return;
@@ -958,6 +958,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_vibrate");
 		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_VIBRATE;
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_record_audio");
+		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ) app->project->apk_settings.permission_flags |= AGK_ANDROID_PERMISSION_RECORD_AUDIO;
+
 		// signing
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
 		AGK_CLEAR_STR(app->project->apk_settings.keystore_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -1072,6 +1075,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_vibrate");
 		int permission_vibrate = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_record_audio");
+		int permission_record_audio = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
 
 		// signing
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
@@ -1447,6 +1453,7 @@ android_dialog_continue:
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
 		}
 		if ( permission_vibrate ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.VIBRATE\"></uses-permission>\n" );
+		if ( permission_record_audio ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"></uses-permission>\n" );
 		
 		// supports FireTV
 		if ( 0 )
@@ -2567,6 +2574,10 @@ void project_export_apk()
 		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_VIBRATE) ? 1 : 0;
 		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_record_audio");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_RECORD_AUDIO) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
 		// signing
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_keystore_file_entry");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.keystore_path, "") );
@@ -2736,6 +2747,10 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_vibrate");
 		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_VIBRATE) ? 1 : 0;
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_record_audio");
+		mode = (app->project->apk_settings.permission_flags & AGK_ANDROID_PERMISSION_RECORD_AUDIO) ? 1 : 0;
 		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(widget), mode );
 
 		// signing
@@ -5632,7 +5647,7 @@ gboolean project_load_file(const gchar *locale_file_name)
  * At this point there should not be an already opened project in Geany otherwise it will just
  * return.
  * The filename is expected in the locale encoding. */
-static gboolean load_config(const gchar *filename)
+static gboolean load_config(const gchar *filename) 
 {
 	GKeyFile *config;
 	GeanyProject *p;

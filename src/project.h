@@ -59,6 +59,7 @@ typedef struct GeanyProjectFile GeanyProjectFile;
 #define AGK_ANDROID_PERMISSION_PUSH			0x080
 #define AGK_ANDROID_PERMISSION_CAMERA		0x100
 #define AGK_ANDROID_PERMISSION_VIBRATE		0x200
+#define AGK_ANDROID_PERMISSION_RECORD_AUDIO	0x400
 
 typedef struct GeanyProjectAPKSettings
 {
