@@ -1552,10 +1552,10 @@ Get3DPhysicsJointPositionVector|Integer|(Integer jointID)|
 Get3DPhysicsJointRotationVector|Integer|(Integer jointID)|
 Delete3DPhysicsJoint||(Integer jointID)|
 Set3DPhysicsHingeJointMotorIsEnabled||(Integer jointID, Integer isEnabled)|
-Set3DPhysicsHingeJointMaxMotorImpluse||(Integer jointID, Float maxImpluse)|
+Set3DPhysicsHingeJointMaxMotorImpulse||(Integer jointID, Float maxImpulse)|
 Set3DPhysicsHingeJointMotorVelocity||(Integer jointID, Float targetVelocity)|
 Set3DPhysicsTwistJointMotorIsEnabled||(Integer jointID, Integer isEnabled)|
-Set3DPhysicsTwistJointMaxMotorImpluse||(Integer jointID, Float maxImpluse)|
+Set3DPhysicsTwistJointMaxMotorImpulse||(Integer jointID, Float maxImpulse)|
 Set3DPhysicsTwistJointMotorRotationTarget||(Integer jointID, Integer rotationVec3ID)|
 Set3DPhysicsSliderJointPoweredLinearMotorIsEnabled||(Integer jointID, Integer isEnabled)|
 Set3DPhysicsSliderJointMaxLinearMotorForce||(Integer jointID, Float maxLinearForce)|
@@ -1605,7 +1605,7 @@ Get3DPhysicsRagdollExist|Integer|(Integer objID)|
 Get3DPhysicsRagdollFromBoneObject|Integer|(Integer objID)|
 Is3dPhysicsRagdollStatic|Integer|(Integer objID)|
 Set3DphysicsRagdollStatic||(Integer objID, Integer isStatic)|
-Set3DPhysicsRadollBonesVisible||(Integer objID, Integer isVisible)|
+Set3DPhysicsRagdollBonesVisible||(Integer objID, Integer isVisible)|
 Set3DPhysicsRagdollDamping||(Float linear, Float angular)|
 Set3DPhysicsRagdollSleepingThresholds||(Float linear, Float angular)|
 Set3DPhysicsRagdollDeactivationTime||(Float time)|

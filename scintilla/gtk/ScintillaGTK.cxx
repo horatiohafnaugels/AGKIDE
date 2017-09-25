@@ -2288,6 +2288,18 @@ void ScintillaGTK::CommitThis(char *utfVal) {
 	try {
 		//~ fprintf(stderr, "Commit '%s'\n", utfVal);
 		if (IsUnicodeMode()) {
+			if ( (unsigned char)utfVal[0] == 0xC2 && (unsigned char)utfVal[1] == 0xA8 && utfVal[2] == 0 )
+			{
+				// convert raw umlaut to double quote
+				utfVal[0] = 34;
+				utfVal[1] = 0;
+			}
+			if ( (unsigned char)utfVal[0] == 0xC2 && (unsigned char)utfVal[1] == 0xB4 && utfVal[2] == 0 )
+			{
+				// convert raw umlaut to single quote
+				utfVal[0] = 39;
+				utfVal[1] = 0;
+			}
 			AddCharUTF(utfVal, strlen(utfVal));
 		} else {
 			const char *source = CharacterSetID();
