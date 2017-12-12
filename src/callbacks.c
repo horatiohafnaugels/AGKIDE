@@ -1372,6 +1372,14 @@ static gchar* help_link_parse_line( gchar* line )
 	return cur;
 }
 
+G_MODULE_EXPORT void on_help_home_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	gchar *uri;
+	uri = utils_get_help_url(NULL);
+	utils_open_browser(uri);
+	g_free(uri);
+}
+
 G_MODULE_EXPORT void on_help1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 	gchar *uri;
@@ -2274,6 +2282,23 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
 		g_free(cmdline);
 #endif
 	}
+	else if ( strcmp(item_name, "Tutorial Guide 2") == 0 )
+	{
+		// open Tutorial Guide 2 PDF
+#ifdef G_OS_WIN32
+		gchar *cmdline = g_strconcat("\"", pathDLC, "\\", item_name, "\\AppGameKit Official Tutorial Guide Vol 2.pdf", "\"", NULL);
+		win32_open_file( cmdline );
+		g_free(cmdline);
+#elif __APPLE__
+		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/AppGameKit Official Tutorial Guide Vol 2.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#else
+		gchar *cmdline = g_strconcat("see", " \"", pathDLC, "/", item_name, "/AppGameKit Official Tutorial Guide Vol 2.pdf", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+#endif
+	}
 	else if ( strcmp(item_name, "Visual Editor") == 0 )
 	{
 		// open Visual Editor
@@ -2295,13 +2320,18 @@ G_MODULE_EXPORT void on_menu_dlc_activate(GtkMenuItem *menuitem, gpointer user_d
 		}
 		g_free(working_dir);
 #elif __APPLE__
-		//gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/Visual Editor", "\"", NULL);
-		//g_spawn_command_line_async(cmdline, NULL);
-		//g_free(cmdline);
+		gchar *cmdline = g_strconcat("open", " \"", pathDLC, "/", item_name, "/Visual Editor.app", "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
 #else
 		//gchar *cmdline = g_strconcat("see", " \"", pathDLC, "/", item_name, "/Visual Editor", "\"", NULL);
 		//g_spawn_command_line_async(cmdline, NULL);
 		//g_free(cmdline);
+		gchar *filepath = g_strconcat( pathDLC, "/", item_name, NULL);
+		gchar *cmdline = g_strconcat("xdg-open", " \"", filepath, "\"", NULL);
+		g_spawn_command_line_async(cmdline, NULL);
+		g_free(cmdline);
+		g_free(filepath);
 #endif
 		g_strfreev(argv);
 	}

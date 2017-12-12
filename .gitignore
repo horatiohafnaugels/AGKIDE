@@ -65,3 +65,32 @@ data/html5/3Ddynamic/made-with-appgamekit.png
 data/android/sourceAmazon/AndroidManifest.xml
 data/android/sourceGoogle/AndroidManifest.xml
 data/android/sourceOuya/AndroidManifest.xml
+data/ios/source/Icons.xcassets/Contents.json
+data/ios/source/Icons.xcassets/AppIcon.appiconset/icon-180.png
+data/ios/source/AppGameKit Player.app/AppIcon60x60@2x.png
+data/ios/source/AppGameKit Player.app/AppIcon60x60@3x.png
+data/ios/source/AppGameKit Player.app/AppIcon76x76@2x~ipad.png
+data/ios/source/AppGameKit Player.app/AppIcon76x76~ipad.png
+data/ios/source/AppGameKit Player.app/AppIcon83.5x83.5@2x~ipad.png
+data/ios/source/AppGameKit Player.app/Assets.car
+data/ios/source/AppGameKit Player.app/Default-375w-667h@2x.png
+data/ios/source/AppGameKit Player.app/Default-414w-736h@3x.png
+data/ios/source/AppGameKit Player.app/Default-568h@2x.png
+data/ios/source/AppGameKit Player.app/Default-Landscape-1366h@2x~ipad.png
+data/ios/source/AppGameKit Player.app/Default-Landscape@2x~ipad.png
+data/ios/source/AppGameKit Player.app/Default-Landscape~ipad.png
+data/ios/source/AppGameKit Player.app/Default-Portrait-1366h@2x~ipad.png
+data/ios/source/AppGameKit Player.app/Default-Portrait@2x~ipad.png
+data/ios/source/AppGameKit Player.app/Default-Portrait~ipad.png
+data/ios/source/AppGameKit Player.app/Default@2x.png
+data/ios/source/AppGameKit Player.app/GoogleService-Info.plist
+data/ios/source/AppGameKit Player.app/Info.plist
+data/ios/source/AppGameKit Player.app/MainWindow.nib
+data/ios/source/AppGameKit Player.app/PkgInfo
+data/ios/source/AppGameKit Player.app/UntitledViewController.nib
+data/ios/source/Icons.xcassets/AppIcon.appiconset/Contents.json
+data/ios/source/Icons.xcassets/AppIcon.appiconset/icon-1024.png
+data/ios/source/Icons.xcassets/AppIcon.appiconset/icon-120.png
+data/ios/source/Icons.xcassets/AppIcon.appiconset/icon-152.png
+data/ios/source/Icons.xcassets/AppIcon.appiconset/icon-167.png
+data/ios/source/Icons.xcassets/AppIcon.appiconset/icon-76.png

@@ -2437,6 +2437,11 @@ File size is very important when hosting apps online, so you should remove any u
     <property name="stock">gtk-go-up</property>
     <property name="icon-size">1</property>
   </object>
+  <object class="GtkImage" id="image22">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-help</property>
+  </object>
   <object class="GtkImage" id="image3">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -2870,12 +2875,6 @@ File size is very important when hosting apps online, so you should remove any u
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-select-color</property>
-    <property name="icon-size">1</property>
-  </object>
-  <object class="GtkImage" id="image4083">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-help</property>
     <property name="icon-size">1</property>
   </object>
   <object class="GtkImage" id="image5">
@@ -3450,7 +3449,7 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                           <object class="GtkTable" id="table27">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="n_rows">13</property>
+                            <property name="n_rows">14</property>
                             <property name="n_columns">2</property>
                             <property name="column_spacing">5</property>
                             <property name="row_spacing">3</property>
@@ -3474,8 +3473,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="label" translatable="yes">Facebook App ID:</property>
                               </object>
                               <packing>
-                                <property name="top_attach">9</property>
-                                <property name="bottom_attach">10</property>
+                                <property name="top_attach">10</property>
+                                <property name="bottom_attach">11</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3587,8 +3586,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="label" translatable="yes">Orientation:</property>
                               </object>
                               <packing>
-                                <property name="top_attach">6</property>
-                                <property name="bottom_attach">7</property>
+                                <property name="top_attach">7</property>
+                                <property name="bottom_attach">8</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3622,8 +3621,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">6</property>
-                                <property name="bottom_attach">7</property>
+                                <property name="top_attach">7</property>
+                                <property name="bottom_attach">8</property>
                               </packing>
                             </child>
                             <child>
@@ -3648,7 +3647,7 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                   <object class="GtkEntry" id="ios_app_icon_entry">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="tooltip_text" translatable="yes">should be at least 180x180 pixels, PNG only, can contain transparency</property>
+                                    <property name="tooltip_text" translatable="yes">Must be at least 1024x1024 pixels, PNG only, can contain transparency</property>
                                     <property name="invisible_char">●</property>
                                     <property name="invisible_char_set">True</property>
                                     <property name="primary_icon_activatable">False</property>
@@ -3699,8 +3698,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="label" translatable="yes">Version Number:</property>
                               </object>
                               <packing>
-                                <property name="top_attach">7</property>
-                                <property name="bottom_attach">8</property>
+                                <property name="top_attach">8</property>
+                                <property name="bottom_attach">9</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3735,8 +3734,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">7</property>
-                                <property name="bottom_attach">8</property>
+                                <property name="top_attach">8</property>
+                                <property name="bottom_attach">9</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3771,8 +3770,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">9</property>
-                                <property name="bottom_attach">10</property>
+                                <property name="top_attach">10</property>
+                                <property name="bottom_attach">11</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3785,8 +3784,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="label" translatable="yes">Build Number:</property>
                               </object>
                               <packing>
-                                <property name="top_attach">8</property>
-                                <property name="bottom_attach">9</property>
+                                <property name="top_attach">9</property>
+                                <property name="bottom_attach">10</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3821,8 +3820,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">8</property>
-                                <property name="bottom_attach">9</property>
+                                <property name="top_attach">9</property>
+                                <property name="bottom_attach">10</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3835,8 +3834,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="label" translatable="yes">Device Type:</property>
                               </object>
                               <packing>
-                                <property name="top_attach">10</property>
-                                <property name="bottom_attach">11</property>
+                                <property name="top_attach">11</property>
+                                <property name="bottom_attach">12</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -3870,8 +3869,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">10</property>
-                                <property name="bottom_attach">11</property>
+                                <property name="top_attach">11</property>
+                                <property name="bottom_attach">12</property>
                               </packing>
                             </child>
                             <child>
@@ -3907,7 +3906,7 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
-                                <property name="label" translatable="yes">Splash Screen (1536x2048):</property>
+                                <property name="label" translatable="yes">Splash Screen (1125x2436):</property>
                               </object>
                               <packing>
                                 <property name="top_attach">5</property>
@@ -4063,8 +4062,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">5</property>
-                                <property name="bottom_attach">6</property>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -4078,8 +4077,8 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
 Install Tracking:</property>
                               </object>
                               <packing>
-                                <property name="top_attach">11</property>
-                                <property name="bottom_attach">12</property>
+                                <property name="top_attach">12</property>
+                                <property name="bottom_attach">13</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -4095,8 +4094,8 @@ Install Tracking:</property>
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">11</property>
-                                <property name="bottom_attach">12</property>
+                                <property name="top_attach">12</property>
+                                <property name="bottom_attach">13</property>
                               </packing>
                             </child>
                             <child>
@@ -4107,8 +4106,8 @@ Install Tracking:</property>
                                 <property name="label" translatable="yes">Firebase Config File (.plist):</property>
                               </object>
                               <packing>
-                                <property name="top_attach">12</property>
-                                <property name="bottom_attach">13</property>
+                                <property name="top_attach">13</property>
+                                <property name="bottom_attach">14</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -4158,8 +4157,73 @@ Install Tracking:</property>
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">12</property>
-                                <property name="bottom_attach">13</property>
+                                <property name="top_attach">13</property>
+                                <property name="bottom_attach">14</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="ios_app_splash_label4">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">Splash Screen (1536x2048):</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkHBox" id="hbox55">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkEntry" id="ios_app_splash_entry4">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">(Optional) Displayed whilst your app is launching on iPhone X, should be at least 1125x2436. Landscape splash screens should be rotated 90 degrees clockwise so the bottom of the image is to the left</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="ios_app_splash_path4">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <child>
+                                      <object class="GtkImage" id="image_project_dialog_base_path19">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="stock">gtk-open</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options"/>
                               </packing>
@@ -9455,6 +9519,15 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9475,6 +9548,15 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -12989,14 +13071,22 @@ To generate a keystore file you need to submit some information about you or you
                       <object class="GtkMenu" id="menu_help1_menu">
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkImageMenuItem" id="help1">
-                            <property name="label" translatable="yes">_Help</property>
+                          <object class="GtkMenuItem" id="help1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Command Help</property>
                             <property name="use_underline">True</property>
-                            <property name="image">image4083</property>
-                            <property name="use_stock">False</property>
                             <signal name="activate" handler="on_help1_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkImageMenuItem" id="help_home">
+                            <property name="label" translatable="yes">_Help Home</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="image">image22</property>
+                            <property name="use_stock">False</property>
+                            <signal name="activate" handler="on_help_home_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>

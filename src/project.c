@@ -3176,6 +3176,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
 		AGK_CLEAR_STR(app->project->ipa_settings.splash_2048_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry4");
+		AGK_CLEAR_STR(app->project->ipa_settings.splash_2436_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.facebook_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
@@ -3245,6 +3248,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
 		gchar *app_splash3 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry4");
+		gchar *app_splash4 = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 		gchar *facebook_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -3364,6 +3370,12 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			if ( !g_file_test( app_splash3, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (1536x2048) location"); goto ios_dialog_clean_up; }
 		}
 
+		if ( app_splash4 && *app_splash4 )
+		{
+			if ( !strrchr( app_splash4, '.' ) || utils_str_casecmp( strrchr( app_splash4, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (1125x2436) must be a PNG file"); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash4, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (1125x2436) location"); goto ios_dialog_clean_up; }
+		}
+
 		// check profile
 		if ( !profile || !*profile ) { SHOW_ERR("You must select a provisioning profile"); goto ios_dialog_clean_up; }
 		if ( !strrchr( profile, '.' ) || utils_str_casecmp( strrchr( profile, '.' ), ".mobileprovision" ) != 0 ) { SHOW_ERR("Provisioning profile must have .mobileprovision extension"); goto ios_dialog_clean_up; }
@@ -3392,6 +3404,12 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 				}
 			}
 		}
+
+		if ( !g_file_test( "/Applications/XCode.app/Contents/Developer/usr/bin/actool", G_FILE_TEST_EXISTS ) )
+		{
+			SHOW_ERR("As of iOS 11 you must install XCode to export iOS apps from the AGK IDE. XCode can be downloaded from the Mac AppStore"); 
+			goto ios_dialog_clean_up; 
+		}
 	
 		goto ios_dialog_continue;
 
@@ -3403,6 +3421,7 @@ ios_dialog_clean_up:
 		if ( app_splash1 ) g_free(app_splash1);
 		if ( app_splash2 ) g_free(app_splash2);
 		if ( app_splash3 ) g_free(app_splash3);
+		if ( app_splash4 ) g_free(app_splash4);
 		if ( facebook_id ) g_free(facebook_id);
 		if ( version_number ) g_free(version_number);
 		if ( output_file ) g_free(output_file);
@@ -3421,6 +3440,7 @@ ios_dialog_continue:
 
 		gchar* path_to_codesign = g_strdup("/usr/bin/codesign");
 		gchar* path_to_security = g_strdup("/usr/bin/security");
+		gchar* path_to_actool = g_strdup("/Applications/XCode.app/Contents/Developer/usr/bin/actool");
 
 		// make temporary folder
 		gchar* ios_folder = g_build_filename( app->datadir, "ios", NULL );
@@ -3433,6 +3453,9 @@ ios_dialog_continue:
         gchar* app_folder = g_build_filename( tmp_folder, app_name, NULL );
 		SETPTR(app_folder, g_strconcat( app_folder, ".app", NULL ));
 
+		gchar* app_folder_name = g_strdup( app_name );
+		SETPTR(app_folder_name, g_strconcat( app_folder_name, ".app", NULL ));
+
 		utils_str_replace_char( ios_folder, '\\', '/' );
 		utils_str_replace_char( tmp_folder, '\\', '/' );
 		
@@ -3441,6 +3464,15 @@ ios_dialog_continue:
 
 		gchar* no_ads_binary = g_build_path( "/", app->datadir, "ios", "source", "AppGameKit Player No Ads", NULL );
 		utils_str_replace_char( no_ads_binary, '\\', '/' );
+
+		gchar* icons_src_folder = g_build_path( "/", app->datadir, "ios", "source", "Icons.xcassets", NULL );
+		utils_str_replace_char( icons_src_folder, '\\', '/' );
+
+		gchar* icons_dst_folder = g_build_path( "/", tmp_folder, "Icons.xcassets", NULL );
+		utils_str_replace_char( icons_dst_folder, '\\', '/' );
+
+		gchar* icons_sub_folder = g_build_path( "/", tmp_folder, "Icons.xcassets", "AppIcon.appiconset", NULL );
+		utils_str_replace_char( icons_sub_folder, '\\', '/' );
 
 		gchar *output_file_zip = g_strdup( output_file );
 		gchar *ext = strrchr( output_file_zip, '.' );
@@ -3695,7 +3727,7 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
 		
-		if ( status != 0 && strncmp(str_out,"SHA-1",strlen("SHA-1") != 0) )
+		if ( status != 0 && strstr(str_out,"SHA-1") == 0 )
 		{
 			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
 			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
@@ -3922,13 +3954,6 @@ ios_dialog_continue:
             }
 		}
 		
-		/*
-		version_string = g_strconcat( "<string>", version_number, "</string>", NULL );
-		build_string = g_strconcat( "<string>", build_number, "</string>", NULL );
-        utils_str_replace_all( &contents, "<string>1.0.0</string>", version_string );
-		utils_str_replace_all( &contents, "<string>1.0</string>", build_string );
-		*/
-
 		utils_str_replace_all( &contents, "${VERSION}", version_number );
 		utils_str_replace_all( &contents, "${BUILD}", build_number );
 
@@ -3972,6 +3997,13 @@ ios_dialog_continue:
 		// load icon file
 		if ( app_icon && *app_icon )
 		{
+			// write Icons.xcassets file
+			if ( !utils_copy_folder( icons_src_folder, icons_dst_folder, TRUE, NULL ) )
+			{
+				SHOW_ERR( "Failed to create icon asset catalog" );
+				goto ios_dialog_cleanup2;
+			}
+
 			icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
 			if ( !icon_image || error )
 			{
@@ -3983,7 +4015,7 @@ ios_dialog_continue:
 
 			// scale it and save it
 			// 152x152
-			image_filename = g_build_path( "/", app_folder, "icon-152.png", NULL );
+			image_filename = g_build_path( "/", icons_sub_folder, "icon-152.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 152, 152, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -3996,7 +4028,7 @@ ios_dialog_continue:
 			g_free( image_filename );
 
 			// 180x180
-			image_filename = g_build_path( "/", app_folder, "icon-180.png", NULL );
+			image_filename = g_build_path( "/", icons_sub_folder, "icon-180.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 180, 180, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -4009,7 +4041,7 @@ ios_dialog_continue:
 			g_free( image_filename );
 
 			// 167x167
-			image_filename = g_build_path( "/", app_folder, "icon-167.png", NULL );
+			image_filename = g_build_path( "/", icons_sub_folder, "icon-167.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 167, 167, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -4022,7 +4054,7 @@ ios_dialog_continue:
 			g_free( image_filename );
 
 			// 120x120
-			image_filename = g_build_path( "/", app_folder, "icon-120.png", NULL );
+			image_filename = g_build_path( "/", icons_sub_folder, "icon-120.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 120, 120, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -4035,7 +4067,7 @@ ios_dialog_continue:
 			g_free( image_filename );
 
 			// 76x76
-			image_filename = g_build_path( "/", app_folder, "icon-76.png", NULL );
+			image_filename = g_build_path( "/", icons_sub_folder, "icon-76.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 76, 76, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -4048,7 +4080,7 @@ ios_dialog_continue:
 			g_free( image_filename );
 
 			// 60x60
-			image_filename = g_build_path( "/", app_folder, "icon-60.png", NULL );
+			image_filename = g_build_path( "/", icons_sub_folder, "icon-60.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 60, 60, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
@@ -4060,8 +4092,63 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+			// 1024x1024
+			image_filename = g_build_path( "/", icons_sub_folder, "icon-1024.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 1024, 1024, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save 1024x1024 icon: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
 			icon_scaled_image = NULL;
 			image_filename = NULL;
+
+			// run actool to compile asset catalog, it will copy the app icons to the app_folder and create the Assets.car file
+			argv = g_new0( gchar*, 19 );
+			argv[0] = g_strdup( path_to_actool );
+			argv[1] = g_strdup("--output-partial-info-plist");
+			argv[2] = g_strdup("temp.plist");
+			argv[3] = g_strdup("--app-icon");
+			argv[4] = g_strdup("AppIcon");
+			argv[5] = g_strdup("--target-device");
+			argv[6] = g_strdup("iphone");
+			argv[7] = g_strdup("--target-device");
+			argv[8] = g_strdup("ipad");
+			argv[9] = g_strdup("--minimum-deployment-target");
+			argv[10] = g_strdup("7.0");
+			argv[11] = g_strdup("--platform");
+			argv[12] = g_strdup("iphoneos");
+			argv[13] = g_strdup("--product-type");
+			argv[14] = g_strdup("com.apple.product-type.application");
+			argv[15] = g_strdup("--compile");
+			argv[16] = g_strdup(app_folder_name);
+			argv[17] = g_strdup("Icons.xcassets");
+			argv[18] = NULL;
+
+			if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+			{
+				SHOW_ERR1( "Failed to run \"actool\" program: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+		
+			if ( !str_out || strstr(str_out,"actool.errors") != 0 || strstr(str_out,"actool.warnings") != 0 || strstr(str_out,"actool.notices") != 0 )
+			{
+				if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to compile asset catalog (error %d: %s)", status, str_out );
+				else SHOW_ERR1( "Failed to get compile asset catalog (error: %d)", status );
+				goto ios_dialog_cleanup2;
+			}
+
+			g_free(str_out);
+			str_out = 0;
+			g_strfreev(argv);
+			argv = 0;
 		}
 
 		while (gtk_events_pending())
@@ -4162,6 +4249,47 @@ ios_dialog_continue:
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( "Failed to save Default-414w-736h@3x.png splash screen: %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+			gdk_pixbuf_unref( icon_scaled_image );
+			g_free( image_filename );
+
+			icon_scaled_image = NULL;
+			image_filename = NULL;
+
+			gdk_pixbuf_unref( splash_image );
+			splash_image = NULL;
+		}
+
+		// iPhone X
+		if ( app_splash4 && *app_splash4 )
+		{
+			splash_image = gdk_pixbuf_new_from_file( app_splash4, &error );
+			if ( !splash_image || error )
+			{
+				SHOW_ERR1( "Failed to load splash screen (1125x2436): %s", error->message );
+				g_error_free(error);
+				error = NULL;
+				goto ios_dialog_cleanup2;
+			}
+
+			int width = gdk_pixbuf_get_width( splash_image );
+			int height = gdk_pixbuf_get_height( splash_image );
+			float aspect = width / (float) height;
+			if ( aspect > 0.43f || aspect < 0.49f )
+			{
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Splash screen (1125x2436) should have an aspect ratio near 0.46 otherwise it will look stretched when scaled. Export will continue." );
+			}
+
+			// scale it and save it
+			// 1125x2436 Default-375w-812h@3x.png
+			image_filename = g_build_path( "/", app_folder, "Default-375w-812h@3x.png", NULL );
+			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1125, 2436, GDK_INTERP_HYPER );
+			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			{
+				SHOW_ERR1( "Failed to save Default-375w-812h@3x.png splash screen: %s", error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4495,7 +4623,12 @@ ios_dialog_cleanup2:
 		if ( ios_folder ) g_free(ios_folder);
 		if ( tmp_folder ) g_free(tmp_folder);
 		if ( src_folder ) g_free(src_folder);
+		if ( app_folder ) g_free(app_folder);
+		if ( app_folder_name ) g_free(app_folder_name);
 		if ( no_ads_binary ) g_free(no_ads_binary);
+		if ( icons_src_folder ) g_free(icons_src_folder);
+		if ( icons_dst_folder ) g_free(icons_dst_folder);
+		if ( icons_sub_folder ) g_free(icons_sub_folder);
 
 		if ( error ) g_error_free(error);
 		if ( str_out ) g_free(str_out);
@@ -4565,6 +4698,8 @@ void project_export_ipa()
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry2")));
 		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_path3"), NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3")));
+		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_path4"), NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry4")));
 
 		ui_setup_open_button_callback_ios(ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_path"), NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_ENTRY(ui_lookup_widget(ui_widgets.ios_dialog, "ios_firebase_config_entry")));
@@ -4606,6 +4741,9 @@ void project_export_ipa()
 			gtk_entry_set_text( GTK_ENTRY(widget), "" );
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry4");
 			gtk_entry_set_text( GTK_ENTRY(widget), "" );
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
@@ -4663,6 +4801,9 @@ void project_export_ipa()
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry3");
 			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.splash_2048_path, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_splash_entry4");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.splash_2436_path, "") );
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.facebook_id, "") );
@@ -4787,6 +4928,7 @@ void init_ios_settings( GeanyProject* project )
 	project->ipa_settings.prov_profile_path = 0;
 	project->ipa_settings.splash_1136_path = 0;
 	project->ipa_settings.splash_2048_path = 0;
+	project->ipa_settings.splash_2436_path = 0;
 	project->ipa_settings.splash_960_path = 0;
 	project->ipa_settings.uses_ads = 0;
 	project->ipa_settings.version_number = 0;
@@ -4825,6 +4967,7 @@ void free_ios_settings( GeanyProject* project )
 	if ( project->ipa_settings.output_path ) g_free(project->ipa_settings.output_path);
 	if ( project->ipa_settings.prov_profile_path ) g_free(project->ipa_settings.prov_profile_path);
 	if ( project->ipa_settings.splash_1136_path ) g_free(project->ipa_settings.splash_1136_path);
+	if ( project->ipa_settings.splash_2436_path ) g_free(project->ipa_settings.splash_2436_path);
 	if ( project->ipa_settings.splash_2048_path ) g_free(project->ipa_settings.splash_2048_path);
 	if ( project->ipa_settings.splash_960_path ) g_free(project->ipa_settings.splash_960_path);
 	if ( project->ipa_settings.version_number ) g_free(project->ipa_settings.version_number);
@@ -4868,6 +5011,7 @@ void save_ios_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "ipa_settings", "output_path", FALLBACK(project->ipa_settings.output_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "prov_profile_path", FALLBACK(project->ipa_settings.prov_profile_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "splash_1136_path", FALLBACK(project->ipa_settings.splash_1136_path,"") );
+	g_key_file_set_string( config, "ipa_settings", "splash_2436_path", FALLBACK(project->ipa_settings.splash_2436_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "splash_2048_path", FALLBACK(project->ipa_settings.splash_2048_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "splash_960_path", FALLBACK(project->ipa_settings.splash_960_path,"") );
 	g_key_file_set_integer( config, "ipa_settings", "uses_ads", project->ipa_settings.uses_ads );
@@ -4914,6 +5058,7 @@ void load_ios_settings( GKeyFile *config, GeanyProject* project )
 	project->ipa_settings.output_path = g_key_file_get_string( config, "ipa_settings", "output_path", 0 );
 	project->ipa_settings.prov_profile_path = g_key_file_get_string( config, "ipa_settings", "prov_profile_path", 0 );
 	project->ipa_settings.splash_1136_path = g_key_file_get_string( config, "ipa_settings", "splash_1136_path", 0 );
+	project->ipa_settings.splash_2436_path = g_key_file_get_string( config, "ipa_settings", "splash_2436_path", 0 );
 	project->ipa_settings.splash_2048_path = g_key_file_get_string( config, "ipa_settings", "splash_2048_path", 0 );
 	project->ipa_settings.splash_960_path = g_key_file_get_string( config, "ipa_settings", "splash_960_path", 0 );
 	project->ipa_settings.uses_ads = utils_get_setting_integer( config, "ipa_settings", "uses_ads", 0 );

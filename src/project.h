@@ -91,6 +91,7 @@ typedef struct GeanyProjectIPASettings
 	gchar* prov_profile_path;
 	gchar* splash_960_path;
 	gchar* splash_1136_path;
+	gchar* splash_2436_path;
 	gchar* splash_2048_path;
 	int orientation;
 	gchar* version_number;

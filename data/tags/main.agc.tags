@@ -1827,3 +1827,56 @@ SetObjectMeshNormalMapScale||(Integer objID, Integer meshIndex, Float scaleU, Fl
 StartScreenRecording||(String szFilename, Integer microphone)|
 StopScreenRecording||()|
 IsScreenRecording|Integer|()|
+DeleteShader||(Integer shaderID)|
+ActivateSmartWatch||(String szReserved)|
+GetSmartWatchState|Integer|()|
+SendSmartWatchData||(String szJson)|
+ReceiveSmartWatchData|String|()|
+TextToSpeechSetup||()|
+GetTextToSpeechReady|Integer|()|
+Speak||(String text)|
+SetSpeechRate||(Float rate)|
+SetSpeechLanguage||(String lang)|
+IsSpeaking|Integer|()|
+StopSpeaking||()|
+GetSpriteTransparency|Integer|(Integer iSpriteIndex)|
+SetSpriteShape||(Integer iSpriteIndex, Integer shape, Integer shapeID)|
+SetSpriteShapeBox||(Integer iSpriteIndex, Float x, Float y, Float x2, Float y2, Float angle, Integer shapeID)|
+SetSpriteShapeCircle||(Integer iSpriteIndex, Float x, Float y, Float radius, Integer shapeID)|
+SetSpriteShapePolygon||(Integer iSpriteIndex, Integer numPoints, Integer index, Float x, Float y, Integer shapeID)|
+SetSpriteShapeChain||(Integer iSpriteIndex, Integer numPoints, Integer index, Integer loop, Float x, Float y, Integer shapeID)|
+AddSpriteShapeChain||(Integer iSpriteIndex, Integer numPoints, Integer index, Integer loop, Float x, Float y)|
+GetSpriteNumShapes|Integer|(Integer iSpriteIndex)|
+GetSpriteShapeNumVertices|Integer|(Integer iSpriteIndex, Integer shapeID)|
+GetSpriteShapeVertexX|Float|(Integer iSpriteIndex, Integer shapeID, Integer vertex)|
+GetSpriteShapeVertexY|Float|(Integer iSpriteIndex, Integer shapeID, Integer vertex)|
+GetSpritePhysicsCOMX|Float|(Integer iSpriteIndex)|
+GetSpritePhysicsCOMY|Float|(Integer iSpriteIndex)|
+SetSpritePhysicsFriction||(Integer iSpriteIndex, Float friction, Integer shapeID)|
+SetSpritePhysicsRestitution||(Integer iSpriteIndex, Float restitution, Integer shapeID)|
+SetSpritePhysicsDensity||(Integer iSpriteIndex, Float density, Integer shapeID)|
+SetSpritePhysicsIsSensor||(Integer iSpriteIndex, Integer sensor, Integer shapeID)|
+SetSpriteGroup||(Integer iSpriteIndex, Integer group, Integer shapeID)|
+SetSpriteCategoryBits||(Integer iSpriteIndex, Integer categories, Integer shapeID)|
+SetSpriteCategoryBit||(Integer iSpriteIndex, Integer category, Integer flag, Integer shapeID)|
+SetSpriteCollideBits||(Integer iSpriteIndex, Integer mask, Integer shapeID)|
+SetSpriteCollideBit||(Integer iSpriteIndex, Integer category, Integer flag, Integer shapeID)|
+CreateRopeJoint||(Integer iJointIndex, Integer iSpriteIndex1, Integer iSpriteIndex2, Float x, Float y, Float x2, Float y2, Float maxLength, Integer colConnected)|
+CreateRopeJoint|Integer|(Integer iSpriteIndex1, Integer iSpriteIndex2, Float x, Float y, Float x2, Float y2, Float maxLength, Integer colConnected)|
+SetJointMouseMaxForce||(Integer iJointIndex, Float maxForce)|
+SetJointDamping||(Integer iJointIndex, Float dampingRatio, Float frequency)|
+PauseTweenCustom||(Integer tweenID)|
+ResumeTweenCustom||(Integer tweenID)|
+PauseTweenSprite||(Integer tweenID, Integer spriteID)|
+ResumeTweenSprite||(Integer tweenID, Integer spriteID)|
+PauseTweenText||(Integer tweenID, Integer textID)|
+ResumeTweenText||(Integer tweenID, Integer textID)|
+PauseTweenChar||(Integer tweenID, Integer textID, Integer charID)|
+ResumeTweenChar||(Integer tweenID, Integer textID, Integer charID)|
+PauseTweenObject||(Integer tweenID, Integer objectID)|
+ResumeTweenObject||(Integer tweenID, Integer objectID)|
+PauseTweenCamera||(Integer tweenID, Integer cameraID)|
+ResumeTweenCamera||(Integer tweenID, Integer cameraID)|
+GetNetworkExists|Integer|(Integer iNetID)|
+SetObjectBlendModes||(Integer objID, Integer src, Integer dst)|
+GetShaderExists|Integer|(Integer shaderID)|
