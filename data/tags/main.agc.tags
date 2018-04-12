@@ -1880,3 +1880,50 @@ ResumeTweenCamera||(Integer tweenID, Integer cameraID)|
 GetNetworkExists|Integer|(Integer iNetID)|
 SetObjectBlendModes||(Integer objID, Integer src, Integer dst)|
 GetShaderExists|Integer|(Integer shaderID)|
+GetTextAlignment|Integer|(Integer iTextIndex)|
+SetupCloudData||(String reserved)|
+GetCloudDataAllowed|Integer|()|
+GetCloudDataChanged|Integer|()|
+GetCloudDataVariable|String|(String varName, String defaultValue)|
+SetCloudDataVariable||(String varName, String varValue)|
+DeleteCloudDataVariable||(String varName)|
+GetDeviceNetworkType|Integer|()|
+GetStorageRemaining|Integer|(String path)|
+GetStorageTotal|Integer|(String path)|
+CheckPermission|Integer|(String szPermission)|
+RequestPermission||(String szPermission)|
+DrawText||(Integer iTextIndex)|
+SetShadowCascadeValues||(Float cascade1, Float cascade2, Float cascade3)|
+ARSetup||()|
+ARGetStatus|Integer|()|
+ARDestroy||()|
+ARControlCamera||()|
+ARDrawBackground||()|
+ARSetPlaneDetectionMode||(Integer mode)|
+ARSetLightEstimationMode||(Integer mode)|
+ARGetLightEstimate|Float|()|
+ARHitTest|Integer|(Float screenX, Float screenY)|
+ARGetHitTestX|Float|(Integer index)|
+ARGetHitTestY|Float|(Integer index)|
+ARGetHitTestZ|Float|(Integer index)|
+ARGetHitTestNormalX|Float|(Integer index)|
+ARGetHitTestNormalY|Float|(Integer index)|
+ARGetHitTestNormalZ|Float|(Integer index)|
+ARGetHitTestType|Integer|(Integer index)|
+ARHitTestFinish||()|
+ARGetPlanes|Integer|(Integer reserved)|
+ARGetPlaneX|Float|(Integer index)|
+ARGetPlaneY|Float|(Integer index)|
+ARGetPlaneZ|Float|(Integer index)|
+ARGetPlaneAngleX|Float|(Integer index)|
+ARGetPlaneAngleY|Float|(Integer index)|
+ARGetPlaneAngleZ|Float|(Integer index)|
+ARGetPlaneSizeX|Float|(Integer index)|
+ARGetPlaneSizeZ|Float|(Integer index)|
+ARGetPlanesFinish||()|
+ARCreateAnchorFromHitTest|Integer|(Integer index)|
+ARCreateAnchorFromPlane|Integer|(Integer index)|
+ARFixObjectToAnchor||(Integer objID, Integer anchorID)|
+ARGetAnchorStatus|Integer|(Integer anchorID)|
+ARDeleteAnchor||(Integer anchorID)|
+DeleteObjectTree||(Integer objID)|

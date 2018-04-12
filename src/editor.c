@@ -229,7 +229,7 @@ static void add_kb(GKeyFile *keyfile, const gchar *group, gchar **keys)
 
 		if (key == 0 && mods == 0)
 		{
-			g_warning("Can not parse accelerator \"%s\" from user snippets.conf", accel_string);
+			g_warning(_("Can not parse accelerator \"%s\" from user snippets.conf"), accel_string);
 			continue;
 		}
 		gtk_accel_group_connect(snippet_accel_group, key, mods, 0,
@@ -4740,7 +4740,7 @@ static gboolean register_named_icon(ScintillaObject *sci, guint id, const gchar 
 	pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), name, size, 0, &error);
 	if (! pixbuf)
 	{
-		g_warning("failed to load icon '%s': %s", name, error->message);
+		g_warning(_("failed to load icon '%s': %s"), name, error->message);
 		g_error_free(error);
 		return FALSE;
 	}
@@ -4755,7 +4755,7 @@ static gboolean register_named_icon(ScintillaObject *sci, guint id, const gchar 
 		n_channels != 4 ||
 		rowstride != width * n_channels)
 	{
-		g_warning("incompatible image data for icon '%s'", name);
+		g_warning(_("incompatible image data for icon '%s'"), name);
 		g_object_unref(pixbuf);
 		return FALSE;
 	}

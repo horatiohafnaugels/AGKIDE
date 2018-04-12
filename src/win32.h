@@ -74,4 +74,6 @@ gchar *win32_expand_environment_variables(const gchar *str);
 
 gboolean CreateChildProcessASync(gchar *szCmdline, const gchar *dir);
 
+void WaitForProcess( GPid pid );
+
 #endif

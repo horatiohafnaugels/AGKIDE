@@ -38,7 +38,7 @@
 
 #define HEADER "<span size=\"larger\" weight=\"bold\">AppGameKit IDE %s</span>"
 #define INFO "<span size=\"larger\" weight=\"bold\">%s</span>"
-#define CODENAME "<span>Built on Geany 1.24.1</span>"
+#define CODENAME _("<span>Built on Geany 1.24.1</span>")
 #define BUILDDATE "<span size=\"smaller\">%s</span>"
 #define COPYRIGHT _("App Game Kit (c) 2014\nThe Game Creators Ltd. All Rights Reserved.\n\nGeany Copyright (c)  2005-2014\nColomban Wendling\nNick Treleaven\nMatthew Brush\nEnrico Tröger\nFrank Lanitz\nAll rights reserved.")
 
@@ -327,7 +327,7 @@ static GtkWidget *create_dialog(void)
 	gtk_misc_set_alignment(GTK_MISC(pLicenseLabel),0,0.5);
 	gtk_label_set_selectable(GTK_LABEL(pLicenseLabel), TRUE);
 	gtk_label_set_use_markup(GTK_LABEL(pLicenseLabel), TRUE);
-	gtk_label_set_markup(GTK_LABEL(pLicenseLabel), "The following license applies to the IDE only\nThe source code can be found at https://github.com/TheGameCreators/AGKIDE");
+	gtk_label_set_markup(GTK_LABEL(pLicenseLabel), _("The following license applies to the IDE only\nThe source code can be found at https://github.com/TheGameCreators/AGKIDE"));
 	gtk_misc_set_padding(GTK_MISC(pLicenseLabel), 0, 0);
 	gtk_widget_show(pLicenseLabel);
 

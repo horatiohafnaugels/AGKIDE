@@ -3238,7 +3238,7 @@ gboolean document_check_disk_status(GeanyDocument *doc, gboolean force)
 	else if (! use_gio_filemon && /* ignore check when using GIO */
 		doc->priv->mtime > cur_time)
 	{
-		g_warning("%s: Something is wrong with the time stamps.", G_STRFUNC);
+		g_warning(_("%s: Something is wrong with the time stamps."), G_STRFUNC);
 		/* Note: on Windows st.st_mtime can be newer than cur_time */
 	}
 	else if (doc->priv->mtime < st.st_mtime)

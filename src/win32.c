@@ -1591,6 +1591,11 @@ gboolean CreateChildProcessASync(gchar *szCmdline, const gchar* dir)
 	return FALSE;
 }
 
+void WaitForProcess( GPid pid )
+{
+	WaitForSingleObject( pid, INFINITE );
+}
+
 static VOID ReadFromPipe(HANDLE hRead, HANDLE hWrite, HANDLE hFile, GError **error)
 {
 	DWORD dwRead, dwWritten;

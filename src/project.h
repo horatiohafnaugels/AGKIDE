@@ -80,6 +80,7 @@ typedef struct GeanyProjectAPKSettings
 	int version_number;
 	gchar* alias;
 	gchar* firebase_config_path;
+	int arcore;
 }
 GeanyProjectAPKSettings;
 

@@ -858,7 +858,7 @@ static GPid build_spawn_cmd(GeanyDocument *doc, const gchar *cmd, const gchar *d
 				G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL,
 				&(build_info.pid), NULL, &stdout_fd, &stderr_fd, &error))
 		{
-			geany_debug("build command spawning failed: %s", error->message);
+			geany_debug(_("build command spawning failed: %s"), error->message);
 			ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
 			g_strfreev(argv);
 			g_error_free(error);
@@ -1050,7 +1050,7 @@ GPid build_compile_project_spawn_cmd(GeanyProject *project)
 
 			if ( found == 0 )
 			{
-				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to compile project, it must contain a 'main.agc' file in the project directory");
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to compile project, it must contain a 'main.agc' file in the project directory"));
 				ui_set_statusbar(TRUE, _("Failed to compile project, it must contain a 'main.agc' file in the project directory"));
 				return (GPid) 0;
 			}
@@ -1081,7 +1081,7 @@ GPid build_compile_project_spawn_cmd(GeanyProject *project)
 	
 	if ( !g_file_test( path, G_FILE_TEST_EXISTS ) )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Could not find compiler, please check the compiler path in the build options");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Could not find compiler, please check the compiler path in the build options"));
 		ui_set_statusbar(TRUE, _("Could not find compiler, please check the compiler path in the build options"));
 		g_free(path);
 		return (GPid) 0;
@@ -1158,7 +1158,7 @@ GPid build_compile_project_spawn_cmd(GeanyProject *project)
 				G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL,
 				&build_pid, NULL, &stdout_fd, &stderr_fd, &error))
 		{
-			geany_debug("build command spawning failed: %s", error->message);
+			geany_debug(_("build command spawning failed: %s"), error->message);
 			ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
 			g_strfreev(argv);
 			g_error_free(error);
@@ -1207,7 +1207,7 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 
 	if ( local_pid ) 
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to run project locally, project is already running");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to run project locally, project is already running"));
 		ui_set_statusbar(TRUE, _("Failed to run project locally, project is already running"));
 		return (GPid) 0;
 	}
@@ -1252,7 +1252,7 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 
 	if ( !g_file_test( main_path, G_FILE_TEST_EXISTS ) )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to run project locally, program not found");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to run project locally, program not found"));
 		ui_set_statusbar(TRUE, _("Failed to run project locally, program not found"));
 		return (GPid) 0;
 	}
@@ -1284,7 +1284,7 @@ GPid build_run_project_spawn_cmd(GeanyProject *project)
 	{
 		if (! g_spawn_async(working_dir, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &local_pid, &error))
 		{
-			geany_debug("g_spawn_async() failed: %s", error->message);
+			geany_debug(_("g_spawn_async() failed: %s"), error->message);
 			ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
 			g_error_free(error);
 			error = NULL;
@@ -1332,14 +1332,14 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 
 	if ( broadcast_pid ) 
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, broadcaster is already running");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to broadcast project, broadcaster is already running"));
 		ui_set_statusbar(TRUE, _("Failed to broadcast project, broadcaster is already running"));
 		return (GPid) 0;
 	}
 
 	if ( debug_pid ) 
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, debugger is currently running");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to broadcast project, debugger is currently running"));
 		ui_set_statusbar(TRUE, _("Failed to broadcast project, debugger is currently running"));
 		return (GPid) 0;
 	}
@@ -1367,7 +1367,7 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 
 	if ( !g_file_test( main_path, G_FILE_TEST_EXISTS ) )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to broadcast project, broadcaster program not found");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to broadcast project, broadcaster program not found"));
 		ui_set_statusbar(TRUE, _("Failed to broadcast project, broadcaster program not found"));
 		return (GPid) 0;
 	}
@@ -1384,7 +1384,7 @@ GPid build_broadcast_project_spawn_cmd(GeanyProject *project)
 	if (! g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &broadcast_pid, 
 								   &gdb_in.fd, &gdb_out.fd, &gdb_err.fd, &error))
 	{
-		geany_debug("g_spawn_async() failed: %s", error->message);
+		geany_debug(_("g_spawn_async() failed: %s"), error->message);
 		ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
 		g_error_free(error);
 		error = NULL;
@@ -1433,14 +1433,14 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 
 	if ( broadcast_pid ) 
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project, broadcaster is already running");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to debug project, broadcaster is already running"));
 		ui_set_statusbar(TRUE, _("Failed to debug project, broadcaster is already running"));
 		return (GPid) 0;
 	}
 
 	if ( debug_pid ) 
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project, debugger is already running");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to debug project, debugger is already running"));
 		ui_set_statusbar(TRUE, _("Failed to debug project, debugger is already running"));
 		return (GPid) 0;
 	}
@@ -1470,7 +1470,7 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 
 	if ( !g_file_test( main_path, G_FILE_TEST_EXISTS ) )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project, debug broadcaster not found");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to debug project, debug broadcaster not found"));
 		ui_set_statusbar(TRUE, _("Failed to broadcast project, debug broadcaster not found"));
 		return (GPid) 0;
 	}
@@ -1514,7 +1514,7 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 	if ( build_prefs.agk_debug_ip && *build_prefs.agk_debug_ip )
 	{
 		#ifdef AGK_FREE_VERSION
-			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Debugging on remote devices is disabled in the trial version. Remove the debug IP address in the build settings to stop this message");
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Debugging on remote devices is disabled in the trial version. Remove the debug IP address in the build settings to stop this message"));
 		#else
 			debug_local = 0;
 			// debug on remote device
@@ -1531,7 +1531,7 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 	if ( debug_local == 1 )
 	{
 		// set up local interpreter for debugging
-		msgwin_debug_add_string( COLOR_BLUE, "Debugging on local machine, to debug on a device set its IP address in the build options" );
+		msgwin_debug_add_string( COLOR_BLUE, _("Debugging on local machine, to debug on a device set its IP address in the build options"));
 
 		gchar *path1 = 0;
 #ifdef G_OS_WIN32
@@ -1552,7 +1552,7 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 		
 		if ( !g_file_test( path1, G_FILE_TEST_EXISTS ) )
 		{
-			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project locally, interpreter program not found");
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to debug project locally, interpreter program not found"));
 			ui_set_statusbar(TRUE, _("Failed to debug project locally, interpreter program not found"));
 			g_free(path1);
 			return (GPid) 0;
@@ -1567,8 +1567,8 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 
 		if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &debug_pid2, &error))
 		{
-			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project locally, interpreter failed to run");
-			geany_debug("g_spawn_async() failed: %s", error->message);
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to debug project locally, interpreter failed to run"));
+			geany_debug(_("g_spawn_async() failed: %s"), error->message);
 			ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
 			g_error_free(error);
 			error = NULL;
@@ -1598,7 +1598,7 @@ GPid build_debug_project_spawn_cmd(GeanyProject *project)
 		}
 		else
 		{
-			dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Failed to debug project locally, interpreter failed to run");
+			dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Failed to debug project locally, interpreter failed to run"));
 			ui_set_statusbar(TRUE, _("Failed to debug project locally, interpreter failed to run"));
 			return (GPid) 0;
 		}
@@ -1787,7 +1787,7 @@ static GPid build_run_cmd(GeanyDocument *doc, guint cmdindex)
 		{
 			ui_set_statusbar(FALSE,
 		_("Could not execute the file in the VTE because it probably contains a command."));
-			geany_debug("Could not execute the file in the VTE because it probably contains a command.");
+			geany_debug(_("Could not execute the file in the VTE because it probably contains a command."));
 		}
 
 		/* show the VTE */
@@ -1848,7 +1848,7 @@ static GPid build_run_cmd(GeanyDocument *doc, guint cmdindex)
 		if (! g_spawn_async(working_dir, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD,
 							NULL, NULL, &(run_info[cmdindex].pid), &error))
 		{
-			geany_debug("g_spawn_async() failed: %s", error->message);
+			geany_debug(_("g_spawn_async() failed: %s"), error->message);
 			ui_set_statusbar(TRUE, _("Process failed (%s)"), error->message);
 			g_error_free(error);
 			script_path = g_build_filename(working_dir, RUN_SCRIPT_CMD, NULL);
@@ -2170,7 +2170,7 @@ gboolean build_parse_make_dir(const gchar *string, gchar **prefix)
 	if (string == NULL)
 		return FALSE;
 
-	if ((pos = strstr(string, "Entering directory")) != NULL)
+	if ((pos = strstr(string, _("Entering directory"))) != NULL)
 	{
 		gsize len;
 		gchar *input;
@@ -2192,7 +2192,7 @@ gboolean build_parse_make_dir(const gchar *string, gchar **prefix)
 		return TRUE;
 	}
 
-	if (strstr(string, "Leaving directory") != NULL)
+	if (strstr(string, _("Leaving directory")) != NULL)
 	{
 		*prefix = NULL;
 		return TRUE;
@@ -2849,24 +2849,24 @@ void update_build_menu3()
 
 	if ( !app->project || !app->project->name ) 
 	{
-		gtk_action_set_tooltip(widgets.compile_action,"You must open a project before you can compile");
-		gtk_action_set_tooltip(widgets.run_action,"You must open a project before you can run");
-		gtk_action_set_tooltip(widgets.broadcast_action,"You must open a project before you can broadcast");
-		gtk_action_set_tooltip(widgets.debug_action,"You must open a project before you can debug");
+		gtk_action_set_tooltip(widgets.compile_action,_("You must open a project before you can compile"));
+		gtk_action_set_tooltip(widgets.run_action,_("You must open a project before you can run"));
+		gtk_action_set_tooltip(widgets.broadcast_action,_("You must open a project before you can broadcast"));
+		gtk_action_set_tooltip(widgets.debug_action,_("You must open a project before you can debug"));
 	}
 	else 
 	{
 		gchar tooltip_text[ 256 ];
-		g_sprintf( tooltip_text, "Compile the project '%s'", app->project->name );
+		g_sprintf( tooltip_text, _("Compile the project '%s'"), app->project->name );
 		gtk_action_set_tooltip(widgets.compile_action,tooltip_text);
 	
-		g_sprintf( tooltip_text, "Run the project '%s' on the local machine", app->project->name );
+		g_sprintf( tooltip_text, _("Run the project '%s' on the local machine"), app->project->name );
 		gtk_action_set_tooltip(widgets.run_action,tooltip_text);
 
-		g_sprintf( tooltip_text, "Broadcast the project '%s' to any listening devices", app->project->name );
+		g_sprintf( tooltip_text, _("Broadcast the project '%s' to any listening devices"), app->project->name );
 		gtk_action_set_tooltip(widgets.broadcast_action,tooltip_text);
 
-		g_sprintf( tooltip_text, "Debug the project '%s' on a particular device", app->project->name );
+		g_sprintf( tooltip_text, _("Debug the project '%s' on a particular device"), app->project->name );
 		gtk_action_set_tooltip(widgets.debug_action,tooltip_text);
 	}
 

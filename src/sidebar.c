@@ -407,7 +407,7 @@ static void prepare_debug_tab(void)
 	gtk_tree_view_column_pack_start(column, text_renderer, FALSE);
 	gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
 	gtk_tree_view_column_set_attributes(column, text_renderer, "text", 0, NULL);
-	gtk_tree_view_column_set_title(column, "Variable");
+	gtk_tree_view_column_set_title(column, _("Variable"));
 	gtk_tree_view_column_set_alignment(column, 0.5);
 	gtk_tree_view_column_set_min_width(column, 75);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tv.debug_variables), column);
@@ -421,7 +421,7 @@ static void prepare_debug_tab(void)
 	column = gtk_tree_view_column_new();
 	gtk_tree_view_column_pack_start(column, text_renderer2, TRUE);
 	gtk_tree_view_column_set_attributes(column, text_renderer2, "text", 1, NULL);
-	gtk_tree_view_column_set_title(column, "Value");
+	gtk_tree_view_column_set_title(column, _("Value"));
 	gtk_tree_view_column_set_alignment(column, 0.5);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tv.debug_variables), column);
 
@@ -1663,13 +1663,13 @@ static void documents_menu_update(GtkTreeSelection *selection)
 		if ( project )
 		{
 			gtk_widget_hide(doc_items.add_item);
-			if ( type == 0 || type == 2 ) gtk_menu_item_set_label( GTK_MENU_ITEM(doc_items.remove_item), "Remove From Project" );
-			else if ( type == 1 ) gtk_menu_item_set_label( GTK_MENU_ITEM(doc_items.remove_item), "Close Project" );
+			if ( type == 0 || type == 2 ) gtk_menu_item_set_label( GTK_MENU_ITEM(doc_items.remove_item), _("Remove From Project") );
+			else if ( type == 1 ) gtk_menu_item_set_label( GTK_MENU_ITEM(doc_items.remove_item), _("Close Project") );
 		}
 		else 
 		{
 			gtk_widget_show(doc_items.add_item);
-			gtk_menu_item_set_label( GTK_MENU_ITEM(doc_items.remove_item), "Close Document" );
+			gtk_menu_item_set_label( GTK_MENU_ITEM(doc_items.remove_item), _("Close Document") );
 		}
 			
 		gtk_widget_set_sensitive(doc_items.expand_all, TRUE);

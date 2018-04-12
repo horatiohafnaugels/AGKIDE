@@ -135,7 +135,7 @@ G_MODULE_EXPORT gboolean on_exit_clicked(GtkWidget *widget, gpointer gdata)
 {
 	if ( install_thread_running && install_thread )
 	{
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Cannot quit whilst an update is in progress, please wait");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Cannot quit whilst an update is in progress, please wait"));
 		return TRUE;
 	}
 
@@ -273,8 +273,8 @@ G_MODULE_EXPORT void on_file1_activate(GtkMenuItem *menuitem, gpointer user_data
 
 	gchar close_text[50];
 	gchar export_text[50];
-	strcpy( close_text, "_Close Project" );
-	strcpy( export_text, "E_xport Project" );
+	strcpy( close_text, _("_Close Project") );
+	strcpy( export_text, _("E_xport Project") );
 	if ( app->project && app->project->name )
 	{
 		strcat( close_text, " '" );
@@ -852,6 +852,8 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), FALSE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), TRUE );
 	}
 	else if ( strcmp( text, "Amazon" ) == 0 )
 	{
@@ -867,6 +869,8 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), TRUE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), FALSE );
 	}
 	else if ( strcmp( text, "Ouya" ) == 0 )
 	{
@@ -882,6 +886,29 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), FALSE );
+
+		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), FALSE );
+	}
+}
+
+G_MODULE_EXPORT void on_android_arcore_combo_changed( GtkComboBox *combo, gpointer data )
+{
+	gchar *text = gtk_combo_box_text_get_active_text( GTK_COMBO_BOX_TEXT(combo) );
+	if ( !text ) return;
+	if ( strcmp( text, "Required" ) == 0 )
+	{
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 8 ); 
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera")), 1 );
+	}
+	else if ( strcmp( text, "Optional" ) == 0 )
+	{
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 0 ); 
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera")), 1 );
+	}
+	else
+	{
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 0 ); 
+		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera")), 0 );
 	}
 }
 
@@ -2032,7 +2059,7 @@ G_MODULE_EXPORT void on_project_export_html5_activate(GtkMenuItem *menuitem, gpo
 	on_show_trial_dialog();
 #else
 	#ifdef __arm__
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Unfortunately exporting is not supported on Raspberry Pi");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Unfortunately exporting is not supported on Raspberry Pi"));
 	#else
 		project_export_html5();
 	#endif
@@ -2046,7 +2073,7 @@ G_MODULE_EXPORT void on_project_export_apk_activate(GtkMenuItem *menuitem, gpoin
 	on_show_trial_dialog();
 #else
 	#ifdef __arm__
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Unfortunately exporting is not supported on Raspberry Pi");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Unfortunately exporting is not supported on Raspberry Pi"));
 	#else
 		GdkEvent* event = gtk_get_current_event();
 		int shift = 0;
@@ -2068,10 +2095,10 @@ G_MODULE_EXPORT void on_project_export_apk_activate(GtkMenuItem *menuitem, gpoin
 G_MODULE_EXPORT void on_menu_tools_android_keystore_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 #ifdef AGK_FREE_VERSION
-	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Generating a keystore is not available in the trial version");
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Generating a keystore is not available in the trial version"));
 #else
 	#ifdef __arm__
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Unfortunately generating a keystore is not supported on Raspberry Pi");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Unfortunately generating a keystore is not supported on Raspberry Pi"));
 	#else
 		project_generate_keystore();
 	#endif
@@ -2081,7 +2108,7 @@ G_MODULE_EXPORT void on_menu_tools_android_keystore_activate(GtkMenuItem *menuit
 G_MODULE_EXPORT void on_project_export_ipa_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 #ifndef __APPLE__
-	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting to IPA is only possible on Mac");
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Exporting to IPA is only possible on Mac"));
 #else
 	#ifdef AGK_FREE_VERSION
 		//dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting is not available in the trial version");
@@ -2089,7 +2116,7 @@ G_MODULE_EXPORT void on_project_export_ipa_activate(GtkMenuItem *menuitem, gpoin
 	#else
 		if ( !app->project )
 		{
-			dialogs_show_msgbox(GTK_MESSAGE_ERROR, "You must have a project open to export it");
+			dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("You must have a project open to export it"));
 			return;
 		}
 
@@ -2101,10 +2128,10 @@ G_MODULE_EXPORT void on_project_export_ipa_activate(GtkMenuItem *menuitem, gpoin
 G_MODULE_EXPORT void on_menu_tools_ios_export_player_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 #ifndef __APPLE__
-	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Exporting to IPA is only possible on Mac");
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Exporting to IPA is only possible on Mac"));
 #else
 	#ifdef AGK_FREE_VERSION
-		dialogs_show_msgbox(GTK_MESSAGE_WARNING, "iOS player is not available in the trial version");
+		dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("iOS player is not available in the trial version"));
 	#else
 		GeanyProject *curr_project = app->project;
 		app->project = NULL;
@@ -2117,7 +2144,7 @@ G_MODULE_EXPORT void on_menu_tools_ios_export_player_activate(GtkMenuItem *menui
 G_MODULE_EXPORT void on_menu_tools_android_browse_to_player_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 #ifdef AGK_FREE_VERSION
-	dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Android player is not available in the trial version");
+	dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Android player is not available in the trial version"));
 #else
 	#ifdef G_OS_WIN32
 		gchar *filepath = g_build_filename( app->datadir, "../../../Players/Android", NULL );
@@ -2150,7 +2177,7 @@ G_MODULE_EXPORT void on_menu_tools_install_files_activate(GtkMenuItem *menuitem,
 	if (ui_widgets.install_dialog == NULL)
 	{
 		ui_widgets.install_dialog = create_install_dialog();
-		gtk_widget_set_name(ui_widgets.install_dialog, "Install Additional Files");
+		gtk_widget_set_name(ui_widgets.install_dialog, _("Install Additional Files"));
 		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.install_dialog), GTK_WINDOW(main_widgets.window));
 
 		g_signal_connect(ui_widgets.install_dialog, "response", G_CALLBACK(on_install_dialog_response), NULL);
@@ -2406,10 +2433,10 @@ G_MODULE_EXPORT void on_menu_build3_activate(GtkMenuItem *menuitem, gpointer use
 	gchar run_text[40];
 	gchar broadcast_text[50];
 	gchar debug_text[40];
-	strcpy( compile_text, "_Compile" );
-	strcpy( run_text, exec_running ? "Stop _Running" : "_Run" );
-	strcpy( broadcast_text, broadcast_running ? "Stop _Broadcasting" : "_Broadcast" );
-	strcpy( debug_text, debug_running ? "Stop _Debugging" : "_Debug" );
+	strcpy( compile_text, _("_Compile") );
+	strcpy( run_text, exec_running ? _("Stop _Running") : _("_Run") );
+	strcpy( broadcast_text, broadcast_running ? _("Stop _Broadcasting") : _("_Broadcast") );
+	strcpy( debug_text, debug_running ? _("Stop _Debugging") : _("_Debug") );
 	if ( app->project && app->project->name )
 	{
 		strcat( compile_text, " '" );

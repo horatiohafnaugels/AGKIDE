@@ -511,8 +511,8 @@ static void on_html5_dialog_response(GtkDialog *dialog, gint response, gpointer 
 
 		// START CHECKS
 
-		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your HTML5 files"); goto html5_dialog_clean_up; }
-		if ( commands_mode < 0 ) { SHOW_ERR("Unrecognised choice for 'commands used' drop down box"); goto html5_dialog_clean_up; }
+		if ( !output_file || !*output_file ) { SHOW_ERR(_("You must choose an output location to save your HTML5 files")); goto html5_dialog_clean_up; }
+		if ( commands_mode < 0 ) { SHOW_ERR(_("Unrecognised choice for 'commands used' drop down box")); goto html5_dialog_clean_up; }
 
 		goto html5_dialog_continue;
 
@@ -563,7 +563,7 @@ html5_dialog_continue:
 				
 		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
 		{
-			SHOW_ERR( "Failed to copy source folder" );
+			SHOW_ERR( _("Failed to copy source folder") );
 			goto html5_dialog_cleanup2;
 		}
 
@@ -575,7 +575,7 @@ html5_dialog_continue:
 		pHTML5File = fopen( html5data_file, "wb" );
 		if ( !pHTML5File )
 		{
-			SHOW_ERR( "Failed to open HTML5 data file for writing" );
+			SHOW_ERR( _("Failed to open HTML5 data file for writing") );
 			goto html5_dialog_cleanup2;
 		}
 
@@ -593,7 +593,7 @@ html5_dialog_continue:
 				fclose( pHTML5File );
 				pHTML5File = 0;
 
-				SHOW_ERR( "Failed to write HTML5 data file" );
+				SHOW_ERR( _("Failed to write HTML5 data file") );
 				goto html5_dialog_cleanup2;
 			}
 		}
@@ -616,7 +616,7 @@ html5_dialog_continue:
 
 		if ( !g_file_get_contents( agkplayer_file, &contents, &length, &error ) )
 		{
-			SHOW_ERR1( "Failed to read AGKPlayer.js file: %s", error->message );
+			SHOW_ERR1( _("Failed to read AGKPlayer.js file: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto html5_dialog_cleanup2;
@@ -643,7 +643,7 @@ html5_dialog_continue:
 		}
 		else
 		{
-			SHOW_ERR( "AGKPlayer.js is corrupt, it is missing the %%ADDITIONALFOLDERS%% variable" );
+			SHOW_ERR( _("AGKPlayer.js is corrupt, it is missing the %%ADDITIONALFOLDERS%% variable") );
 			goto html5_dialog_cleanup2;
 		}
 
@@ -661,7 +661,7 @@ html5_dialog_continue:
 		}
 		else
 		{
-			SHOW_ERR( "AGKPlayer.js is corrupt, it is missing the %%LOADPACKAGE%% variable" );
+			SHOW_ERR( _("AGKPlayer.js is corrupt, it is missing the %%LOADPACKAGE%% variable") );
 			goto html5_dialog_cleanup2;
 		}
 
@@ -671,7 +671,7 @@ html5_dialog_continue:
 		// write new AGKPlayer.js file
 		if ( !g_file_set_contents( agkplayer_file, newcontents, strlen(newcontents), &error ) )
 		{
-			SHOW_ERR1( "Failed to write AGKPlayer.js file: %s", error->message );
+			SHOW_ERR1( _("Failed to write AGKPlayer.js file: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto html5_dialog_cleanup2;
@@ -773,12 +773,12 @@ html5_dialog_continue:
 		/*
 		if ( !mz_zip_writer_finalize_archive( &zip_archive ) )
 		{
-			SHOW_ERR( "Failed to finalize zip file" );
+			SHOW_ERR( _("Failed to finalize zip file") );
 			goto html5_dialog_cleanup2;
 		}
 		if ( !mz_zip_writer_end( &zip_archive ) )
 		{
-			SHOW_ERR( "Failed to end zip file" );
+			SHOW_ERR( _("Failed to end zip file") );
 			goto html5_dialog_cleanup2;
 		}
 		*/
@@ -820,7 +820,7 @@ void project_export_html5()
 
 	if ( !app->project ) 
 	{
-		SHOW_ERR( "You must have a project open to export it" );
+		SHOW_ERR( _("You must have a project open to export it") );
 		return;
 	}
 
@@ -830,7 +830,7 @@ void project_export_html5()
 	if (ui_widgets.html5_dialog == NULL)
 	{
 		ui_widgets.html5_dialog = create_html5_dialog();
-		gtk_widget_set_name(ui_widgets.html5_dialog, "Export HTML5");
+		gtk_widget_set_name(ui_widgets.html5_dialog, _("Export HTML5"));
 		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.html5_dialog), GTK_WINDOW(main_widgets.window));
 
 		g_signal_connect(ui_widgets.html5_dialog, "response", G_CALLBACK(on_html5_dialog_response), NULL);
@@ -913,10 +913,26 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		else if ( strcmp(app_orientation,"All") == 0 ) app->project->apk_settings.orientation = 2;
 		g_free(app_orientation);
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo");
+		gchar *app_arcore = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		app->project->apk_settings.arcore = 0;
+		if ( strcmp(app_arcore,"Optional") == 0 ) app->project->apk_settings.arcore = 1;
+		else if ( strcmp(app_arcore,"Required") == 0 ) app->project->apk_settings.arcore = 2;
+		g_free(app_arcore);
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->apk_settings.sdk_version = 0;
-		if ( strcmp(app_sdk,"4.0.3") == 0 ) app->project->apk_settings.sdk_version = 1;
+		app->project->apk_settings.sdk_version = 1; // 4.0.3
+		if ( strcmp(app_sdk,"4.1") == 0 ) app->project->apk_settings.sdk_version = 2;
+		if ( strcmp(app_sdk,"4.2") == 0 ) app->project->apk_settings.sdk_version = 3;
+		if ( strcmp(app_sdk,"4.3") == 0 ) app->project->apk_settings.sdk_version = 4;
+		if ( strcmp(app_sdk,"4.4") == 0 ) app->project->apk_settings.sdk_version = 5;
+		if ( strcmp(app_sdk,"5.0") == 0 ) app->project->apk_settings.sdk_version = 6;
+		if ( strcmp(app_sdk,"5.1") == 0 ) app->project->apk_settings.sdk_version = 7;
+		if ( strcmp(app_sdk,"6.0") == 0 ) app->project->apk_settings.sdk_version = 8;
+		if ( strcmp(app_sdk,"7.0") == 0 ) app->project->apk_settings.sdk_version = 9;
+		if ( strcmp(app_sdk,"7.1") == 0 ) app->project->apk_settings.sdk_version = 10;
+		if ( strcmp(app_sdk,"8.0") == 0 ) app->project->apk_settings.sdk_version = 11;
 		g_free(app_sdk);
 				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
@@ -1031,10 +1047,27 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		gchar szOrientation[ 20 ];
 		sprintf( szOrientation, "%d", orientation );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo");
+		gchar *app_arcore = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int arcore_mode = 0;
+		if ( strcmp(app_arcore,"Optional") == 0 ) arcore_mode = 1;
+		else if ( strcmp(app_arcore,"Required") == 0 ) arcore_mode = 2;
+		g_free(app_arcore);
+		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		int sdk = 10;
 		if ( strcmp(app_sdk,"4.0.3") == 0 ) sdk = 15;
+		if ( strcmp(app_sdk,"4.1") == 0 ) sdk = 16;
+		if ( strcmp(app_sdk,"4.2") == 0 ) sdk = 17;
+		if ( strcmp(app_sdk,"4.3") == 0 ) sdk = 18;
+		if ( strcmp(app_sdk,"4.4") == 0 ) sdk = 19;
+		if ( strcmp(app_sdk,"5.0") == 0 ) sdk = 21;
+		if ( strcmp(app_sdk,"5.1") == 0 ) sdk = 22;
+		if ( strcmp(app_sdk,"6.0") == 0 ) sdk = 23;
+		if ( strcmp(app_sdk,"7.0") == 0 ) sdk = 24;
+		if ( strcmp(app_sdk,"7.1") == 0 ) sdk = 25;
+		if ( strcmp(app_sdk,"8.0") == 0 ) sdk = 26;
 		g_free(app_sdk);
 		gchar szSDK[ 20 ];
 		sprintf( szSDK, "%d", sdk );
@@ -1142,12 +1175,12 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		// START CHECKS
 
-		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your APK"); goto android_dialog_clean_up; }
-		if ( strchr(output_file, '.') == 0 ) { SHOW_ERR("The output location must be a file not a directory"); goto android_dialog_clean_up; }
+		if ( !output_file || !*output_file ) { SHOW_ERR(_("You must choose an output location to save your APK")); goto android_dialog_clean_up; }
+		if ( strchr(output_file, '.') == 0 ) { SHOW_ERR(_("The output location must be a file not a directory")); goto android_dialog_clean_up; }
 
 		// check app name
-		if ( !app_name || !*app_name ) { SHOW_ERR("You must enter an app name"); goto android_dialog_clean_up; }
-		if ( strlen(app_name) > 30 ) { SHOW_ERR("App name must be less than 30 characters"); goto android_dialog_clean_up; }
+		if ( !app_name || !*app_name ) { SHOW_ERR(_("You must enter an app name")); goto android_dialog_clean_up; }
+		if ( strlen(app_name) > 30 ) { SHOW_ERR(_("App name must be less than 30 characters")); goto android_dialog_clean_up; }
 		for( i = 0; i < strlen(app_name); i++ )
 		{
 			/*
@@ -1158,30 +1191,30 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			  && app_name[i] != 45
 			  && app_name[i] != 95 ) 
 			{ 
-				SHOW_ERR("App name contains invalid characters, must be A-Z, 0-9, dash, spaces, and undersore only"); 
+				SHOW_ERR(_("App name contains invalid characters, must be A-Z, 0-9, dash, spaces, and undersore only")); 
 				goto android_dialog_clean_up; 
 			}
 			*/
 			//switch to black list
 			if ( app_name[i] == 34 || app_name[i] == 60 || app_name[i] == 62 || app_name[i] == 39 )
 			{
-				SHOW_ERR("App name contains invalid characters, it must not contain quotes or < > characters."); 
+				SHOW_ERR(_("App name contains invalid characters, it must not contain quotes or < > characters.")); 
 				goto android_dialog_clean_up; 
 			}
 		}
 		
 		// check package name
-		if ( !package_name || !*package_name ) { SHOW_ERR("You must enter a package name"); goto android_dialog_clean_up; }
-		if ( strlen(package_name) > 100 ) { SHOW_ERR("Package name must be less than 100 characters"); goto android_dialog_clean_up; }
-		if ( strchr(package_name,'.') == NULL ) { SHOW_ERR("Package name must contain at least one dot character"); goto android_dialog_clean_up; }
-		if ( package_name[0] == '.' || package_name[strlen(package_name)-1] == '.' ) { SHOW_ERR("Package name must not begin or end with a dot"); goto android_dialog_clean_up; }
+		if ( !package_name || !*package_name ) { SHOW_ERR(_("You must enter a package name")); goto android_dialog_clean_up; }
+		if ( strlen(package_name) > 100 ) { SHOW_ERR(_("Package name must be less than 100 characters")); goto android_dialog_clean_up; }
+		if ( strchr(package_name,'.') == NULL ) { SHOW_ERR(_("Package name must contain at least one dot character")); goto android_dialog_clean_up; }
+		if ( package_name[0] == '.' || package_name[strlen(package_name)-1] == '.' ) { SHOW_ERR(_("Package name must not begin or end with a dot")); goto android_dialog_clean_up; }
 
 		gchar last = 0;
 		for( i = 0; i < strlen(package_name); i++ )
 		{
 			if ( last == '.' && (package_name[i] < 65 || package_name[i] > 90) && (package_name[i] < 97 || package_name[i] > 122) )
 			{
-				SHOW_ERR("Package name invalid, a dot must be followed by a letter");
+				SHOW_ERR(_("Package name invalid, a dot must be followed by a letter"));
 				goto android_dialog_clean_up; 
 			}
 
@@ -1191,7 +1224,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			  && package_name[i] != 46 // .
 			  && package_name[i] != 95 ) // _
 			{ 
-				SHOW_ERR("Package name contains invalid characters, must be A-Z 0-9 . and undersore only"); 
+				SHOW_ERR(_("Package name contains invalid characters, must be A-Z 0-9 . and undersore only")); 
 				goto android_dialog_clean_up; 
 			}
 
@@ -1199,31 +1232,31 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		}
 
 		// check icon
-		//if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto android_dialog_clean_up; }
+		//if ( !app_icon || !*app_icon ) { SHOW_ERR(_("You must select an app icon")); goto android_dialog_clean_up; }
 		if ( app_icon && *app_icon )
 		{
-			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto android_dialog_clean_up; }
-			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto android_dialog_clean_up; }
+			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("App icon must be a PNG file")); goto android_dialog_clean_up; }
+			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find app icon location")); goto android_dialog_clean_up; }
 		}
 
 		if ( notif_icon && *notif_icon )
 		{
-			if ( !strrchr( notif_icon, '.' ) || utils_str_casecmp( strrchr( notif_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("Notification icon must be a PNG file"); goto android_dialog_clean_up; }
-			if ( !g_file_test( notif_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find notification icon location"); goto android_dialog_clean_up; }
+			if ( !strrchr( notif_icon, '.' ) || utils_str_casecmp( strrchr( notif_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Notification icon must be a PNG file")); goto android_dialog_clean_up; }
+			if ( !g_file_test( notif_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find notification icon location")); goto android_dialog_clean_up; }
 		}
 
 		if ( app_type == 2 )
 		{
-			if ( !ouya_icon || !*ouya_icon ) { SHOW_ERR("You must select an Ouya large icon"); goto android_dialog_clean_up; }
-			if ( !strrchr( ouya_icon, '.' ) || utils_str_casecmp( strrchr( ouya_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("Ouya large icon must be a PNG file"); goto android_dialog_clean_up; }
-			if ( !g_file_test( ouya_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find ouya large icon location"); goto android_dialog_clean_up; }
+			if ( !ouya_icon || !*ouya_icon ) { SHOW_ERR(_("You must select an Ouya large icon")); goto android_dialog_clean_up; }
+			if ( !strrchr( ouya_icon, '.' ) || utils_str_casecmp( strrchr( ouya_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Ouya large icon must be a PNG file")); goto android_dialog_clean_up; }
+			if ( !g_file_test( ouya_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find ouya large icon location")); goto android_dialog_clean_up; }
 		}
 
 		// check firebase config file
 		if ( firebase_config && *firebase_config )
 		{
-			if ( !strrchr( firebase_config, '.' ) || utils_str_casecmp( strrchr( firebase_config, '.' ), ".json" ) != 0 ) { SHOW_ERR("Google services config file must be a .json file"); goto android_dialog_clean_up; }
-			if ( !g_file_test( firebase_config, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find Google services config file"); goto android_dialog_clean_up; }
+			if ( !strrchr( firebase_config, '.' ) || utils_str_casecmp( strrchr( firebase_config, '.' ), ".json" ) != 0 ) { SHOW_ERR(_("Google services config file must be a .json file")); goto android_dialog_clean_up; }
+			if ( !g_file_test( firebase_config, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find Google services config file")); goto android_dialog_clean_up; }
 		}
 				
 		// check version
@@ -1233,7 +1266,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			{
 				if ( (version_number[i] < 48 || version_number[i] > 57) && version_number[i] != 46 ) 
 				{ 
-					SHOW_ERR("Version name contains invalid characters, must be 0-9 and . only"); 
+					SHOW_ERR(_("Version name contains invalid characters, must be 0-9 and . only")); 
 					goto android_dialog_clean_up; 
 				}
 			}
@@ -1242,21 +1275,21 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		// check keystore
 		if ( keystore_file && *keystore_file )
 		{
-			if ( !g_file_test( keystore_file, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find keystore file location"); goto android_dialog_clean_up; }
+			if ( !g_file_test( keystore_file, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find keystore file location")); goto android_dialog_clean_up; }
 		}
 
 		// check passwords
-		if ( keystore_password && strchr(keystore_password,'"') ) { SHOW_ERR("Keystore password cannot contain double quotes"); goto android_dialog_clean_up; }
-		if ( alias_password && strchr(alias_password,'"') ) { SHOW_ERR("Alias password cannot contain double quotes"); goto android_dialog_clean_up; }
+		if ( keystore_password && strchr(keystore_password,'"') ) { SHOW_ERR(_("Keystore password cannot contain double quotes")); goto android_dialog_clean_up; }
+		if ( alias_password && strchr(alias_password,'"') ) { SHOW_ERR(_("Alias password cannot contain double quotes")); goto android_dialog_clean_up; }
 
 		if ( keystore_file && *keystore_file )
 		{
-			if ( !keystore_password || !*keystore_password ) { SHOW_ERR("You must enter your keystore password when using your own keystore"); goto android_dialog_clean_up; }
+			if ( !keystore_password || !*keystore_password ) { SHOW_ERR(_("You must enter your keystore password when using your own keystore")); goto android_dialog_clean_up; }
 		}
 
 		if ( alias_name && *alias_name )
 		{
-			if ( !alias_password || !*alias_password ) { SHOW_ERR("You must enter your alias password when using a custom alias"); goto android_dialog_clean_up; }
+			if ( !alias_password || !*alias_password ) { SHOW_ERR(_("You must enter your alias password when using a custom alias")); goto android_dialog_clean_up; }
 		}
 
 		goto android_dialog_continue;
@@ -1291,18 +1324,24 @@ android_dialog_continue:
 
 		// CHECKS COMPLETE, START EXPORT
 
-		const char* androidJar = "android23.jar";
+		const char* androidJar = "android26.jar";
 		//if ( app_type == 0 ) androidJar = "android21.jar";
 
 #ifdef G_OS_WIN32
-		gchar* path_to_aapt = g_build_path( "/", app->datadir, "android", "aapt.exe", NULL );
-		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", androidJar, NULL );
-		gchar* path_to_jarsigner = g_build_path( "/", app->datadir, "android", "jre", "bin", "jarsigner.exe", NULL );
-		gchar* path_to_zipalign = g_build_path( "/", app->datadir, "android", "zipalign.exe", NULL );
+		gchar* path_to_aapt2 = g_build_path( "\\", app->datadir, "android", "aapt2.exe", NULL );
+		gchar* path_to_android_jar = g_build_path( "\\", app->datadir, "android", androidJar, NULL );
+		gchar* path_to_jarsigner = g_build_path( "\\", app->datadir, "android", "jre", "bin", "jarsigner.exe", NULL );
+		gchar* path_to_zipalign = g_build_path( "\\", app->datadir, "android", "zipalign.exe", NULL );
+
+		// convert forward slashes to backward slashes for parameters that will be passed to aapt2
+		gchar *pathPtr = path_to_android_jar;
+		while( *pathPtr ) { if ( *pathPtr == '/' ) *pathPtr = '\\'; pathPtr++; }
+
+		pathPtr = output_file;
+		while( *pathPtr ) { if ( *pathPtr == '/' ) *pathPtr = '\\'; pathPtr++; }
 #else
-        gchar* path_to_aapt = g_build_path( "/", app->datadir, "android", "aapt", NULL );
+		gchar* path_to_aapt2 = g_build_path( "/", app->datadir, "android", "aapt2", NULL );
 		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", androidJar, NULL );
-		//gchar* path_to_jarsigner = g_build_path( "/", "/usr", "bin", "jarsigner", NULL );
         gchar* path_to_jarsigner = g_build_path( "/", app->datadir, "android", "jre", "bin", "jarsigner", NULL );
 		gchar* path_to_zipalign = g_build_path( "/", app->datadir, "android", "zipalign", NULL );
 #endif
@@ -1351,7 +1390,7 @@ android_dialog_continue:
 			}
 		}
 
-#define AGK_NEW_CONTENTS_SIZE 150000
+#define AGK_NEW_CONTENTS_SIZE 1000000
 
 		// declarations
 		gchar *newcontents = g_new0( gchar, AGK_NEW_CONTENTS_SIZE );
@@ -1378,14 +1417,12 @@ android_dialog_continue:
 		gchar *zip_add_file = 0;
 		gchar *str_out = NULL;
 		gsize resLength = 0;
-		gchar* aapt_output = 0;
-		gchar* aapt_error = 0;
 		gint package_count = 0;
 		gint package_index = 0;
 
 		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
 		{
-			SHOW_ERR( "Failed to copy source folder" );
+			SHOW_ERR( _("Failed to copy source folder") );
 			goto android_dialog_cleanup2;
 		}
 
@@ -1397,7 +1434,7 @@ android_dialog_continue:
 
 		if ( !g_file_get_contents( manifest_file, &contents, &length, NULL ) )
 		{
-			SHOW_ERR( "Failed to read AndroidManifest.xml file" );
+			SHOW_ERR( _("Failed to read AndroidManifest.xml file") );
 			goto android_dialog_cleanup2;
 		}
 
@@ -1420,7 +1457,8 @@ android_dialog_continue:
 			
 		strcat( newcontents, "\" android:targetSdkVersion=\"" );
 		if ( app_type == 0 )
-			strcat( newcontents, "22" );
+			if ( sdk < 22 ) strcat( newcontents, "22" );
+			else strcat( newcontents, szSDK );
 		else
 			strcat( newcontents, "15" );
 		strcat( newcontents, "\" />\n\n" );
@@ -1488,12 +1526,7 @@ android_dialog_continue:
 			contents3 += strlen("<!--GOOGLE_PLAY_APPLICATION_ID-->");
 
 			strcat( newcontents, contents2 );
-			strcat( newcontents, "<meta-data android:name=\"com.google.android.gms.games.APP_ID\" android:value=\"\\ " );
-			if ( google_play_app_id && *google_play_app_id )
-				strcat( newcontents, google_play_app_id );
-			else
-				strcat( newcontents, "900475732431" );
-			strcat( newcontents, "\" />" );
+			strcat( newcontents, "<meta-data android:name=\"com.google.android.gms.games.APP_ID\" android:value=\"@string/games_app_id\" />" );
 			contents2 = contents3;
 		}
 
@@ -1543,6 +1576,18 @@ android_dialog_continue:
 
 		// write the rest of the manifest file
 		strcat( newcontents, contents2 );
+
+		// Google sign in
+		if ( app_type == 0 )
+		{
+			strcat( newcontents, "\n<activity android:name=\"com.google.android.gms.auth.api.signin.internal.SignInHubActivity\"\n\
+            android:excludeFromRecents=\"true\"\n\
+            android:exported=\"false\"\n\
+            android:theme=\"@android:style/Theme.Translucent.NoTitleBar\" />\n\
+        <service android:name=\"com.google.android.gms.auth.api.signin.RevocationBoundService\"\n\
+            android:exported=\"true\"\n\
+            android:permission=\"com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION\" />\n" );
+		}
 
 		// IAP Purchase Activity
 		if ( permission_billing && app_type == 0 )
@@ -1610,12 +1655,32 @@ android_dialog_continue:
         </service>" );
 		}
 
+		// arcore activity
+		if ( arcore_mode > 0 )
+		{
+			strcat( newcontents, "\n\
+		<meta-data android:name=\"com.google.ar.core\" android:value=\"");
+			if ( arcore_mode == 1 ) strcat( newcontents, "optional" );
+			else strcat( newcontents, "required" );
+			strcat( newcontents, "\" />\n\
+		<meta-data android:name=\"com.google.ar.core.min_apk_version\" android:value=\"180129103\" />\n\
+		<meta-data android:name=\"android.support.VERSION\" android:value=\"26.0.2\" />\n\
+        <activity\n\
+            android:name=\"com.google.ar.core.InstallActivity\"\n\
+            android:configChanges=\"keyboardHidden|orientation|screenSize\"\n\
+            android:excludeFromRecents=\"true\"\n\
+            android:exported=\"false\"\n\
+            android:launchMode=\"singleTop\"\n\
+            android:theme=\"@android:style/Theme.Material.Light.Dialog.Alert\" />" );
+		}
+
+
 		strcat( newcontents, "\n    </application>\n</manifest>\n" );
 	
 		// write new Android Manifest.xml file
 		if ( !g_file_set_contents( manifest_file, newcontents, strlen(newcontents), &error ) )
 		{
-			SHOW_ERR1( "Failed to write AndroidManifest.xml file: %s", error->message );
+			SHOW_ERR1( _("Failed to write AndroidManifest.xml file: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto android_dialog_cleanup2;
@@ -1625,10 +1690,10 @@ android_dialog_continue:
 		contents = 0;
 
 		// read resources file
-		resources_file = g_build_path( "/", tmp_folder, "resMerged", "values", "values.xml", NULL );
+		resources_file = g_build_path( "/", tmp_folder, "resOrig", "values", "values.xml", NULL );
 		if ( !g_file_get_contents( resources_file, &contents, &resLength, &error ) )
 		{
-			SHOW_ERR1( "Failed to read resource values.xml file: %s", error->message );
+			SHOW_ERR1( _("Failed to read resource values.xml file: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto android_dialog_cleanup2;
@@ -1637,7 +1702,7 @@ android_dialog_continue:
 		contents2 = strstr( contents, "<string name=\"app_name\">" );
 		if ( !contents2 )
 		{
-			SHOW_ERR( "Could not find app name entry in values.xml file" );
+			SHOW_ERR( _("Could not find app name entry in values.xml file") );
 			goto android_dialog_cleanup2;
 		}
 
@@ -1648,7 +1713,7 @@ android_dialog_continue:
 		contents3 = strstr( contents3, "</string>" );
 		if ( !contents3 )
 		{
-			SHOW_ERR( "Could not find end of app name entry in values.xml file" );
+			SHOW_ERR( _("Could not find end of app name entry in values.xml file") );
 			goto android_dialog_cleanup2;
 		}
 
@@ -1661,13 +1726,44 @@ android_dialog_continue:
 		// repair original file
 		*contents2 = '>';
 
+		if ( google_play_app_id && *google_play_app_id )
+		{
+			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+			contents2 = strstr( newcontents2, "<string name=\"games_app_id\">" );
+			if ( !contents2 )
+			{
+				SHOW_ERR( _("Could not find games_app_id entry in values.xml file") );
+				goto android_dialog_cleanup2;
+			}
+
+			contents2 += strlen("<string name=\"games_app_id\"");
+			*contents2 = 0;
+			contents3 = contents2;
+			contents3++;
+			contents3 = strstr( contents3, "</string>" );
+			if ( !contents3 )
+			{
+				SHOW_ERR( _("Could not find end of games_app_id entry in values.xml file") );
+				goto android_dialog_cleanup2;
+			}
+
+			// write resources file
+			strcpy( newcontents, newcontents2 );
+			strcat( newcontents, ">" );
+			strcat( newcontents, google_play_app_id );
+			strcat( newcontents, contents3 );
+
+			// repair original file
+			*contents2 = '>';
+		}
+
 		// firebase
 		if ( firebase_config && *firebase_config && (app_type == 0 || app_type == 1) ) // Google and Amazon only
 		{
 			// read json values
 			if ( !g_file_get_contents( firebase_config, &contentsOther, &resLength, &error ) )
 			{
-				SHOW_ERR1( "Failed to read firebase config file: %s", error->message );
+				SHOW_ERR1( _("Failed to read firebase config file: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -1680,7 +1776,7 @@ android_dialog_continue:
 				contentsOther2 = strstr( contentsOther, "\"project_number\": \"" );
 				if ( !contentsOther2 )
 				{
-					SHOW_ERR( "Could not find project_number entry in Firebase config file" );
+					SHOW_ERR( _("Could not find project_number entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1688,7 +1784,7 @@ android_dialog_continue:
 				contentsOther3 = strstr( contentsOther2, "\"" );
 				if ( !contentsOther3 )
 				{
-					SHOW_ERR( "Could not find end of project_number entry in Firebase config file" );
+					SHOW_ERR( _("Could not find end of project_number entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 				*contentsOther3 = 0;
@@ -1697,7 +1793,7 @@ android_dialog_continue:
 				contents2 = strstr( newcontents2, "<string name=\"gcm_defaultSenderId\" translatable=\"false\"" );
 				if ( !contents2 )
 				{
-					SHOW_ERR( "Could not find gcm_defaultSenderId entry in values.xml file" );
+					SHOW_ERR( _("Could not find gcm_defaultSenderId entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1708,7 +1804,7 @@ android_dialog_continue:
 				contents3 = strstr( contents3, "</string>" );
 				if ( !contents3 )
 				{
-					SHOW_ERR( "Could not find end of gcm_defaultSenderId entry in values.xml file" );
+					SHOW_ERR( _("Could not find end of gcm_defaultSenderId entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1728,7 +1824,7 @@ android_dialog_continue:
 				contentsOther2 = strstr( contentsOther, "\"firebase_url\": \"" );
 				if ( !contentsOther2 )
 				{
-					SHOW_ERR( "Could not find firebase_url entry in Firebase config file" );
+					SHOW_ERR( _("Could not find firebase_url entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1736,7 +1832,7 @@ android_dialog_continue:
 				contentsOther3 = strstr( contentsOther2, "\"" );
 				if ( !contentsOther3 )
 				{
-					SHOW_ERR( "Could not find end of firebase_url entry in Firebase config file" );
+					SHOW_ERR( _("Could not find end of firebase_url entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 				*contentsOther3 = 0;
@@ -1745,7 +1841,7 @@ android_dialog_continue:
 				contents2 = strstr( newcontents2, "<string name=\"firebase_database_url\" translatable=\"false\"" );
 				if ( !contents2 )
 				{
-					SHOW_ERR( "Could not find firebase_database_url entry in values.xml file" );
+					SHOW_ERR( _("Could not find firebase_database_url entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1756,7 +1852,7 @@ android_dialog_continue:
 				contents3 = strstr( contents3, "</string>" );
 				if ( !contents3 )
 				{
-					SHOW_ERR( "Could not find end of firebase_database_url entry in values.xml file" );
+					SHOW_ERR( _("Could not find end of firebase_database_url entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1791,7 +1887,7 @@ android_dialog_continue:
 				
 				if ( package_index == 0 )
 				{
-					SHOW_ERR1( "Could not find android package_name \"%s\" in the Firebase config file", package_name );
+					SHOW_ERR1( _("Could not find android package_name \"%s\" in the Firebase config file"), package_name );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1809,7 +1905,7 @@ android_dialog_continue:
 
 				if ( package_count != package_index )
 				{
-					SHOW_ERR( "Could not find matching mobilesdk_app_id entry in Firebase config file" );
+					SHOW_ERR( _("Could not find matching mobilesdk_app_id entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1817,7 +1913,7 @@ android_dialog_continue:
 				contentsOther3 = strstr( contentsOther2, "\"" );
 				if ( !contentsOther3 )
 				{
-					SHOW_ERR( "Could not find end of mobilesdk_app_id entry in Firebase config file" );
+					SHOW_ERR( _("Could not find end of mobilesdk_app_id entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 				*contentsOther3 = 0;
@@ -1826,7 +1922,7 @@ android_dialog_continue:
 				contents2 = strstr( newcontents2, "<string name=\"google_app_id\" translatable=\"false\"" );
 				if ( !contents2 )
 				{
-					SHOW_ERR( "Could not find google_app_id entry in values.xml file" );
+					SHOW_ERR( _("Could not find google_app_id entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1837,7 +1933,7 @@ android_dialog_continue:
 				contents3 = strstr( contents3, "</string>" );
 				if ( !contents3 )
 				{
-					SHOW_ERR( "Could not find end of google_app_id entry in values.xml file" );
+					SHOW_ERR( _("Could not find end of google_app_id entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1857,7 +1953,7 @@ android_dialog_continue:
 				contentsOther2 = strstr( contentsOther, "\"current_key\": \"" );
 				if ( !contentsOther2 )
 				{
-					SHOW_ERR( "Could not find current_key entry in Firebase config file" );
+					SHOW_ERR( _("Could not find current_key entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1865,7 +1961,7 @@ android_dialog_continue:
 				contentsOther3 = strstr( contentsOther2, "\"" );
 				if ( !contentsOther3 )
 				{
-					SHOW_ERR( "Could not find end of current_key entry in Firebase config file" );
+					SHOW_ERR( _("Could not find end of current_key entry in Firebase config file") );
 					goto android_dialog_cleanup2;
 				}
 				*contentsOther3 = 0;
@@ -1874,7 +1970,7 @@ android_dialog_continue:
 				contents2 = strstr( newcontents2, "<string name=\"google_api_key\" translatable=\"false\"" );
 				if ( !contents2 )
 				{
-					SHOW_ERR( "Could not find google_api_key entry in values.xml file" );
+					SHOW_ERR( _("Could not find google_api_key entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1885,7 +1981,7 @@ android_dialog_continue:
 				contents3 = strstr( contents3, "</string>" );
 				if ( !contents3 )
 				{
-					SHOW_ERR( "Could not find end of google_api_key entry in values.xml file" );
+					SHOW_ERR( _("Could not find end of google_api_key entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1902,7 +1998,7 @@ android_dialog_continue:
 				contents2 = strstr( newcontents2, "<string name=\"google_crash_reporting_api_key\" translatable=\"false\"" );
 				if ( !contents2 )
 				{
-					SHOW_ERR( "Could not find google_crash_reporting_api_key entry in values.xml file" );
+					SHOW_ERR( _("Could not find google_crash_reporting_api_key entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1913,7 +2009,7 @@ android_dialog_continue:
 				contents3 = strstr( contents3, "</string>" );
 				if ( !contents3 )
 				{
-					SHOW_ERR( "Could not find end of google_crash_reporting_api_key entry in values.xml file" );
+					SHOW_ERR( _("Could not find end of google_crash_reporting_api_key entry in values.xml file") );
 					goto android_dialog_cleanup2;
 				}
 
@@ -1934,7 +2030,7 @@ android_dialog_continue:
 
 		if ( !g_file_set_contents( resources_file, newcontents, strlen(newcontents), &error ) )
 		{
-			SHOW_ERR1( "Failed to write resource values.xml file: %s", error->message );
+			SHOW_ERR1( _("Failed to write resource values.xml file: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto android_dialog_cleanup2;
@@ -1943,6 +2039,50 @@ android_dialog_continue:
 		if ( contents ) g_free(contents);
 		contents = 0;
 
+		// start packaging app
+		gchar *aaptcommand = g_new0( gchar*, 1000000 );
+		if ( !g_file_test( path_to_aapt2, G_FILE_TEST_EXISTS ) )
+		{
+			SHOW_ERR( _("Failed to export project, AAPT2 program not found") );
+			goto android_dialog_cleanup2;
+		}
+
+		argv = g_new0(gchar *, 3);
+		argv[0] = g_strdup(path_to_aapt2);
+		argv[1] = g_strdup("m"); // open for stdin commands
+		argv[2] = NULL;
+
+		GPid aapt2_pid = 0;
+		GPollFD aapt2_in = { -1, G_IO_OUT | G_IO_ERR, 0 };
+		if (! g_spawn_async_with_pipes(tmp_folder, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_STDERR_TO_DEV_NULL | G_SPAWN_STDOUT_TO_DEV_NULL, NULL, NULL, &aapt2_pid, 
+									   &aapt2_in.fd, NULL, NULL, &error))
+		{
+			SHOW_ERR1("g_spawn_async() failed: %s", error->message);
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+
+		if ( aapt2_pid == 0 )
+		{
+			SHOW_ERR( _("Failed to start packaging tool") );
+			goto android_dialog_cleanup2;
+		}
+
+		// compile values.xml file
+	#ifdef G_OS_WIN32
+		strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\values\\values.xml\n\n" );
+	#else
+		strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/values/values.xml\n\n" );
+	#endif
+		write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
+		if ( error )
+		{
+			g_error_free(error);
+			error = NULL;
+		}
+		
 		// load icon file
 		if ( app_icon && *app_icon )
 		{
@@ -1950,7 +2090,7 @@ android_dialog_continue:
 			icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
 			if ( !icon_image || error )
 			{
-				SHOW_ERR1( "Failed to load image icon: %s", error->message );
+				SHOW_ERR1( _("Failed to load image icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -1960,11 +2100,11 @@ android_dialog_continue:
 			if ( app_type == 0 || app_type == 1 )
 			{
 				// 192x192
-				image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxxhdpi", "icon.png", NULL );
+				image_filename = g_build_path( "/", tmp_folder, "resOrig", "drawable-xxxhdpi", "icon.png", NULL );
 				icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 192, 192, GDK_INTERP_HYPER );
 				if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 				{
-					SHOW_ERR1( "Failed to save xxxhdpi icon: %s", error->message );
+					SHOW_ERR1( _("Failed to save xxxhdpi icon: %s"), error->message );
 					g_error_free(error);
 					error = NULL;
 					goto android_dialog_cleanup2;
@@ -1972,18 +2112,32 @@ android_dialog_continue:
 				gdk_pixbuf_unref( icon_scaled_image );
 				g_free( image_filename );
 
+			#ifdef G_OS_WIN32
+				strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable-xxxhdpi\\icon.png\n\n" );
+			#else
+				strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable-xxxhdpi/icon.png\n\n" );
+			#endif
+				write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 				// 144x144
-				image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxhdpi", "icon.png", NULL );
+				image_filename = g_build_path( "/", tmp_folder, "resOrig", "drawable-xxhdpi", "icon.png", NULL );
 				icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 144, 144, GDK_INTERP_HYPER );
 				if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 				{
-					SHOW_ERR1( "Failed to save xxhdpi icon: %s", error->message );
+					SHOW_ERR1( _("Failed to save xxhdpi icon: %s"), error->message );
 					g_error_free(error);
 					error = NULL;
 					goto android_dialog_cleanup2;
 				}
 				gdk_pixbuf_unref( icon_scaled_image );
 				g_free( image_filename );
+
+			#ifdef G_OS_WIN32
+				strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable-xxhdpi\\icon.png\n\n" );
+			#else
+				strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable-xxhdpi/icon.png\n\n" );
+			#endif
+				write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 			}
 
 			const gchar* szDrawable_xhdpi = (app_type == 2) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
@@ -1994,11 +2148,11 @@ android_dialog_continue:
 			const gchar* szMainIcon = (app_type == 2) ? "app_icon.png" : "icon.png";
 			
 			// 96x96
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_xhdpi, szMainIcon, NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_xhdpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save xhdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2006,12 +2160,21 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_xhdpi ); strcat( aaptcommand, "\\" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_xhdpi ); strcat( aaptcommand, "/" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 72x72
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_hdpi, szMainIcon, NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_hdpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save hdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save hdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2019,12 +2182,21 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_hdpi ); strcat( aaptcommand, "\\" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_hdpi ); strcat( aaptcommand, "/" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 48x48
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_mdpi, szMainIcon, NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_mdpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save mdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save mdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2032,12 +2204,21 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_mdpi ); strcat( aaptcommand, "\\" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_mdpi ); strcat( aaptcommand, "/" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 36x36
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_ldpi, szMainIcon, NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_ldpi, szMainIcon, NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save ldpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save ldpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2045,6 +2226,15 @@ android_dialog_continue:
 					
 			gdk_pixbuf_unref( icon_scaled_image );
 			icon_scaled_image = NULL;
+
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_ldpi ); strcat( aaptcommand, "\\" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_ldpi ); strcat( aaptcommand, "/" );
+			strcat( aaptcommand, szMainIcon ); strcat( aaptcommand, "\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 
 			g_free( image_filename );
 			image_filename = NULL;
@@ -2057,7 +2247,7 @@ android_dialog_continue:
 			icon_image = gdk_pixbuf_new_from_file( notif_icon, &error );
 			if ( !icon_image || error )
 			{
-				SHOW_ERR1( "Failed to load notification icon: %s", error->message );
+				SHOW_ERR1( _("Failed to load notification icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2065,11 +2255,11 @@ android_dialog_continue:
 
 			// scale it and save it
 			// 96x96
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxxhdpi", "icon_white.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", "drawable-xxxhdpi", "icon_white.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 96, 96, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save xxxhdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save xxxhdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2077,18 +2267,32 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable-xxxhdpi\\icon_white.png\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable-xxxhdpi/icon_white.png\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 72x72
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xxhdpi", "icon_white.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", "drawable-xxhdpi", "icon_white.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 72, 72, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save xxhdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save xxhdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
+
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable-xxhdpi\\icon_white.png\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable-xxhdpi/icon_white.png\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 
 			const gchar* szDrawable_xhdpi = (app_type == 2) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
 			const gchar* szDrawable_hdpi = (app_type == 2) ? "drawable-hdpi-v4" : "drawable-hdpi";
@@ -2096,11 +2300,11 @@ android_dialog_continue:
 			const gchar* szDrawable_ldpi = (app_type == 2) ? "drawable-ldpi-v4" : "drawable-ldpi";
 
 			// 48x48
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_xhdpi, "icon_white.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_xhdpi, "icon_white.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 48, 48, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save xhdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save xhdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2108,12 +2312,21 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_xhdpi ); 
+			strcat( aaptcommand, "\\icon_white.png\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_xhdpi );
+			strcat( aaptcommand, "/icon_white.png\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 36x36
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_hdpi, "icon_white.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_hdpi, "icon_white.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 36, 36, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save hdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save hdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2121,12 +2334,21 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_hdpi ); 
+			strcat( aaptcommand, "\\icon_white.png\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_hdpi );
+			strcat( aaptcommand, "/icon_white.png\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 24x24
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_mdpi, "icon_white.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_mdpi, "icon_white.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 24, 24, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save mdpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save mdpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2134,12 +2356,21 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			g_free( image_filename );
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_mdpi ); 
+			strcat( aaptcommand, "\\icon_white.png\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_mdpi );
+			strcat( aaptcommand, "/icon_white.png\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 24x24
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", szDrawable_ldpi, "icon_white.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_ldpi, "icon_white.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 24, 24, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save ldpi icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save ldpi icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2147,6 +2378,15 @@ android_dialog_continue:
 					
 			gdk_pixbuf_unref( icon_scaled_image );
 			icon_scaled_image = NULL;
+
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\" ); strcat( aaptcommand, szDrawable_ldpi ); 
+			strcat( aaptcommand, "\\icon_white.png\n\n" );
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/" ); strcat( aaptcommand, szDrawable_ldpi );
+			strcat( aaptcommand, "/icon_white.png\n\n" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 
 			g_free( image_filename );
 			image_filename = NULL;
@@ -2159,7 +2399,7 @@ android_dialog_continue:
 			icon_image = gdk_pixbuf_new_from_file( ouya_icon, &error );
 			if ( !icon_image || error )
 			{
-				SHOW_ERR1( "Failed to load Ouya large icon: %s", error->message );
+				SHOW_ERR1( _("Failed to load Ouya large icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2167,26 +2407,28 @@ android_dialog_continue:
 
 			if ( gdk_pixbuf_get_width( icon_image ) != 732 || gdk_pixbuf_get_height( icon_image ) != 412 )
 			{
-				SHOW_ERR( "Ouya large icon must be 732x412 pixels" );
+				SHOW_ERR( _("Ouya large icon must be 732x412 pixels") );
 				goto android_dialog_cleanup2;
 			}
 
 			// copy it to the res folder
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable-xhdpi-v4", "ouya_icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", "drawable-xhdpi-v4", "ouya_icon.png", NULL );
 			utils_copy_file( ouya_icon, image_filename, TRUE, NULL );
 			g_free( image_filename );
 
-			// make folder
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable", NULL );
-			g_mkdir_with_parents( image_filename, 0777 );
-			g_free( image_filename );
-			
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable-xhdpi-v4\\ouya_icon.png" ); 
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable-xhdpi-v4/ouya_icon.png" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			// 320x180
-			image_filename = g_build_path( "/", tmp_folder, "resMerged", "drawable", "icon.png", NULL );
+			image_filename = g_build_path( "/", tmp_folder, "resOrig", "drawable", "icon.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 320, 180, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save lean back icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save lean back icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto android_dialog_cleanup2;
@@ -2195,78 +2437,91 @@ android_dialog_continue:
 			gdk_pixbuf_unref( icon_scaled_image );
 			icon_scaled_image = NULL;
 
+		#ifdef G_OS_WIN32
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable\\icon.png" ); 
+		#else
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable/icon.png" );
+		#endif
+			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
 			g_free( image_filename );
 			image_filename = NULL;
 		}
 
 		while (gtk_events_pending())
 			gtk_main_iteration();
-							
-		// package manifest and resources
-		argv = g_new0( gchar*, 23 );
-		argv[0] = g_strdup( path_to_aapt );
-		argv[1] = g_strdup("package");
-		argv[2] = g_strdup("-f");
-		argv[3] = g_strdup("--no-crunch");
-		argv[4] = g_strdup("-M");
-		argv[5] = g_build_path( "/", tmp_folder, "AndroidManifest.xml", NULL );
-		argv[6] = g_strdup("-I");
-		argv[7] = g_strdup( path_to_android_jar );
-		argv[8] = g_strdup("-S");
-		argv[9] = g_build_path( "/", tmp_folder, "resMerged", NULL );
-		argv[10] = g_strdup("-F");
-		argv[11] = g_strdup( output_file );
-		argv[12] = NULL;
+		
+		strcpy( aaptcommand, "l\n-I\n" );
+		strcat( aaptcommand, path_to_android_jar );
+		strcat( aaptcommand, "\n--manifest\n" );
+		strcat( aaptcommand, tmp_folder );
+		strcat( aaptcommand, "/AndroidManifest.xml\n-o\n" );
+		strcat( aaptcommand, output_file );
+		strcat( aaptcommand, "\n--auto-add-overlay\n--no-version-vectors\n" );
 
-		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &aapt_output, &aapt_error, &status, &error) )
+		gchar* resMergedPath = g_build_filename( tmp_folder, "resMerged", NULL );
+		GDir *dir = g_dir_open(resMergedPath, 0, NULL);
+		
+		const gchar *filename;
+		foreach_dir(filename, dir)
 		{
-			SHOW_ERR1( "Failed to run packaging tool: %s", error->message );
-			g_error_free(error);
-			error = NULL;
-			goto android_dialog_cleanup2;
+			gchar* fullsrcpath = g_build_filename( tmp_folder, "resMerged", filename, NULL );
+
+			if ( g_file_test( fullsrcpath, G_FILE_TEST_IS_REGULAR ) )
+			{
+				strcat( aaptcommand, "-R\n" );
+				strcat( aaptcommand, fullsrcpath );
+				strcat( aaptcommand, "\n" );
+			}
+
+			g_free(fullsrcpath);
 		}
+
+		g_dir_close(dir);
+		g_free( resMergedPath );
 
 		/*
-        // if we have previously called g_spawn_async then g_spawn_sync will never return the correct exit status due to ECHILD being returned from waitpid()
-		if ( status != 0 )
-		{
-			if ( status < 256 )
-			{
-				SHOW_ERR1( "Package tool returned error code: %d", status );
-				goto android_dialog_cleanup2;
-			}
-			else
-			{
-				SHOW_ERR1( "Package tool returned error code: %d, attempting to continue", status );
-			}
-		}
-        */
+		gchar* fullsrcpath = g_build_filename( tmp_folder, "resMerged\\values_values.arsc.flat", NULL );
+		strcat( aaptcommand, "-R\n" );
+		strcat( aaptcommand, fullsrcpath );
+		strcat( aaptcommand, "\n" );
+		g_free(fullsrcpath);
+		*/
 
+		strcat( aaptcommand, "\nquit\n\n" );
+
+	#ifdef G_OS_WIN32
+		gchar *ptr = aaptcommand;
+		while( *ptr )
+		{
+			if ( *ptr == '/' ) *ptr = '\\';
+			ptr++;
+		}
+	#endif
+
+		//gchar* logpath = g_build_filename( tmp_folder, "log.txt", NULL );
+		//FILE *pFile = fopen( logpath, "wb" );
+		//fputs( aaptcommand, pFile );
+		//fclose( pFile );
+
+		write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
+
+	#ifdef G_OS_WIN32
+		WaitForProcess( aapt2_pid );
+	#else
+		waitpid( aapt2_pid, &status, 0 );
+	#endif
+		aapt2_pid = 0;
+
+		// if we have previously called g_spawn_async then g_spawn_sync will never return the correct exit status due to ECHILD being returned from waitpid()
+		
 		// check the file was created instead
 		if ( !g_file_test( output_file, G_FILE_TEST_EXISTS ) )
 		{
-			if ( error ) 
-			{
-				SHOW_ERR1( "Failed to run packaging tool: %s", error->message );
-				g_error_free(error);
-			}
-			else
-			{
-				if ( status == 0 )
-				{
-					SHOW_ERR( "Failed to write output files, check that your project directory is not in a write protected location" );
-				}
-				else
-				{
-					dialogs_show_msgbox( GTK_MESSAGE_ERROR, "packaging tool returned error code: %d - %s", status, FALLBACK(aapt_error,"") );
-				}
-			}
+			SHOW_ERR( _("Failed to write output files, check that your project directory is not in a write protected location") );
 			goto android_dialog_cleanup2;
 		}
-
-		if ( aapt_output ) g_free(aapt_output); aapt_output = 0;
-		if ( aapt_error ) g_free(aapt_error); aapt_error = 0;
-
+		
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
@@ -2275,12 +2530,12 @@ android_dialog_continue:
 		// open APK as a zip file
 		if ( !mz_zip_reader_init_file( &zip_archive, output_file_zip, 0 ) )
 		{
-			SHOW_ERR( "Failed to initialise zip file for reading" );
+			SHOW_ERR( _("Failed to initialise zip file for reading") );
 			goto android_dialog_cleanup2;
 		}
 		if ( !mz_zip_writer_init_from_reader( &zip_archive, output_file_zip ) )
 		{
-			SHOW_ERR( "Failed to open zip file for writing" );
+			SHOW_ERR( _("Failed to open zip file for writing") );
 			goto android_dialog_cleanup2;
 		}
 
@@ -2289,9 +2544,9 @@ android_dialog_continue:
 		mz_zip_writer_add_file( &zip_archive, "classes.dex", zip_add_file, NULL, 0, 9 );
 		g_free( zip_add_file );
 
-		//zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi", "libandroid_player.so", NULL );
-		//mz_zip_writer_add_file( &zip_archive, "lib/armeabi/libandroid_player.so", zip_add_file, NULL, 0, 9 );
-		//g_free( zip_add_file );
+		zip_add_file = g_build_path( "/", android_folder, "lib", "arm64-v8a", "libandroid_player.so", NULL );
+		mz_zip_writer_add_file( &zip_archive, "lib/arm64-v8a/libandroid_player.so", zip_add_file, NULL, 0, 9 );
+		g_free( zip_add_file );
 
 		zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libandroid_player.so", NULL );
 		mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libandroid_player.so", zip_add_file, NULL, 0, 9 );
@@ -2301,6 +2556,22 @@ android_dialog_continue:
 		mz_zip_writer_add_file( &zip_archive, "lib/x86/libandroid_player.so", zip_add_file, NULL, 0, 9 );
 		g_free( zip_add_file );
 
+		if ( arcore_mode > 0 )
+		{
+			// use real ARCore lib
+			zip_add_file = g_build_path( "/", android_folder, "lib", "arm64-v8a", "libarcore_sdk.so", NULL );
+			mz_zip_writer_add_file( &zip_archive, "lib/arm64-v8a/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
+			g_free( zip_add_file );
+
+			zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libarcore_sdk.so", NULL );
+			mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
+			g_free( zip_add_file );
+
+			zip_add_file = g_build_path( "/", android_folder, "lib", "x86", "libarcore_sdk.so", NULL );
+			mz_zip_writer_add_file( &zip_archive, "lib/x86/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
+			g_free( zip_add_file );
+		}
+		
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
@@ -2308,18 +2579,18 @@ android_dialog_continue:
 		zip_add_file = g_build_path( "/", app->project->base_path, "media", NULL );
 		if ( !utils_add_folder_to_zip( &zip_archive, zip_add_file, "assets/media", TRUE, TRUE ) )
 		{
-			SHOW_ERR( "Failed to add media files to APK" );
+			SHOW_ERR( _("Failed to add media files to APK") );
 			goto android_dialog_cleanup2;
 		}
 
 		if ( !mz_zip_writer_finalize_archive( &zip_archive ) )
 		{
-			SHOW_ERR( "Failed to add finalize zip file" );
+			SHOW_ERR( _("Failed to add finalize zip file") );
 			goto android_dialog_cleanup2;
 		}
 		if ( !mz_zip_writer_end( &zip_archive ) )
 		{
-			SHOW_ERR( "Failed to end zip file" );
+			SHOW_ERR( _("Failed to end zip file") );
 			goto android_dialog_cleanup2;
 		}
 
@@ -2353,7 +2624,7 @@ android_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv2, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run signing tool: %s", error->message );
+			SHOW_ERR1( _("Failed to run signing tool: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto android_dialog_cleanup2;
@@ -2361,7 +2632,7 @@ android_dialog_continue:
 		
 		if ( status != 0 && str_out && *str_out && strstr(str_out,"jar signed.") == 0 )
 		{
-			SHOW_ERR1( "Failed to sign APK, is your keystore password and alias correct? (error: %s)", str_out );
+			SHOW_ERR1( _("Failed to sign APK, is your keystore password and alias correct? (error: %s)"), str_out );
 			goto android_dialog_cleanup2;
 		}
 
@@ -2381,7 +2652,7 @@ android_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv3, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run zipalign tool: %s", error->message );
+			SHOW_ERR1( _("Failed to run zipalign tool: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto android_dialog_cleanup2;
@@ -2389,7 +2660,7 @@ android_dialog_continue:
 		
 		if ( status != 0 && str_out && *str_out )
 		{
-			SHOW_ERR1( "Zip align tool returned error: %s", str_out );
+			SHOW_ERR1( _("Zip align tool returned error: %s"), str_out );
 			goto android_dialog_cleanup2;
 		}
 
@@ -2403,12 +2674,22 @@ android_dialog_cleanup2:
         gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_export1"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "button7"), TRUE );
 
+		if ( aapt2_pid ) 
+		{
+		#ifdef G_OS_WIN32
+			TerminateProcess(aapt2_pid, 0);
+		#else
+			kill(aapt2_pid, SIGTERM);
+		#endif
+		}
+
 		g_unlink( output_file_zip );
 		utils_remove_folder_recursive( tmp_folder );
 
-		if ( path_to_aapt ) g_free(path_to_aapt);
+		if ( path_to_aapt2 ) g_free(path_to_aapt2);
 		if ( path_to_android_jar ) g_free(path_to_android_jar);
 		if ( path_to_jarsigner ) g_free(path_to_jarsigner);
+		if ( path_to_zipalign ) g_free(path_to_zipalign);
 
 		if ( zip_add_file ) g_free(zip_add_file);
 		if ( manifest_file ) g_free(manifest_file);
@@ -2424,6 +2705,7 @@ android_dialog_cleanup2:
 		if ( argv ) g_strfreev(argv);
 		if ( argv2 ) g_strfreev(argv2);
 		if ( argv3 ) g_strfreev(argv3);
+		if ( aaptcommand ) g_free(aaptcommand);
 		
 		if ( output_file_zip ) g_free(output_file_zip);
 		if ( tmp_folder ) g_free(tmp_folder);
@@ -2445,9 +2727,6 @@ android_dialog_cleanup2:
 		if ( version_number ) g_free(version_number);
 		if ( alias_name ) g_free(alias_name);
 		if ( alias_password ) g_free(alias_password);
-
-		if ( aapt_output ) g_free(aapt_output);
-		if ( aapt_error ) g_free(aapt_error);
 	}
 
 	running = 0;
@@ -2459,7 +2738,7 @@ void project_export_apk()
 {
 	if ( !app->project ) 
 	{
-		SHOW_ERR( "You must have a project open to export it" );
+		SHOW_ERR( _("You must have a project open to export it") );
 		return;
 	}
 
@@ -2492,6 +2771,7 @@ void project_export_apk()
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo")), 0 );
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo")), 0 );
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 0 ); 
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo")), 0 );
 	}
 
 	// pointers could be the same even if the project is different, so check project path instead
@@ -2524,8 +2804,13 @@ void project_export_apk()
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
 		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.orientation );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.arcore );
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
-		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.sdk_version );
+		int version = app->project->apk_settings.sdk_version - 1;
+		if ( version < 0 ) version = 0;
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), version );
 								
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.game_circle_api_key, "") );
@@ -2646,7 +2931,7 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 	if ( !*output_file ) 
 	{
 		g_free(output_file);
-		SHOW_ERR("You must choose an output folder to save your APKs");
+		SHOW_ERR(_("You must choose an output folder to save your APKs"));
 		return;
 	}
 
@@ -2699,8 +2984,13 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
 		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.orientation );
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo");
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.arcore );
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
-		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->apk_settings.sdk_version );
+		int version = app->project->apk_settings.sdk_version - 1;
+		if ( version < 0 ) version = 0;
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), version );
 								
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.game_circle_api_key, "") );
@@ -2813,7 +3103,7 @@ void project_export_apk_all()
 {
 	if ( projects_array->len <= 0 ) 
 	{
-		SHOW_ERR( "You must have at least one project open to export all" );
+		SHOW_ERR( _("You must have at least one project open to export all") );
 		return;
 	}
 
@@ -2844,6 +3134,7 @@ void project_export_apk_all()
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo")), 0 );
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo")), 0 );
 		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 0 ); 
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo")), 0 ); 
 	}
 
 	// make sure export all dialog exists
@@ -2907,7 +3198,7 @@ static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpoint
 
 		// START CHECKS
 
-		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your keystore file"); goto keystore_dialog_clean_up; }
+		if ( !output_file || !*output_file ) { SHOW_ERR(_("You must choose an output location to save your keystore file")); goto keystore_dialog_clean_up; }
 
 		if ( g_file_test( output_file, G_FILE_TEST_EXISTS ) )
 		{
@@ -2918,14 +3209,14 @@ static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpoint
 		}
 
 		// check full name
-		if ( strlen(full_name) > 30 ) { SHOW_ERR("Full name must be less than 30 characters"); goto keystore_dialog_clean_up; }
+		if ( strlen(full_name) > 30 ) { SHOW_ERR(_("Full name must be less than 30 characters")); goto keystore_dialog_clean_up; }
 		for( i = 0; i < strlen(full_name); i++ )
 		{
 			if ( (full_name[i] < 97 || full_name[i] > 122)
 			  && (full_name[i] < 65 || full_name[i] > 90) 
 			  && full_name[i] != 32 ) 
 			{ 
-				SHOW_ERR("Full name contains invalid characters, must be A-Z and spaces only"); 
+				SHOW_ERR(_("Full name contains invalid characters, must be A-Z and spaces only")); 
 				goto keystore_dialog_clean_up; 
 			}
 		}
@@ -2936,14 +3227,14 @@ static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpoint
 		}
 
 		// check company name
-		if ( strlen(company_name) > 30 ) { SHOW_ERR("Company name must be less than 30 characters"); goto keystore_dialog_clean_up; }
+		if ( strlen(company_name) > 30 ) { SHOW_ERR(_("Company name must be less than 30 characters")); goto keystore_dialog_clean_up; }
 		for( i = 0; i < strlen(company_name); i++ )
 		{
 			if ( (company_name[i] < 97 || company_name[i] > 122)
 			  && (company_name[i] < 65 || company_name[i] > 90) 
 			  && company_name[i] != 32 ) 
 			{ 
-				SHOW_ERR("Company name contains invalid characters, must be A-Z and spaces only"); 
+				SHOW_ERR(_("Company name contains invalid characters, must be A-Z and spaces only")); 
 				goto keystore_dialog_clean_up; 
 			}
 		}
@@ -2954,14 +3245,14 @@ static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpoint
 		}
 
 		// city
-		if ( strlen(city) > 30 ) { SHOW_ERR("City must be less than 30 characters"); goto keystore_dialog_clean_up; }
+		if ( strlen(city) > 30 ) { SHOW_ERR(_("City must be less than 30 characters")); goto keystore_dialog_clean_up; }
 		for( i = 0; i < strlen(city); i++ )
 		{
 			if ( (city[i] < 97 || city[i] > 122)
 			  && (city[i] < 65 || city[i] > 90) 
 			  && city[i] != 32 ) 
 			{ 
-				SHOW_ERR("City contains invalid characters, must be A-Z and spaces only"); 
+				SHOW_ERR(_("City contains invalid characters, must be A-Z and spaces only")); 
 				goto keystore_dialog_clean_up; 
 			}
 		}
@@ -2972,13 +3263,13 @@ static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpoint
 		}
 
 		// country
-		if ( strlen(country) > 0 && strlen(country) != 2 ) { SHOW_ERR("Country code must be 2 characters"); goto keystore_dialog_clean_up; }
+		if ( strlen(country) > 0 && strlen(country) != 2 ) { SHOW_ERR(_("Country code must be 2 characters")); goto keystore_dialog_clean_up; }
 		for( i = 0; i < strlen(country); i++ )
 		{
 			if ( (country[i] < 97 || country[i] > 122)
 			  && (country[i] < 65 || country[i] > 90) ) 
 			{ 
-				SHOW_ERR("Country code contains invalid characters, must be A-Z only"); 
+				SHOW_ERR(_("Country code contains invalid characters, must be A-Z only")); 
 				goto keystore_dialog_clean_up; 
 			}
 		}
@@ -2989,10 +3280,10 @@ static void on_keystore_dialog_response(GtkDialog *dialog, gint response, gpoint
 		}
 		
 		// check passwords
-		if ( !password1 || !*password1 ) { SHOW_ERR("Password cannot be blank"); goto keystore_dialog_clean_up; }
-		if ( strlen(password1) < 6 ) { SHOW_ERR("Password must be at least 6 characters long"); goto keystore_dialog_clean_up; }
-		if ( strchr(password1,'"') ) { SHOW_ERR("Password cannot contain double quotes"); goto keystore_dialog_clean_up; }
-		if ( strcmp(password1,password2) != 0 ) { SHOW_ERR("Passwords do not match"); goto keystore_dialog_clean_up; }
+		if ( !password1 || !*password1 ) { SHOW_ERR(_("Password cannot be blank")); goto keystore_dialog_clean_up; }
+		if ( strlen(password1) < 6 ) { SHOW_ERR(_("Password must be at least 6 characters long")); goto keystore_dialog_clean_up; }
+		if ( strchr(password1,'"') ) { SHOW_ERR(_("Password cannot contain double quotes")); goto keystore_dialog_clean_up; }
+		if ( strcmp(password1,password2) != 0 ) { SHOW_ERR(_("Passwords do not match")); goto keystore_dialog_clean_up; }
 
 		goto keystore_dialog_continue;
 
@@ -3046,7 +3337,7 @@ keystore_dialog_continue:
 
 		if ( !g_file_test( path_to_keytool, G_FILE_TEST_EXISTS ) )
 		{
-			SHOW_ERR1( "Could not find keytool program, the path \"%s\" is incorrect", path_to_keytool );
+			SHOW_ERR1( _("Could not find keytool program, the path \"%s\" is incorrect"), path_to_keytool );
 			goto keystore_dialog_cleanup2;
 		}
 
@@ -3076,7 +3367,7 @@ keystore_dialog_continue:
 
 		if ( !utils_spawn_sync( output_file, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run keytool program: %s", error->message );
+			SHOW_ERR1( _("Failed to run keytool program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto keystore_dialog_cleanup2;
@@ -3084,7 +3375,7 @@ keystore_dialog_continue:
 		
         if ( status != 0 && str_out && *str_out )
 		{
-			SHOW_ERR1( "keytool program returned error: %s", str_out );
+			SHOW_ERR1( _("keytool program returned error: %s"), str_out );
 			goto keystore_dialog_cleanup2;
 		}
 
@@ -3121,7 +3412,7 @@ void project_generate_keystore()
 	if (ui_widgets.keystore_dialog == NULL)
 	{
 		ui_widgets.keystore_dialog = create_keystore_dialog();
-		gtk_widget_set_name(ui_widgets.keystore_dialog, "Generate Keystore");
+		gtk_widget_set_name(ui_widgets.keystore_dialog, _("Generate Keystore"));
 		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.keystore_dialog), GTK_WINDOW(main_widgets.window));
 
 		g_signal_connect(ui_widgets.keystore_dialog, "response", G_CALLBACK(on_keystore_dialog_response), NULL);
@@ -3304,12 +3595,12 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 		// START CHECKS
 
-		if ( !output_file || !*output_file ) { SHOW_ERR("You must choose an output location to save your IPA"); goto ios_dialog_clean_up; }
-		if ( strchr(output_file, '.') == 0 ) { SHOW_ERR("The output location must be a file not a directory"); goto ios_dialog_clean_up; }
+		if ( !output_file || !*output_file ) { SHOW_ERR(_("You must choose an output location to save your IPA")); goto ios_dialog_clean_up; }
+		if ( strchr(output_file, '.') == 0 ) { SHOW_ERR(_("The output location must be a file not a directory")); goto ios_dialog_clean_up; }
 
 		// check app name
-		if ( !app_name || !*app_name ) { SHOW_ERR("You must enter an app name"); goto ios_dialog_clean_up; }
-		if ( strlen(app_name) > 30 ) { SHOW_ERR("App name must be less than 30 characters"); goto ios_dialog_clean_up; }
+		if ( !app_name || !*app_name ) { SHOW_ERR(_("You must enter an app name")); goto ios_dialog_clean_up; }
+		if ( strlen(app_name) > 30 ) { SHOW_ERR(_("App name must be less than 30 characters")); goto ios_dialog_clean_up; }
 		for( i = 0; i < strlen(app_name); i++ )
 		{
 			/*
@@ -3319,7 +3610,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			  && app_name[i] != 32 
 			  && app_name[i] != 95 ) 
 			{ 
-				SHOW_ERR("App name contains invalid characters, must be A-Z 0-9 spaces and undersore only"); 
+				SHOW_ERR(_("App name contains invalid characters, must be A-Z 0-9 spaces and undersore only")); 
 				goto ios_dialog_clean_up; 
 			}
 			*/
@@ -3332,62 +3623,62 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			  || app_name[i] == 124 || app_name[i] == 61
 			  || app_name[i] == 44 || app_name[i] == 38 )
 			{
-				SHOW_ERR("App name contains invalid characters, it must not contain quotes or any of the following < > * . / \\ : ; | = , &");
+				SHOW_ERR(_("App name contains invalid characters, it must not contain quotes or any of the following < > * . / \\ : ; | = , &"));
 				goto ios_dialog_clean_up; 
 			}
 		}
 		
 		// check icon
-		//if ( !app_icon || !*app_icon ) { SHOW_ERR("You must select an app icon"); goto ios_dialog_clean_up; }
+		//if ( !app_icon || !*app_icon ) { SHOW_ERR(_("You must select an app icon")); goto ios_dialog_clean_up; }
 		if ( app_icon && *app_icon )
 		{
-			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR("App icon must be a PNG file"); goto ios_dialog_clean_up; }
-			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find app icon location"); goto ios_dialog_clean_up; }
+			if ( !strrchr( app_icon, '.' ) || utils_str_casecmp( strrchr( app_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("App icon must be a PNG file")); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find app icon location")); goto ios_dialog_clean_up; }
 		}
 
 		if ( firebase_config && *firebase_config )
 		{
-			if ( !strrchr( firebase_config, '.' ) || utils_str_casecmp( strrchr( firebase_config, '.' ), ".plist" ) != 0 ) { SHOW_ERR("Firebase config file must be a .plist file"); goto ios_dialog_clean_up; }
-			if ( !g_file_test( firebase_config, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find Firebase config file"); goto ios_dialog_clean_up; }
+			if ( !strrchr( firebase_config, '.' ) || utils_str_casecmp( strrchr( firebase_config, '.' ), ".plist" ) != 0 ) { SHOW_ERR(_("Firebase config file must be a .plist file")); goto ios_dialog_clean_up; }
+			if ( !g_file_test( firebase_config, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find Firebase config file")); goto ios_dialog_clean_up; }
 		}
 
 		// check splash screens
 		if ( app_splash1 && *app_splash1 )
 		{
-			if ( !strrchr( app_splash1, '.' ) || utils_str_casecmp( strrchr( app_splash1, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (640x960) must be a PNG file"); goto ios_dialog_clean_up; }
-			if ( !g_file_test( app_splash1, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (640x960) location"); goto ios_dialog_clean_up; }
+			if ( !strrchr( app_splash1, '.' ) || utils_str_casecmp( strrchr( app_splash1, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Splash screen (640x960) must be a PNG file")); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash1, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find splash screen (640x960) location")); goto ios_dialog_clean_up; }
 		}
 
 		if ( app_splash2 && *app_splash2 )
 		{
-			if ( !strrchr( app_splash2, '.' ) || utils_str_casecmp( strrchr( app_splash2, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (640x1136) must be a PNG file"); goto ios_dialog_clean_up; }
-			if ( !g_file_test( app_splash2, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (640x1136) location"); goto ios_dialog_clean_up; }
+			if ( !strrchr( app_splash2, '.' ) || utils_str_casecmp( strrchr( app_splash2, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Splash screen (640x1136) must be a PNG file")); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash2, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find splash screen (640x1136) location")); goto ios_dialog_clean_up; }
 		}
 
 		if ( app_splash3 && *app_splash3 )
 		{
-			if ( !strrchr( app_splash3, '.' ) || utils_str_casecmp( strrchr( app_splash3, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (1536x2048) must be a PNG file"); goto ios_dialog_clean_up; }
-			if ( !g_file_test( app_splash3, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (1536x2048) location"); goto ios_dialog_clean_up; }
+			if ( !strrchr( app_splash3, '.' ) || utils_str_casecmp( strrchr( app_splash3, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Splash screen (1536x2048) must be a PNG file")); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash3, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find splash screen (1536x2048) location")); goto ios_dialog_clean_up; }
 		}
 
 		if ( app_splash4 && *app_splash4 )
 		{
-			if ( !strrchr( app_splash4, '.' ) || utils_str_casecmp( strrchr( app_splash4, '.' ), ".png" ) != 0 ) { SHOW_ERR("Splash screen (1125x2436) must be a PNG file"); goto ios_dialog_clean_up; }
-			if ( !g_file_test( app_splash4, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find splash screen (1125x2436) location"); goto ios_dialog_clean_up; }
+			if ( !strrchr( app_splash4, '.' ) || utils_str_casecmp( strrchr( app_splash4, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Splash screen (1125x2436) must be a PNG file")); goto ios_dialog_clean_up; }
+			if ( !g_file_test( app_splash4, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find splash screen (1125x2436) location")); goto ios_dialog_clean_up; }
 		}
 
 		// check profile
-		if ( !profile || !*profile ) { SHOW_ERR("You must select a provisioning profile"); goto ios_dialog_clean_up; }
-		if ( !strrchr( profile, '.' ) || utils_str_casecmp( strrchr( profile, '.' ), ".mobileprovision" ) != 0 ) { SHOW_ERR("Provisioning profile must have .mobileprovision extension"); goto ios_dialog_clean_up; }
-		if ( !g_file_test( profile, G_FILE_TEST_EXISTS ) ) { SHOW_ERR("Could not find provisioning profile location"); goto ios_dialog_clean_up; }
+		if ( !profile || !*profile ) { SHOW_ERR(_("You must select a provisioning profile")); goto ios_dialog_clean_up; }
+		if ( !strrchr( profile, '.' ) || utils_str_casecmp( strrchr( profile, '.' ), ".mobileprovision" ) != 0 ) { SHOW_ERR(_("Provisioning profile must have .mobileprovision extension")); goto ios_dialog_clean_up; }
+		if ( !g_file_test( profile, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find provisioning profile location")); goto ios_dialog_clean_up; }
 
 		// check version
-		if ( !version_number || !*version_number ) { SHOW_ERR("You must enter a version number, e.g. 1.0.0"); goto ios_dialog_clean_up; }
+		if ( !version_number || !*version_number ) { SHOW_ERR(_("You must enter a version number, e.g. 1.0.0")); goto ios_dialog_clean_up; }
 		for( i = 0; i < strlen(version_number); i++ )
 		{
 			if ( (version_number[i] < 48 || version_number[i] > 57) && version_number[i] != 46 ) 
 			{ 
-				SHOW_ERR("Version number contains invalid characters, must be 0-9 and . only"); 
+				SHOW_ERR(_("Version number contains invalid characters, must be 0-9 and . only")); 
 				goto ios_dialog_clean_up; 
 			}
 		}
@@ -3399,7 +3690,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			{
 				if ( (facebook_id[i] < 48 || facebook_id[i] > 57) ) 
 				{ 
-					SHOW_ERR("Facebook App ID must be numbers only"); 
+					SHOW_ERR(_("Facebook App ID must be numbers only")); 
 					goto ios_dialog_clean_up; 
 				}
 			}
@@ -3407,7 +3698,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 		if ( !g_file_test( "/Applications/XCode.app/Contents/Developer/usr/bin/actool", G_FILE_TEST_EXISTS ) )
 		{
-			SHOW_ERR("As of iOS 11 you must install XCode to export iOS apps from the AGK IDE. XCode can be downloaded from the Mac AppStore"); 
+			SHOW_ERR(_("As of iOS 11 you must install XCode to export iOS apps from the AGK IDE. XCode can be downloaded from the Mac AppStore")); 
 			goto ios_dialog_clean_up; 
 		}
 	
@@ -3511,7 +3802,7 @@ ios_dialog_continue:
 		
 		if ( !utils_copy_folder( src_folder, app_folder, TRUE, NULL ) )
 		{
-			SHOW_ERR( "Failed to copy source folder" );
+			SHOW_ERR( _("Failed to copy source folder") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3532,7 +3823,7 @@ ios_dialog_continue:
 		// open provisioning profile and extract certificate
 		if ( !g_file_get_contents( profile, &contents, &length, NULL ) )
 		{
-			SHOW_ERR( "Failed to read provisioning profile" );
+			SHOW_ERR( _("Failed to read provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3540,14 +3831,14 @@ ios_dialog_continue:
 		gchar* certificate = strstr( contents+100, "<key>DeveloperCertificates</key>" );
 		if ( !certificate )
 		{
-			SHOW_ERR( "Failed to read certificate from provisioning profile" );
+			SHOW_ERR( _("Failed to read certificate from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 
 		certificate = strstr( certificate, "<data>" );
 		if ( !certificate )
 		{
-			SHOW_ERR( "Failed to read certificate data from provisioning profile" );
+			SHOW_ERR( _("Failed to read certificate data from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3555,7 +3846,7 @@ ios_dialog_continue:
 		gchar* certificate_end = strstr( certificate, "</data>" );
 		if ( !certificate_end )
 		{
-			SHOW_ERR( "Failed to read certificate end data from provisioning profile" );
+			SHOW_ERR( _("Failed to read certificate end data from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3571,14 +3862,14 @@ ios_dialog_continue:
 		certificate = strstr( contents+100, "<key>application-identifier</key>" );
 		if ( !certificate )
 		{
-			SHOW_ERR( "Failed to read bundle ID from provisioning profile" );
+			SHOW_ERR( _("Failed to read bundle ID from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 
 		certificate = strstr( certificate, "<string>" );
 		if ( !certificate )
 		{
-			SHOW_ERR( "Failed to read bundle ID data from provisioning profile" );
+			SHOW_ERR( _("Failed to read bundle ID data from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3586,7 +3877,7 @@ ios_dialog_continue:
 		certificate_end = strstr( certificate, "</string>" );
 		if ( !certificate_end )
 		{
-			SHOW_ERR( "Failed to read bundle ID end data from provisioning profile" );
+			SHOW_ERR( _("Failed to read bundle ID end data from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 		
@@ -3622,14 +3913,14 @@ ios_dialog_continue:
 			certificate = strstr( certificate, "<array>" );
 			if ( !certificate )
 			{
-				SHOW_ERR( "Failed to read App Group data from provisioning profile" );
+				SHOW_ERR( _("Failed to read App Group data from provisioning profile") );
 				goto ios_dialog_cleanup2;
 			}
 
 			app_group_data = strstr( certificate, "</array>" );
 			if ( !app_group_data )
 			{
-				SHOW_ERR( "Failed to read App Group end data from provisioning profile" );
+				SHOW_ERR( _("Failed to read App Group end data from provisioning profile") );
 				goto ios_dialog_cleanup2;
 			}
 
@@ -3649,7 +3940,7 @@ ios_dialog_continue:
 				certificate_end = strstr( certificate, "</array>" );
 				if ( !certificate_end )
 				{
-					SHOW_ERR( "Failed to read App Group end data from provisioning profile" );
+					SHOW_ERR( _("Failed to read App Group end data from provisioning profile") );
 					goto ios_dialog_cleanup2;
 				}
 
@@ -3662,6 +3953,13 @@ ios_dialog_continue:
 				app_group_data[ cert_length ] = 0;
 			}
 		}
+
+		// look for cloud kit
+		int cloudKit = 0;
+        if ( strstr(contents+100, "<key>com.apple.developer.ubiquity-kvstore-identifier</key>") != 0 )
+        {
+            cloudKit = 1;
+        }
 		
 		// extract team ID, reuse variables
 		certificate = strstr( contents+100, "<key>com.apple.developer.team-identifier</key>" );
@@ -3670,7 +3968,7 @@ ios_dialog_continue:
 			certificate = strstr( contents+100, "<key>TeamIdentifier</key>" );
 			if ( !certificate )
 			{
-				SHOW_ERR( "Failed to read team ID from provisioning profile" );
+				SHOW_ERR( _("Failed to read team ID from provisioning profile") );
 				goto ios_dialog_cleanup2;
 			}
 		}
@@ -3678,7 +3976,7 @@ ios_dialog_continue:
 		certificate = strstr( certificate, "<string>" );
 		if ( !certificate )
 		{
-			SHOW_ERR( "Failed to read team ID data from provisioning profile" );
+			SHOW_ERR( _("Failed to read team ID data from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3686,7 +3984,7 @@ ios_dialog_continue:
 		certificate_end = strstr( certificate, "</string>" );
 		if ( !certificate_end )
 		{
-			SHOW_ERR( "Failed to read team ID end data from provisioning profile" );
+			SHOW_ERR( _("Failed to read team ID end data from provisioning profile") );
 			goto ios_dialog_cleanup2;
 		}
 		
@@ -3721,7 +4019,7 @@ ios_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run \"security\" program: %s", error->message );
+			SHOW_ERR1( _("Failed to run \"security\" program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -3729,8 +4027,8 @@ ios_dialog_continue:
 		
 		if ( status != 0 && strstr(str_out,"SHA-1") == 0 )
 		{
-			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
-			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
+			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Failed to get code signing identities (error %d: %s)"), status, str_out );
+			else SHOW_ERR1( _("Failed to get code signing identities (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3742,7 +4040,7 @@ ios_dialog_continue:
 			gchar *sha_end = strchr( sha, '\n' );
 			if ( !sha_end )
 			{
-				SHOW_ERR( "Failed to read code signing identity from certificate list" );
+				SHOW_ERR( _("Failed to read code signing identity from certificate list") );
 				goto ios_dialog_cleanup2;
 			}
 
@@ -3758,7 +4056,7 @@ ios_dialog_continue:
 			sha = strstr( sha, "-----BEGIN CERTIFICATE-----" );
 			if ( !sha )
 			{
-				SHOW_ERR( "Failed to read certificate data from certificate list" );
+				SHOW_ERR( _("Failed to read certificate data from certificate list") );
 				goto ios_dialog_cleanup2;
 			}
 
@@ -3766,7 +4064,7 @@ ios_dialog_continue:
 			sha_end = strstr( sha, "-----END CERTIFICATE-----" );
 			if ( !sha_end )
 			{
-				SHOW_ERR( "Failed to read certificate end data from certificate list" );
+				SHOW_ERR( _("Failed to read certificate end data from certificate list") );
 				goto ios_dialog_cleanup2;
 			}
 
@@ -3793,7 +4091,7 @@ ios_dialog_continue:
 
 		if ( !cert_hash )
 		{
-			SHOW_ERR( "Could not find the certificate used to create the provisioning profile, have you added the certificate to your keychain?" );
+			SHOW_ERR( _("Could not find the certificate used to create the provisioning profile, have you added the certificate to your keychain?") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3813,7 +4111,7 @@ ios_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run \"security\" program: %s", error->message );
+			SHOW_ERR1( _("Failed to run \"security\" program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -3821,15 +4119,15 @@ ios_dialog_continue:
 		
 		if ( status != 0 && strncmp(str_out,"  1) ",strlen("  1) ") != 0) )
 		{
-			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get code signing identities (error %d: %s)", status, str_out );
-			else SHOW_ERR1( "Failed to get code signing identities (error: %d)", status );
+			if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Failed to get code signing identities (error %d: %s)"), status, str_out );
+			else SHOW_ERR1( _("Failed to get code signing identities (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
 
 		// parse identities, look for the identity we found earlier
 		if ( strstr( str_out, cert_hash ) == 0 )
 		{
-			SHOW_ERR( "Signing certificate is not valid, either the private key is missing from your keychain, or the certificate has expired" );
+			SHOW_ERR( _("Signing certificate is not valid, either the private key is missing from your keychain, or the certificate has expired") );
 			goto ios_dialog_cleanup2;
 		}
 		
@@ -3866,13 +4164,21 @@ ios_dialog_continue:
 			strcat( newcontents, "\n" );
 		}
 
+		if ( cloudKit )
+		{
+			strcat( newcontents, "<key>com.apple.developer.icloud-container-identifiers</key>\n	<array/>" );
+			strcat( newcontents, "key>com.apple.developer.ubiquity-kvstore-identifier</key>\n	<string>" );
+			strcat( newcontents, bundle_id );
+			strcat( newcontents, "</string>" );
+		}
+
 		strcat( newcontents, "</dict>\n</plist>" );
 
 		entitlements_file = g_build_filename( tmp_folder, "entitlements.xcent", NULL );
 
 		if ( !g_file_set_contents( entitlements_file, newcontents, strlen(newcontents), &error ) )
 		{
-			SHOW_ERR1( "Failed to write entitlements file: %s", error->message );
+			SHOW_ERR1( _("Failed to write entitlements file: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -3898,7 +4204,7 @@ ios_dialog_continue:
 
 		if ( !g_file_set_contents( expanded_entitlements_file, newcontents, strlen(newcontents), &error ) )
 		{
-			SHOW_ERR1( "Failed to write expanded entitlements file: %s", error->message );
+			SHOW_ERR1( _("Failed to write expanded entitlements file: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -3923,7 +4229,7 @@ ios_dialog_continue:
 		contents = 0;
 		if ( !g_file_get_contents( temp_filename1, &contents, &length, NULL ) )
 		{
-			SHOW_ERR( "Failed to read Info.plist file" );
+			SHOW_ERR( _("Failed to read Info.plist file") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3962,7 +4268,7 @@ ios_dialog_continue:
 
 		if ( !g_file_set_contents( temp_filename1, contents, strlen(contents), NULL ) )
 		{
-			SHOW_ERR( "Failed to write Info.plist file" );
+			SHOW_ERR( _("Failed to write Info.plist file") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -3980,7 +4286,7 @@ ios_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run userid program: %s", error->message );
+			SHOW_ERR1( _("Failed to run userid program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -3989,7 +4295,7 @@ ios_dialog_continue:
         /*
 		if ( status != 0 )
 		{
-			SHOW_ERR1( "Failed to get user name (error: %d)", status );
+			SHOW_ERR1( _("Failed to get user name (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
          */
@@ -4000,14 +4306,14 @@ ios_dialog_continue:
 			// write Icons.xcassets file
 			if ( !utils_copy_folder( icons_src_folder, icons_dst_folder, TRUE, NULL ) )
 			{
-				SHOW_ERR( "Failed to create icon asset catalog" );
+				SHOW_ERR( _("Failed to create icon asset catalog") );
 				goto ios_dialog_cleanup2;
 			}
 
 			icon_image = gdk_pixbuf_new_from_file( app_icon, &error );
 			if ( !icon_image || error )
 			{
-				SHOW_ERR1( "Failed to load image icon: %s", error->message );
+				SHOW_ERR1( _("Failed to load image icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4019,7 +4325,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 152, 152, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 152x152 icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save 152x152 icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4032,7 +4338,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 180, 180, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 180x180 icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save 180x180 icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4045,7 +4351,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 167, 167, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 167x167 icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save 167x167 icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4058,7 +4364,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 120, 120, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 120x120 icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save 120x120 icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4071,7 +4377,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 76, 76, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 76x76 icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save 76x76 icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4084,7 +4390,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 60, 60, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 60x60 icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save 60x60 icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4097,7 +4403,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 1024, 1024, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save 1024x1024 icon: %s", error->message );
+				SHOW_ERR1( _("Failed to save 1024x1024 icon: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4132,7 +4438,7 @@ ios_dialog_continue:
 
 			if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 			{
-				SHOW_ERR1( "Failed to run \"actool\" program: %s", error->message );
+				SHOW_ERR1( _("Failed to run \"actool\" program: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4140,8 +4446,8 @@ ios_dialog_continue:
 		
 			if ( !str_out || strstr(str_out,"actool.errors") != 0 || strstr(str_out,"actool.warnings") != 0 || strstr(str_out,"actool.notices") != 0 )
 			{
-				if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to compile asset catalog (error %d: %s)", status, str_out );
-				else SHOW_ERR1( "Failed to get compile asset catalog (error: %d)", status );
+				if ( str_out && *str_out ) dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Failed to compile asset catalog (error %d: %s)"), status, str_out );
+				else SHOW_ERR1( _("Failed to get compile asset catalog (error: %d)"), status );
 				goto ios_dialog_cleanup2;
 			}
 
@@ -4161,7 +4467,7 @@ ios_dialog_continue:
 			splash_image = gdk_pixbuf_new_from_file( app_splash1, &error );
 			if ( !splash_image || error )
 			{
-				SHOW_ERR1( "Failed to load splash screen (640x960): %s", error->message );
+				SHOW_ERR1( _("Failed to load splash screen (640x960): %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4172,7 +4478,7 @@ ios_dialog_continue:
 			float aspect = width / (float) height;
 			if ( aspect > 0.7f || aspect < 0.63f )
 			{
-				dialogs_show_msgbox(GTK_MESSAGE_WARNING,  "Splash screen (640x960) should have an aspect ratio near 0.66 (e.g. 320x480 or 640x960) otherwise it will look stretched when scaled. Export will continue." );
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING,  _("Splash screen (640x960) should have an aspect ratio near 0.66 (e.g. 320x480 or 640x960) otherwise it will look stretched when scaled. Export will continue.") );
 			}
 
 			// scale it and save it
@@ -4181,7 +4487,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 640, 960, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default@2x.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default@2x.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4202,7 +4508,7 @@ ios_dialog_continue:
 			splash_image = gdk_pixbuf_new_from_file( app_splash2, &error );
 			if ( !splash_image || error )
 			{
-				SHOW_ERR1( "Failed to load splash screen (640x1136): %s", error->message );
+				SHOW_ERR1( _("Failed to load splash screen (640x1136): %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4213,7 +4519,7 @@ ios_dialog_continue:
 			float aspect = width / (float) height;
 			if ( aspect > 0.59f || aspect < 0.53f )
 			{
-				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Splash screen (640x1136) should have an aspect ratio near 0.56 (e.g. 640x1136 or 1080x1920) otherwise it will look stretched when scaled. Export will continue." );
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Splash screen (640x1136) should have an aspect ratio near 0.56 (e.g. 640x1136 or 1080x1920) otherwise it will look stretched when scaled. Export will continue.") );
 			}
 
 			// scale it and save it
@@ -4222,7 +4528,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 640, 1136, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-568h@2x.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-568h@2x.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4235,7 +4541,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 750, 1334, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-375w-667h@2x.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-375w-667h@2x.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4248,7 +4554,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1242, 2208, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-414w-736h@3x.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-414w-736h@3x.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4269,7 +4575,7 @@ ios_dialog_continue:
 			splash_image = gdk_pixbuf_new_from_file( app_splash4, &error );
 			if ( !splash_image || error )
 			{
-				SHOW_ERR1( "Failed to load splash screen (1125x2436): %s", error->message );
+				SHOW_ERR1( _("Failed to load splash screen (1125x2436): %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4280,7 +4586,7 @@ ios_dialog_continue:
 			float aspect = width / (float) height;
 			if ( aspect > 0.43f || aspect < 0.49f )
 			{
-				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Splash screen (1125x2436) should have an aspect ratio near 0.46 otherwise it will look stretched when scaled. Export will continue." );
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Splash screen (1125x2436) should have an aspect ratio near 0.46 otherwise it will look stretched when scaled. Export will continue.") );
 			}
 
 			// scale it and save it
@@ -4289,7 +4595,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1125, 2436, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-375w-812h@3x.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-375w-812h@3x.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4310,7 +4616,7 @@ ios_dialog_continue:
 			splash_image = gdk_pixbuf_new_from_file( app_splash3, &error );
 			if ( !splash_image || error )
 			{
-				SHOW_ERR1( "Failed to load splash screen (1536x2048): %s", error->message );
+				SHOW_ERR1( _("Failed to load splash screen (1536x2048): %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4321,7 +4627,7 @@ ios_dialog_continue:
 			float aspect = width / (float) height;
 			if ( aspect > 0.78f || aspect < 0.72f )
 			{
-				dialogs_show_msgbox(GTK_MESSAGE_WARNING, "Splash screen (1536x2048) should have an aspect ratio near 0.75 (e.g. 768x1024 or 1536x2048) otherwise it will look stretched when scaled. Export will continue." );
+				dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Splash screen (1536x2048) should have an aspect ratio near 0.75 (e.g. 768x1024 or 1536x2048) otherwise it will look stretched when scaled. Export will continue.") );
 			}
 
 			// scale it and save it
@@ -4330,7 +4636,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 768, 1024, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-Portrait~ipad.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-Portrait~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4343,7 +4649,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1536, 2048, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-Portrait@2x~ipad.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-Portrait@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4356,7 +4662,7 @@ ios_dialog_continue:
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 2048, 2732, GDK_INTERP_HYPER );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-Portrait-1366h@2x~ipad.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-Portrait-1366h@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4371,7 +4677,7 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( temp_image );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-Landscape~ipad.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-Landscape~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4386,7 +4692,7 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( temp_image );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-Landscape@2x~ipad.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-Landscape@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4401,7 +4707,7 @@ ios_dialog_continue:
 			gdk_pixbuf_unref( temp_image );
 			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
 			{
-				SHOW_ERR1( "Failed to save Default-Landscape-1366h@2x~ipad.png splash screen: %s", error->message );
+				SHOW_ERR1( _("Failed to save Default-Landscape-1366h@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
 				error = NULL;
 				goto ios_dialog_cleanup2;
@@ -4441,7 +4747,7 @@ ios_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run userid program: %s", error->message );
+			SHOW_ERR1( _("Failed to run userid program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -4449,7 +4755,7 @@ ios_dialog_continue:
 		
 		if ( !str_out || !*str_out )
 		{
-			SHOW_ERR1( "Failed to get user name (error: %d)", status );
+			SHOW_ERR1( _("Failed to get user name (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -4469,7 +4775,7 @@ ios_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run groupid program: %s", error->message );
+			SHOW_ERR1( _("Failed to run groupid program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -4477,7 +4783,7 @@ ios_dialog_continue:
 		
 		if ( !str_out || !*str_out )
 		{
-			SHOW_ERR1( "Failed to get group name (error: %d)", status );
+			SHOW_ERR1( _("Failed to get group name (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -4498,7 +4804,7 @@ ios_dialog_continue:
         
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run chown program: %s", error->message );
+			SHOW_ERR1( _("Failed to run chown program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -4507,8 +4813,8 @@ ios_dialog_continue:
         /*
 		if ( status != 0 && status < 256 )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file ownership (error: %s)", str_out );
-			else SHOW_ERR1( "Failed to set file ownership (error: %d)", status );
+			if ( str_out && *str_out ) SHOW_ERR1( _("Failed to set file ownership (error: %s)"), str_out );
+			else SHOW_ERR1( _("Failed to set file ownership (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
          */
@@ -4527,7 +4833,7 @@ ios_dialog_continue:
 
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run chmod program: %s", error->message );
+			SHOW_ERR1( _("Failed to run chmod program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -4536,8 +4842,8 @@ ios_dialog_continue:
         /*
 		if ( status != 0 && status < 256 )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to set file permissions (error: %s)", str_out );
-			else SHOW_ERR1( "Failed to set file permissions (error: %d)", status );
+			if ( str_out && *str_out ) SHOW_ERR1( _("Failed to set file permissions (error: %s)"), str_out );
+			else SHOW_ERR1( _("Failed to set file permissions (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
          */
@@ -4561,7 +4867,7 @@ ios_dialog_continue:
         
 		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
-			SHOW_ERR1( "Failed to run codesign program: %s", error->message );
+			SHOW_ERR1( _("Failed to run codesign program: %s"), error->message );
 			g_error_free(error);
 			error = NULL;
 			goto ios_dialog_cleanup2;
@@ -4570,8 +4876,8 @@ ios_dialog_continue:
         /*
 		if ( status != 0 && status < 256 )
 		{
-			if ( str_out && *str_out ) SHOW_ERR1( "Failed to sign app (error: %s)", str_out );
-			else SHOW_ERR1( "Failed to sign app (error: %d)", status );
+			if ( str_out && *str_out ) SHOW_ERR1( _("Failed to sign app (error: %s)"), str_out );
+			else SHOW_ERR1( _("Failed to sign app (error: %d)"), status );
 			goto ios_dialog_cleanup2;
 		}
          */
@@ -4579,7 +4885,7 @@ ios_dialog_continue:
 		// create IPA zip file
 		if ( !mz_zip_writer_init_file( &zip_archive, output_file_zip, 0 ) )
 		{
-			SHOW_ERR( "Failed to initialise zip file for writing" );
+			SHOW_ERR( _("Failed to initialise zip file for writing") );
 			goto ios_dialog_cleanup2;
 		}
 		
@@ -4587,18 +4893,18 @@ ios_dialog_continue:
 		temp_filename1 = g_strconcat( "Payload/", app_name, ".app", NULL );
 		if ( !utils_add_folder_to_zip( &zip_archive, app_folder, temp_filename1, TRUE, FALSE ) )
 		{
-			SHOW_ERR( "Failed to add files to IPA" );
+			SHOW_ERR( _("Failed to add files to IPA") );
 			goto ios_dialog_cleanup2;
 		}
 
 		if ( !mz_zip_writer_finalize_archive( &zip_archive ) )
 		{
-			SHOW_ERR( "Failed to finalize IPA file" );
+			SHOW_ERR( _("Failed to finalize IPA file") );
 			goto ios_dialog_cleanup2;
 		}
 		if ( !mz_zip_writer_end( &zip_archive ) )
 		{
-			SHOW_ERR( "Failed to end IPA file" );
+			SHOW_ERR( _("Failed to end IPA file") );
 			goto ios_dialog_cleanup2;
 		}
 
@@ -4681,7 +4987,7 @@ void project_export_ipa()
 	if (ui_widgets.ios_dialog == NULL)
 	{
 		ui_widgets.ios_dialog = create_ios_dialog();
-		gtk_widget_set_name(ui_widgets.ios_dialog, "Export IPA");
+		gtk_widget_set_name(ui_widgets.ios_dialog, _("Export IPA"));
 		gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.ios_dialog), GTK_WINDOW(main_widgets.window));
 
 		g_signal_connect(ui_widgets.ios_dialog, "response", G_CALLBACK(on_ios_dialog_response), NULL);
@@ -4910,10 +5216,11 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.package_name = 0;
 	project->apk_settings.permission_flags = AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE;
 	project->apk_settings.play_app_id = 0;
-	project->apk_settings.sdk_version = 0; // 2.3.1
+	project->apk_settings.sdk_version = 1; // 4.0.3
 	project->apk_settings.version_name = 0;
 	project->apk_settings.version_number = 0;
 	project->apk_settings.firebase_config_path = 0;
+	project->apk_settings.arcore = 0;
 }
 
 void init_ios_settings( GeanyProject* project )
@@ -4995,6 +5302,7 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_integer( config, "apk_settings", "permission_flags", project->apk_settings.permission_flags );
 	g_key_file_set_string( config, "apk_settings", "play_app_id", FALLBACK(project->apk_settings.play_app_id,"") );
 	g_key_file_set_integer( config, "apk_settings", "sdk_version", project->apk_settings.sdk_version ); 
+	g_key_file_set_integer( config, "apk_settings", "arcore", project->apk_settings.arcore ); 
 	g_key_file_set_string( config, "apk_settings", "version_name", FALLBACK(project->apk_settings.version_name,"") );
 	g_key_file_set_integer( config, "apk_settings", "version_number", project->apk_settings.version_number );
 	g_key_file_set_string( config, "apk_settings", "firebase_config_path", FALLBACK(project->apk_settings.firebase_config_path,"") );
@@ -5042,6 +5350,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.permission_flags = utils_get_setting_integer( config, "apk_settings", "permission_flags", AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE );
 	project->apk_settings.play_app_id = g_key_file_get_string( config, "apk_settings", "play_app_id", 0 );
 	project->apk_settings.sdk_version = utils_get_setting_integer( config, "apk_settings", "sdk_version", 0 );
+	project->apk_settings.arcore = utils_get_setting_integer( config, "apk_settings", "arcore", 0 );
 	project->apk_settings.version_name = g_key_file_get_string( config, "apk_settings", "version_name", 0 );
 	project->apk_settings.version_number = utils_get_setting_integer( config, "apk_settings", "version_number", 0 );
 	project->apk_settings.firebase_config_path = g_key_file_get_string( config, "apk_settings", "firebase_config_path", 0 );
@@ -5085,7 +5394,7 @@ gboolean project_close(GeanyProject *project, gboolean open_default)
 
 	/* save project session files, etc */
 	if (!write_config(project,FALSE))
-		g_warning("Project file \"%s\" could not be written", project->file_name);
+		g_warning(_("Project file \"%s\" could not be written"), project->file_name);
 
 	if (project_prefs.project_session)
 	{
@@ -5191,7 +5500,7 @@ gboolean project_add_file(GeanyProject *project, gchar* filename, gboolean updat
 {
 	if ( !project )
 	{
-		SHOW_ERR( "Failed to add file to project, no current project selected. Click Project in the menu bar to create a new project or open an existing one." );
+		SHOW_ERR( _("Failed to add file to project, no current project selected. Click Project in the menu bar to create a new project or open an existing one.") );
 		return FALSE;
 	}
 
@@ -5225,7 +5534,7 @@ void project_remove_file(GeanyProject *project, gchar* filename, gboolean update
 {
 	if ( !project )
 	{
-		SHOW_ERR( "Failed to remove file from project, no current project selected" );
+		SHOW_ERR( _("Failed to remove file from project, no current project selected") );
 		return;
 	}
 

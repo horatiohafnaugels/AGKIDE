@@ -59,14 +59,14 @@
 
 
 #define DEFAULT_STATUSBAR_TEMPLATE N_(\
-	"line: %l / %L\t "   \
+	_("line: %l / %L\t "   \
 	"col: %c\t "         \
 	"sel: %s\t "         \
 	"%w      %t      %m" \
 	"mode: %M      "     \
 	"encoding: %e      " \
 	"filetype: %f      " \
-	"scope: %S")
+	"scope: %S"))
 
 GeanyInterfacePrefs	interface_prefs;
 GeanyMainWidgets	main_widgets;
@@ -3472,7 +3472,7 @@ void on_install_dialog_response(GtkDialog *dialog, gint response, gpointer user_
 					g_usleep( 100 * 1000 );
 					//g_thread_yield();
 
-					strcpy( final_progress, "Installing: " );
+					strcpy( final_progress, _("Installing: ") );
 					strcat( final_progress, (gchar*) install_file_progress );
 					gtk_label_set_text( GTK_LABEL(status), final_progress );
 
@@ -3541,14 +3541,14 @@ gpointer CopyAdditionalFiles(gpointer data)
 		if ( !projects_path )
 		{
 			//dialogs_show_msgbox(GTK_MESSAGE_ERROR, "Failed to get projects source folder");
-            strcpy( (gchar*)install_file_progress, "Failed to get projects source folder" );
+            strcpy( (gchar*)install_file_progress, _("Failed to get projects source folder") );
             result = 1;
 			break;
 		}
 
 		if ( !tier2_path )
 		{
-			strcpy( (gchar*)install_file_progress, "Failed to get C++ libraries source folder");
+			strcpy( (gchar*)install_file_progress, _("Failed to get C++ libraries source folder"));
             result = 1;
 			break;
 		}
@@ -3560,13 +3560,13 @@ gpointer CopyAdditionalFiles(gpointer data)
 		{
 			// install project files
 			if (!g_file_test (projects_path, G_FILE_TEST_EXISTS)) {
-				sprintf( (gchar*)install_file_progress, "Failed to find projects source folder at location: %s", projects_path);
+				sprintf( (gchar*)install_file_progress, _("Failed to find projects source folder at location: %s"), projects_path);
                 result = 1;
 				break;
 			}
 
 			if (!g_file_test (projects_path, G_FILE_TEST_IS_DIR)) {
-				sprintf( (gchar*)install_file_progress, "Unexpected: Projects source folder is not a folder: %s", projects_path);
+				sprintf( (gchar*)install_file_progress, _("Unexpected: Projects source folder is not a folder: %s"), projects_path);
                 result = 1;
 				break;
 			}
@@ -3583,13 +3583,13 @@ gpointer CopyAdditionalFiles(gpointer data)
 		{
 			// install tier 2 files
 			if (!g_file_test (tier2_path, G_FILE_TEST_EXISTS)) {
-				sprintf( (gchar*)install_file_progress, "Failed to find C++ libraries folder at location: %s", tier2_path);
+				sprintf( (gchar*)install_file_progress, _("Failed to find C++ libraries folder at location: %s"), tier2_path);
                 result = 1;
 				break;
 			}
 
 			if (!g_file_test (tier2_path, G_FILE_TEST_IS_DIR)) {
-				sprintf( (gchar*)install_file_progress, "Unexpected: C++ libraries folder is not a folder: %s", tier2_path);
+				sprintf( (gchar*)install_file_progress, _("Unexpected: C++ libraries folder is not a folder: %s"), tier2_path);
                 result = 1;
 				break;
 			}
