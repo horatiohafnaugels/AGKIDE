@@ -291,6 +291,12 @@ G_MODULE_EXPORT void
 on_help_menu_item_bug_report_activate(GtkMenuItem *item, gpointer user_data);
 
 G_MODULE_EXPORT void
+on_help_menu_item_mobile_android_activate(GtkMenuItem *item, gpointer user_data);
+
+G_MODULE_EXPORT void
+on_help_menu_item_mobile_ios_activate(GtkMenuItem *item, gpointer user_data);
+
+G_MODULE_EXPORT void
 on_line_wrapping1_toggled			   (GtkCheckMenuItem *checkmenuitem,
 										gpointer		 user_data);
 

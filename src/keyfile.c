@@ -1596,8 +1596,12 @@ void configuration_open_files(GeanyProject *project)
 			if (g_file_test(locale_filename, G_FILE_TEST_IS_REGULAR))
 			{
 				GeanyDocument *doc = document_open_file_full( NULL, locale_filename, 0, FALSE, NULL, NULL );
-				if ( g_strv_length(tmp) > 2 ) editor_goto_pos(doc->editor, atoi(tmp[2]), FALSE);
-				if ( atoi(tmp[0]) == 1 ) set_curr_doc = doc;
+				if ( !doc ) failure = TRUE;
+				else
+				{
+					if ( g_strv_length(tmp) > 2 ) editor_goto_pos(doc->editor, atoi(tmp[2]), FALSE);
+					if ( atoi(tmp[0]) == 1 ) set_curr_doc = doc;
+				}
 			}
 			else
 				failure = TRUE;

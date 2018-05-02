@@ -1207,7 +1207,8 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		if ( !package_name || !*package_name ) { SHOW_ERR(_("You must enter a package name")); goto android_dialog_clean_up; }
 		if ( strlen(package_name) > 100 ) { SHOW_ERR(_("Package name must be less than 100 characters")); goto android_dialog_clean_up; }
 		if ( strchr(package_name,'.') == NULL ) { SHOW_ERR(_("Package name must contain at least one dot character")); goto android_dialog_clean_up; }
-		if ( package_name[0] == '.' || package_name[strlen(package_name)-1] == '.' ) { SHOW_ERR(_("Package name must not begin or end with a dot")); goto android_dialog_clean_up; }
+		if ( (package_name[0] < 65 || package_name[0] > 90) && (package_name[0] < 97 || package_name[0] > 122) ) { SHOW_ERR(_("Package name must begin with a letter")); goto android_dialog_clean_up; }
+		if ( package_name[strlen(package_name)-1] == '.' ) { SHOW_ERR(_("Package name must not end with a dot")); goto android_dialog_clean_up; }
 
 		gchar last = 0;
 		for( i = 0; i < strlen(package_name); i++ )

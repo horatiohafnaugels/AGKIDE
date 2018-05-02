@@ -1522,22 +1522,42 @@ G_MODULE_EXPORT void on_help_shortcuts1_activate(GtkMenuItem *menuitem, gpointer
 
 G_MODULE_EXPORT void on_website1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
-	utils_open_browser("http://www.appgamekit.com");
+	utils_open_browser("https://www.appgamekit.com");
 }
 
 G_MODULE_EXPORT void on_help_menu_item_tgc_activate(GtkMenuItem *item, gpointer user_data)
 {
-	utils_open_browser("http://www.thegamecreators.com");
+	utils_open_browser("https://www.thegamecreators.com");
 }
 
 G_MODULE_EXPORT void on_help_menu_item_forum_activate(GtkMenuItem *item, gpointer user_data)
 {
-	utils_open_browser("http://forum.thegamecreators.com");
+	utils_open_browser("https://forum.thegamecreators.com");
 }
 
 G_MODULE_EXPORT void on_help_menu_item_upgrade_activate(GtkMenuItem *item, gpointer user_data)
 {
 	on_show_trial_dialog();
+}
+
+G_MODULE_EXPORT void on_help_menu_item_android_player_activate(GtkMenuItem *item, gpointer user_data)
+{
+	utils_open_browser("https://play.google.com/store/apps/details?id=com.thegamecreators.agk_player2");
+}
+
+G_MODULE_EXPORT void on_help_menu_item_ios_player_activate(GtkMenuItem *item, gpointer user_data)
+{
+	utils_open_browser("https://itunes.apple.com/us/app/appgamekit-player/id1071731293?mt=8");
+}
+
+G_MODULE_EXPORT void on_help_menu_item_mobile_android_activate(GtkMenuItem *item, gpointer user_data)
+{
+	utils_open_browser("https://play.google.com/store/apps/details?id=com.tgc.agk.mobile");
+}
+
+G_MODULE_EXPORT void on_help_menu_item_mobile_ios_activate(GtkMenuItem *item, gpointer user_data)
+{
+	utils_open_browser("https://itunes.apple.com/us/app/appgamekit-mobile/id1304420256?ls=1&mt=8");
 }
 
 G_MODULE_EXPORT void on_trial_image_event_button_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)

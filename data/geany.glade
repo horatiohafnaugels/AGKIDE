@@ -428,9 +428,9 @@
                                         <property name="tooltip_text" translatable="yes">Select whether this APK will be used on a Google, Amazon, or Ouya device</property>
                                         <property name="active">0</property>
                                         <items>
-                                          <item translatable="yes">Google</item>
-                                          <item translatable="yes">Amazon</item>
-                                          <item translatable="yes">Ouya</item>
+                                          <item>Google</item>
+                                          <item>Amazon</item>
+                                          <item>Ouya</item>
                                         </items>
                                         <signal name="changed" handler="on_android_output_type_combo_changed" swapped="no"/>
                                       </object>
@@ -606,17 +606,17 @@
                                         <property name="tooltip_text" translatable="yes">Only applies to Google and Amazon export. For maximum compatibility choose 4.0.3, or restrict your app to chosen minimum version. If you choose 6.0 (API 23) or above then you must use the RequestPermission command to request any required permissions before using certain commands </property>
                                         <property name="active">0</property>
                                         <items>
-                                          <item translatable="yes">4.0.3 (API 15)</item>
-                                          <item translatable="yes">4.1 (API 16)</item>
-                                          <item translatable="yes">4.2 (API 17)</item>
-                                          <item translatable="yes">4.3 (API 18)</item>
-                                          <item translatable="yes">4.4 (API 19)</item>
-                                          <item translatable="yes">5.0 (API 21)</item>
-                                          <item translatable="yes">5.1 (API 22)</item>
-                                          <item translatable="yes">6.0 (API 23)</item>
-                                          <item translatable="yes">7.0 (API 24)</item>
-                                          <item translatable="yes">7.1 (API 25)</item>
-                                          <item translatable="yes">8.0 (API 26)</item>
+                                          <item>4.0.3 (API 15)</item>
+                                          <item>4.1 (API 16)</item>
+                                          <item>4.2 (API 17)</item>
+                                          <item>4.3 (API 18)</item>
+                                          <item>4.4 (API 19)</item>
+                                          <item>5.0 (API 21)</item>
+                                          <item>5.1 (API 22)</item>
+                                          <item>6.0 (API 23)</item>
+                                          <item>7.0 (API 24)</item>
+                                          <item>7.1 (API 25)</item>
+                                          <item>8.0 (API 26)</item>
                                         </items>
                                       </object>
                                       <packing>
@@ -9603,6 +9603,15 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9623,6 +9632,15 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -13161,6 +13179,15 @@ To generate a keystore file you need to submit some information about you or you
                       <object class="GtkMenu" id="menu_help1_menu">
                         <property name="can_focus">False</property>
                         <child>
+                          <object class="GtkMenuItem" id="help_menu_item_upgrade">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Upgrade To Full Version</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_help_menu_item_upgrade_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkMenuItem" id="help1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -13231,12 +13258,45 @@ To generate a keystore file you need to submit some information about you or you
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem" id="help_menu_item_upgrade">
+                          <object class="GtkSeparatorMenuItem" id="&lt;separator&gt;">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">_Upgrade To Full Version</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="help_menu_item_android_player">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">AppGameKit Player for Android</property>
                             <property name="use_underline">True</property>
-                            <signal name="activate" handler="on_help_menu_item_upgrade_activate" swapped="no"/>
+                            <signal name="activate" handler="on_help_menu_item_android_player_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="help_menu_item_ios_player">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">AppGameKit Player for iOS</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_help_menu_item_ios_player_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="help_menu_item_mobile_android">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">AppGameKit Mobile for Android</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_help_menu_item_mobile_android_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="help_menu_item_mobile_ios">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">AppGameKit Mobile for iOS</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_help_menu_item_mobile_ios_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>
