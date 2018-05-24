@@ -1930,3 +1930,4 @@ DeleteObjectTree||(Integer objID)|
 FixSpriteToSkeleton2D||(Integer spriteID, Integer iSkeletonID, Integer bone, Integer zorder)|
 SetRawTouchMoveSensitivity||(Integer distance)|
 Move3DPhysicsCharacterController||(Integer objID, Float x, Float z, Float velocity)|
+Speak||(String text, Integer delay)|

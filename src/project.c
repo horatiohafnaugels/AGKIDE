@@ -466,11 +466,8 @@ static void on_html5_dialog_response(GtkDialog *dialog, gint response, gpointer 
 	{
 		GtkWidget *widget;
 		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_commands_combo");
-		gchar *html5_commands = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		if ( strcmp(html5_commands,"2D and 3D") == 0 ) app->project->html5_settings.commands_used = 1;
-		else if ( strcmp(html5_commands,"2D Only") == 0 ) app->project->html5_settings.commands_used = 0;
-		g_free(html5_commands);
-
+		app->project->html5_settings.commands_used = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
+		
 		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_dynamic_memory");
 		app->project->html5_settings.dynamic_memory = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
 				
@@ -496,11 +493,10 @@ static void on_html5_dialog_response(GtkDialog *dialog, gint response, gpointer 
 
 		// app details
 		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_commands_combo");
-		gchar *html5_commands = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int html5_command_int = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 		int commands_mode = -1;
-		if ( strcmp(html5_commands,"2D and 3D") == 0 ) commands_mode = 1;
-		else if ( strcmp(html5_commands,"2D Only") == 0 ) commands_mode = 0;
-		g_free(html5_commands);
+		if ( html5_command_int == 1 ) commands_mode = 1;
+		else if ( html5_command_int == 0 ) commands_mode = 0;
 
 		widget = ui_lookup_widget(ui_widgets.html5_dialog, "html5_dynamic_memory");
 		int dynamic_memory = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
@@ -907,32 +903,24 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		AGK_CLEAR_STR(app->project->apk_settings.firebase_config_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
-		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->apk_settings.orientation = 0;
-		if ( strcmp(app_orientation,"Portrait") == 0 ) app->project->apk_settings.orientation = 1;
-		else if ( strcmp(app_orientation,"All") == 0 ) app->project->apk_settings.orientation = 2;
-		g_free(app_orientation);
-
+		app->project->apk_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));;
+		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo");
-		gchar *app_arcore = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->apk_settings.arcore = 0;
-		if ( strcmp(app_arcore,"Optional") == 0 ) app->project->apk_settings.arcore = 1;
-		else if ( strcmp(app_arcore,"Required") == 0 ) app->project->apk_settings.arcore = 2;
-		g_free(app_arcore);
-
+		app->project->apk_settings.arcore = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));;
+		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		app->project->apk_settings.sdk_version = 1; // 4.0.3
-		if ( strcmp(app_sdk,"4.1") == 0 ) app->project->apk_settings.sdk_version = 2;
-		if ( strcmp(app_sdk,"4.2") == 0 ) app->project->apk_settings.sdk_version = 3;
-		if ( strcmp(app_sdk,"4.3") == 0 ) app->project->apk_settings.sdk_version = 4;
-		if ( strcmp(app_sdk,"4.4") == 0 ) app->project->apk_settings.sdk_version = 5;
-		if ( strcmp(app_sdk,"5.0") == 0 ) app->project->apk_settings.sdk_version = 6;
-		if ( strcmp(app_sdk,"5.1") == 0 ) app->project->apk_settings.sdk_version = 7;
-		if ( strcmp(app_sdk,"6.0") == 0 ) app->project->apk_settings.sdk_version = 8;
-		if ( strcmp(app_sdk,"7.0") == 0 ) app->project->apk_settings.sdk_version = 9;
-		if ( strcmp(app_sdk,"7.1") == 0 ) app->project->apk_settings.sdk_version = 10;
-		if ( strcmp(app_sdk,"8.0") == 0 ) app->project->apk_settings.sdk_version = 11;
+		if ( strncmp(app_sdk,"4.1",3) == 0 ) app->project->apk_settings.sdk_version = 2;
+		if ( strncmp(app_sdk,"4.2",3) == 0 ) app->project->apk_settings.sdk_version = 3;
+		if ( strncmp(app_sdk,"4.3",3) == 0 ) app->project->apk_settings.sdk_version = 4;
+		if ( strncmp(app_sdk,"4.4",3) == 0 ) app->project->apk_settings.sdk_version = 5;
+		if ( strncmp(app_sdk,"5.0",3) == 0 ) app->project->apk_settings.sdk_version = 6;
+		if ( strncmp(app_sdk,"5.1",3) == 0 ) app->project->apk_settings.sdk_version = 7;
+		if ( strncmp(app_sdk,"6.0",3) == 0 ) app->project->apk_settings.sdk_version = 8;
+		if ( strncmp(app_sdk,"7.0",3) == 0 ) app->project->apk_settings.sdk_version = 9;
+		if ( strncmp(app_sdk,"7.1",3) == 0 ) app->project->apk_settings.sdk_version = 10;
+		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 11;
 		g_free(app_sdk);
 				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
@@ -996,12 +984,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		AGK_CLEAR_STR(app->project->apk_settings.output_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
-		gchar *output_type = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		int app_type = 0;
-		if ( strcmp(output_type,"Amazon") == 0 ) app_type = 1;
-		else if ( strcmp(output_type,"Ouya") == 0 ) app_type = 2;
-		g_free(output_type);
-		app->project->apk_settings.app_type = app_type;
+		app->project->apk_settings.app_type = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 	}
 
 	if ( response != 1 )
@@ -1039,35 +1022,30 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		gchar *firebase_config = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
-		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
+		int app_orientation_int = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 		int orientation = 10;
-		if ( strcmp(app_orientation,"Landscape") == 0 ) orientation = 6;
-		else if ( strcmp(app_orientation,"Portrait") == 0 ) orientation = 7;
-		g_free(app_orientation);
+		if ( app_orientation_int == 0 ) orientation = 6;
+		else if ( app_orientation_int == 1 ) orientation = 7;
 		gchar szOrientation[ 20 ];
 		sprintf( szOrientation, "%d", orientation );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo");
-		gchar *app_arcore = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		int arcore_mode = 0;
-		if ( strcmp(app_arcore,"Optional") == 0 ) arcore_mode = 1;
-		else if ( strcmp(app_arcore,"Required") == 0 ) arcore_mode = 2;
-		g_free(app_arcore);
-		
+		int arcore_mode = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
+				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		int sdk = 10;
-		if ( strcmp(app_sdk,"4.0.3") == 0 ) sdk = 15;
-		if ( strcmp(app_sdk,"4.1") == 0 ) sdk = 16;
-		if ( strcmp(app_sdk,"4.2") == 0 ) sdk = 17;
-		if ( strcmp(app_sdk,"4.3") == 0 ) sdk = 18;
-		if ( strcmp(app_sdk,"4.4") == 0 ) sdk = 19;
-		if ( strcmp(app_sdk,"5.0") == 0 ) sdk = 21;
-		if ( strcmp(app_sdk,"5.1") == 0 ) sdk = 22;
-		if ( strcmp(app_sdk,"6.0") == 0 ) sdk = 23;
-		if ( strcmp(app_sdk,"7.0") == 0 ) sdk = 24;
-		if ( strcmp(app_sdk,"7.1") == 0 ) sdk = 25;
-		if ( strcmp(app_sdk,"8.0") == 0 ) sdk = 26;
+		if ( strncmp(app_sdk,"4.0.3",5) == 0 ) sdk = 15;
+		if ( strncmp(app_sdk,"4.1",3) == 0 ) sdk = 16;
+		if ( strncmp(app_sdk,"4.2",3) == 0 ) sdk = 17;
+		if ( strncmp(app_sdk,"4.3",3) == 0 ) sdk = 18;
+		if ( strncmp(app_sdk,"4.4",3) == 0 ) sdk = 19;
+		if ( strncmp(app_sdk,"5.0",3) == 0 ) sdk = 21;
+		if ( strncmp(app_sdk,"5.1",3) == 0 ) sdk = 22;
+		if ( strncmp(app_sdk,"6.0",3) == 0 ) sdk = 23;
+		if ( strncmp(app_sdk,"7.0",3) == 0 ) sdk = 24;
+		if ( strncmp(app_sdk,"7.1",3) == 0 ) sdk = 25;
+		if ( strncmp(app_sdk,"8.0",3) == 0 ) sdk = 26;
 		g_free(app_sdk);
 		gchar szSDK[ 20 ];
 		sprintf( szSDK, "%d", sdk );
@@ -1141,10 +1119,8 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
 		gchar *output_type = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		int app_type = 0;
-		if ( strcmp(output_type,"Amazon") == 0 ) app_type = 1;
-		else if ( strcmp(output_type,"Ouya") == 0 ) app_type = 2;
-		
+		int app_type = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
+				
 		gchar *percent = 0;
 		while ( (percent = strchr(output_file, '%')) != 0 )
 		{
@@ -2418,9 +2394,9 @@ android_dialog_continue:
 			g_free( image_filename );
 
 		#ifdef G_OS_WIN32
-			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable-xhdpi-v4\\ouya_icon.png" ); 
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable-xhdpi-v4\\ouya_icon.png\n\n" ); 
 		#else
-			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable-xhdpi-v4/ouya_icon.png" );
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable-xhdpi-v4/ouya_icon.png\n\n" );
 		#endif
 			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 
@@ -2439,9 +2415,9 @@ android_dialog_continue:
 			icon_scaled_image = NULL;
 
 		#ifdef G_OS_WIN32
-			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable\\icon.png" ); 
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\drawable\\icon.png\n\n" ); 
 		#else
-			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable/icon.png" );
+			strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig/drawable/icon.png\n\n" );
 		#endif
 			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 
@@ -3475,13 +3451,8 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		AGK_CLEAR_STR(app->project->ipa_settings.facebook_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
-		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->ipa_settings.orientation = 0;
-		if ( strcmp(app_orientation,"Landscape") == 0 ) app->project->ipa_settings.orientation = 0;
-		else if ( strcmp(app_orientation,"Portrait") == 0 ) app->project->ipa_settings.orientation = 1;
-		else if ( strcmp(app_orientation,"Both") == 0 ) app->project->ipa_settings.orientation = 2;
-		g_free(app_orientation);
-		
+		app->project->ipa_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
+				
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.version_number) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 		
@@ -3489,12 +3460,8 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		AGK_CLEAR_STR(app->project->ipa_settings.build_number) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
-		gchar *app_device = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->ipa_settings.device_type = 0;
-		if ( strcmp(app_device,"iPhone Only") == 0 ) app->project->ipa_settings.device_type = 1;
-		else if ( strcmp(app_device,"iPad Only") == 0 ) app->project->ipa_settings.device_type = 2;
-		g_free(app_device);
-
+		app->project->ipa_settings.device_type = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
+		
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
 		app->project->ipa_settings.uses_ads = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
 
@@ -3548,13 +3515,8 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		gchar *facebook_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
-		gchar *app_orientation = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		int orientation = 0;
-		if ( strcmp(app_orientation,"Landscape") == 0 ) orientation = 0;
-		else if ( strcmp(app_orientation,"Portrait") == 0 ) orientation = 1;
-		else if ( strcmp(app_orientation,"Both") == 0 ) orientation = 2;
-		g_free(app_orientation);
-		
+		int orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
+				
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_version_number_entry");
 		gchar *version_number = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 		if ( !*version_number ) SETPTR( version_number, g_strdup("1.0.0") );
@@ -3564,11 +3526,7 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		if ( !*build_number ) SETPTR( build_number, g_strdup("1.0") );
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_device_combo");
-		gchar *app_device = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		int device_type = 0;
-		if ( strcmp(app_device,"iPhone Only") == 0 ) device_type = 1;
-		else if ( strcmp(app_device,"iPad Only") == 0 ) device_type = 2;
-		g_free(app_device);
+		int device_type = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));;
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_app_uses_ads");
 		int uses_ads = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(widget) );
