@@ -2072,6 +2072,42 @@ G_MODULE_EXPORT void on_project_import1_activate(GtkMenuItem *menuitem, gpointer
 	project_import();
 }
 
+G_MODULE_EXPORT void on_menu_view_workshop_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+#ifdef G_OS_WIN32
+	gchar *filepath = g_strconcat( "\"", app->datadir, "/../Workshop/WorkshopBrowser.exe\"", NULL );
+	utils_str_replace_char( filepath, '/', '\\' );
+	gchar *cmdline = g_strconcat(filepath, " \"", global_project_prefs.project_file_path, "\"", NULL);
+	g_spawn_command_line_async(cmdline, NULL);
+	g_free(cmdline);
+	g_free(filepath);
+#else
+	dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Workshop can only be viewed on Windows"));
+#endif
+}
+
+G_MODULE_EXPORT void on_menu_publish_workshop_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+#ifdef G_OS_WIN32
+	if ( !app->project )
+	{
+		dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("You must have a project open to publish it"));
+		return;
+	}
+
+	gchar *filepath = g_strconcat( "\"", app->datadir, "/../Workshop/WorkshopPublisher.exe\"", NULL );
+	utils_str_replace_char( filepath, '/', '\\' );
+	gchar *cmdline = g_strconcat(filepath, " \"", app->project->base_path, NULL);
+	cmdline[ strlen(cmdline)-1 ] = '\"';
+	//dialogs_show_msgbox(GTK_MESSAGE_ERROR, cmdline );
+	g_spawn_command_line_async(cmdline, NULL);
+	g_free(cmdline);
+	g_free(filepath);
+#else
+	dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Workshop projects can only be published on Windows"));
+#endif
+}
+
 G_MODULE_EXPORT void on_project_export_html5_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 #ifdef AGK_FREE_VERSION

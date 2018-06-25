@@ -8789,6 +8789,7 @@ To generate a keystore file you need to submit some information about you or you
                               <object class="GtkTable" id="table9">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="n_rows">2</property>
                                 <property name="n_columns">2</property>
                                 <property name="column_spacing">6</property>
                                 <property name="row_spacing">6</property>
@@ -8850,6 +8851,52 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="label" translatable="yes">Path To Compiler:</property>
                                   </object>
                                   <packing>
+                                    <property name="x_options">GTK_FILL</property>
+                                    <property name="y_options"/>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="label65">
+                                    <property name="width_request">120</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="xalign">0</property>
+                                    <property name="label" translatable="yes">Windows 64-bit:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
+                                    <property name="x_options">GTK_FILL</property>
+                                    <property name="y_options"/>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkHBox" id="hbox65">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkCheckButton" id="check_use_windows_64bit">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="tooltip_text" translatable="yes">If checked then compiled executables on Windows will be 64-bit only, which will not work on 32-bit versions of Windows. Leave blank to create 32-bit executables which will work on everything</property>
+                                        <property name="draw_indicator">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
@@ -9612,6 +9659,12 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9632,6 +9685,12 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -11498,6 +11557,16 @@ To generate a keystore file you need to submit some information about you or you
                           </object>
                         </child>
                         <child>
+                          <object class="GtkMenuItem" id="menu_view_workshop">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="tooltip_text" translatable="yes">View projects on the Steam Workshop</property>
+                            <property name="label" translatable="yes">View _Workshop Projects...</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_menu_view_workshop_activate" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkMenuItem" id="recent_projects1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -11568,6 +11637,16 @@ To generate a keystore file you need to submit some information about you or you
                                 </child>
                               </object>
                             </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu_publish_workshop">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="tooltip_text" translatable="yes">Publish this project to the Steam Workshop</property>
+                            <property name="label" translatable="yes">Publish to Workshop</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="on_menu_publish_workshop_activate" swapped="no"/>
                           </object>
                         </child>
                         <child>

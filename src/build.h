@@ -168,6 +168,7 @@ typedef struct BuildPrefs
 	gchar *agk_broadcast_ip;
 	gchar *agk_debug_ip;
 	int agk_steam_integration;
+	int agk_compiler_use64bit;
 } BuildPrefs;
 
 GPid build_pid;

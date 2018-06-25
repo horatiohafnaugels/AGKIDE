@@ -1032,10 +1032,18 @@ install-data-only:
 	    $(INSTALL_DATA) $$file $(DESTDIR)$(pkgdatadir)/tags/; \
 	  fi \
 	done
+	rm -rf $(pkgdatadir)/android
 	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/android;
 	rsync -r --exclude=.svn $(srcdir)/data/android/. $(pkgdatadir)/android
+	rm -rf $(pkgdatadir)/ios
 	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/ios;
 	rsync -r --exclude=.svn $(srcdir)/data/ios/. $(pkgdatadir)/ios
+	rm -rf $(pkgdatadir)/html5
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)/html5;
+	rsync -r --exclude=.svn $(srcdir)/data/html5/. $(pkgdatadir)/html5
+	rm -rf $(datadir)/locale
+	$(mkinstalldirs) $(DESTDIR)$(datadir)/locale;
+	rsync -r --exclude=.svn $(srcdir)/share/locale/. $(datadir)/locale
 
 dist-hook:
 	@if test -d "$(top_srcdir)/.git"; then \
@@ -1058,7 +1066,7 @@ sign:
 
 rpm: dist
 	rpmbuild -ta $(distdir).tar.gz
-@INTLTOOL_DESKTOP_RULE@
+%.desktop:   %.desktop.in   ;
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

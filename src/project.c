@@ -1434,8 +1434,7 @@ android_dialog_continue:
 			
 		strcat( newcontents, "\" android:targetSdkVersion=\"" );
 		if ( app_type == 0 )
-			if ( sdk < 22 ) strcat( newcontents, "22" );
-			else strcat( newcontents, szSDK );
+			strcat( newcontents, "26" );
 		else
 			strcat( newcontents, "15" );
 		strcat( newcontents, "\" />\n\n" );
@@ -1474,6 +1473,12 @@ android_dialog_continue:
 		if ( 0 )
 		{
 			strcat( newcontents, "    <uses-feature android:name=\"android.hardware.touchscreen\" android:required=\"false\" />\n" );
+		}
+
+		// if ARCore required
+		if ( arcore_mode == 2 )
+		{
+			strcat( newcontents, "    <uses-feature android:name=\"android.hardware.camera.ar\" android:required=\"true\" />" );
 		}
 
 		contents2 = contents;
@@ -1703,7 +1708,7 @@ android_dialog_continue:
 		// repair original file
 		*contents2 = '>';
 
-		if ( google_play_app_id && *google_play_app_id )
+		if ( app_type == 0 && google_play_app_id && *google_play_app_id )
 		{
 			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
 			contents2 = strstr( newcontents2, "<string name=\"games_app_id\">" );
@@ -2519,40 +2524,52 @@ android_dialog_continue:
 		// copy in extra files
 		zip_add_file = g_build_path( "/", src_folder, "classes.dex", NULL );
 		mz_zip_writer_add_file( &zip_archive, "classes.dex", zip_add_file, NULL, 0, 9 );
+		
 		g_free( zip_add_file );
-
 		zip_add_file = g_build_path( "/", android_folder, "lib", "arm64-v8a", "libandroid_player.so", NULL );
 		mz_zip_writer_add_file( &zip_archive, "lib/arm64-v8a/libandroid_player.so", zip_add_file, NULL, 0, 9 );
+		
 		g_free( zip_add_file );
-
 		zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libandroid_player.so", NULL );
 		mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libandroid_player.so", zip_add_file, NULL, 0, 9 );
+		
 		g_free( zip_add_file );
-
 		zip_add_file = g_build_path( "/", android_folder, "lib", "x86", "libandroid_player.so", NULL );
 		mz_zip_writer_add_file( &zip_archive, "lib/x86/libandroid_player.so", zip_add_file, NULL, 0, 9 );
-		g_free( zip_add_file );
-
+		
 		if ( arcore_mode > 0 )
 		{
 			// use real ARCore lib
+			g_free( zip_add_file );
 			zip_add_file = g_build_path( "/", android_folder, "lib", "arm64-v8a", "libarcore_sdk.so", NULL );
 			mz_zip_writer_add_file( &zip_archive, "lib/arm64-v8a/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
-			g_free( zip_add_file );
 
+			g_free( zip_add_file );
 			zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libarcore_sdk.so", NULL );
 			mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
-			g_free( zip_add_file );
 
+			g_free( zip_add_file );
 			zip_add_file = g_build_path( "/", android_folder, "lib", "x86", "libarcore_sdk.so", NULL );
 			mz_zip_writer_add_file( &zip_archive, "lib/x86/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
-			g_free( zip_add_file );
 		}
 		
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
+		if ( app_type != 2 )
+		{
+			// copy assets for Google and Amazon
+			g_free( zip_add_file );
+			zip_add_file = g_build_path( "/", android_folder, "assets", NULL );
+			if ( !utils_add_folder_to_zip( &zip_archive, zip_add_file, "assets", TRUE, TRUE ) )
+			{
+				SHOW_ERR( _("Failed to add media files to APK") );
+				goto android_dialog_cleanup2;
+			}
+		}
+
 		// copy in media files
+		g_free( zip_add_file );
 		zip_add_file = g_build_path( "/", app->project->base_path, "media", NULL );
 		if ( !utils_add_folder_to_zip( &zip_archive, zip_add_file, "assets/media", TRUE, TRUE ) )
 		{

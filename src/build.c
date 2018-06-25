@@ -910,6 +910,7 @@ void build_save_prefs(GKeyFile *config)
 	g_key_file_set_integer(config, "buildAGK", "broadcast_port", build_prefs.agk_broadcast_port);
 	g_key_file_set_string(config, "buildAGK", "direct_ip", FALLBACK(build_prefs.agk_broadcast_ip, ""));
 	g_key_file_set_integer(config, "buildAGK", "steam_integration", build_prefs.agk_steam_integration);
+	g_key_file_set_integer(config, "buildAGK", "use_windows_64bit", build_prefs.agk_compiler_use64bit);
 	g_key_file_set_string(config, "buildAGK", "debug_ip", FALLBACK(build_prefs.agk_debug_ip, ""));
 }
 
@@ -953,6 +954,7 @@ void build_load_prefs(GKeyFile *config)
 	build_prefs.agk_broadcast_port = utils_get_setting_integer(config, "buildAGK", "broadcast_port", 5689);
 	build_prefs.agk_broadcast_ip = utils_get_setting_string(config, "buildAGK", "direct_ip", "");
 	build_prefs.agk_steam_integration = utils_get_setting_integer(config, "buildAGK", "steam_integration", 1);
+	build_prefs.agk_compiler_use64bit = utils_get_setting_integer(config, "buildAGK", "use_windows_64bit", 0);
 	build_prefs.agk_debug_ip = utils_get_setting_string(config, "buildAGK", "debug_ip", "");
 }
 
@@ -963,6 +965,7 @@ void build_setup_prefs(void)
 	GtkWidget *broadcast_port_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_broadcast_port1");
 	GtkWidget *direct_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_direct_ip");
 	GtkWidget *steam_check = ui_lookup_widget(ui_widgets.prefs_dialog, "check_steam_integrate");
+	GtkWidget *windows_64bit_check = ui_lookup_widget(ui_widgets.prefs_dialog, "check_use_windows_64bit");
 	GtkWidget *debug_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_debug_ip");
 	static gboolean callback_setup = FALSE;
 
@@ -975,6 +978,7 @@ void build_setup_prefs(void)
 	gtk_entry_set_text(GTK_ENTRY(broadcast_port_entry), port);
 	gtk_entry_set_text(GTK_ENTRY(direct_ip_entry), build_prefs.agk_broadcast_ip);
 	gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(steam_check), build_prefs.agk_steam_integration ? TRUE : FALSE );
+	gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(windows_64bit_check), build_prefs.agk_compiler_use64bit ? TRUE : FALSE );
 	gtk_entry_set_text(GTK_ENTRY(debug_ip_entry), build_prefs.agk_debug_ip);
 
 	if (! callback_setup)
@@ -990,6 +994,7 @@ void build_apply_prefs(void)
 	GtkWidget *broadcast_port_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_broadcast_port1");
 	GtkWidget *direct_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_direct_ip");
 	GtkWidget *steam_check = ui_lookup_widget(ui_widgets.prefs_dialog, "check_steam_integrate");
+	GtkWidget *windows_64bit_check = ui_lookup_widget(ui_widgets.prefs_dialog, "check_use_windows_64bit");
 	GtkWidget *debug_ip_entry = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_debug_ip");
 	const gchar *str;
 
@@ -1006,6 +1011,7 @@ void build_apply_prefs(void)
 	SETPTR(build_prefs.agk_debug_ip, g_strdup(str));
 
 	build_prefs.agk_steam_integration = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(steam_check) );
+	build_prefs.agk_compiler_use64bit = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(windows_64bit_check) );
 }
 
 GPid build_run_project_spawn_cmd(GeanyProject *project);
@@ -1093,7 +1099,8 @@ GPid build_compile_project_spawn_cmd(GeanyProject *project)
 #ifdef G_OS_WIN32
 	argv = g_new( gchar*, 3 );
 	argv[0] = g_strdup(path);
-	argv[1] = g_strdup(" -agk main.agc");
+	if ( build_prefs.agk_compiler_use64bit ) argv[1] = g_strdup(" -agk -64 main.agc");
+	else argv[1] = g_strdup(" -agk main.agc");
 	argv[2] = NULL;
 #else
 	argv = g_new0(gchar *, 4);
