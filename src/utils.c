@@ -471,13 +471,11 @@ gchar* utils_get_relative_path(const gchar* base_path, const gchar* file_name )
 
 	while( *base_ptr )
 	{
-		base_ptr++;
 		if ( *base_ptr == '/' || *base_ptr == '\\' || *base_ptr == 0 )
 		{
 			strcat( tmp, "../" );
-			if ( *(base_ptr+1) == 0 ) 
-				break;
 		}
+		base_ptr++;
 	}
 
 	strcat( tmp, last_file_slash );
@@ -2004,7 +2002,7 @@ void utils_tidy_path(gchar *filename)
 			/* replace "/../" */
 			g_string_erase(str, pos, strlen(needle));
 			g_string_insert_c(str, pos, G_DIR_SEPARATOR);
-
+	
 			/* search for last "/" before found "/../" */
 			c = g_strrstr_len(str->str, pos, G_DIR_SEPARATOR_S);
 			sub_len = pos - (c - str->str);

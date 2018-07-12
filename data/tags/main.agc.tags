@@ -1941,3 +1941,6 @@ GetSpeechNumVoices|Integer|()|
 GetSpeechVoiceLanguage|String|(Integer index)|
 GetSpeechVoiceName|String|(Integer index)|
 OverrideConsentChartboost||(Integer consent)|
+AddHTTPHeader||(Integer iHTTP, String headerName, String headerValue)|
+RemoveHTTPHeader||(Integer iHTTP, String headerName)|
+GetHTTPStatusCode|Integer|(Integer iHTTP)|

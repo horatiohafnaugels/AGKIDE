@@ -1269,6 +1269,16 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			if ( !alias_password || !*alias_password ) { SHOW_ERR(_("You must enter your alias password when using a custom alias")); goto android_dialog_clean_up; }
 		}
 
+		int includeFirebase = (firebase_config && *firebase_config && (app_type == 0 || app_type == 1)) ? 1 : 0;
+		int includePushNotify = (permission_push && app_type == 0) ? 1 : 0;
+		int includeGooglePlay = (google_play_app_id && *google_play_app_id && app_type == 0) ? 1 : 0;
+
+		if ( includePushNotify && !includeFirebase )
+		{
+			SHOW_ERR( _("Push Notifications on Android now use Firebase, so you must include a Firebase config file to use them") );
+			goto android_dialog_clean_up;
+		}
+
 		goto android_dialog_continue;
 
 android_dialog_clean_up:
@@ -1463,7 +1473,7 @@ android_dialog_continue:
 		}
 		if ( permission_expansion && app_type == 0 ) 
 		{
-			strcat( newcontents, "    <uses-permission android:name=\"android.permission.GET_ACCOUNTS\"></uses-permission>\n" );
+			//strcat( newcontents, "    <uses-permission android:name=\"android.permission.GET_ACCOUNTS\"></uses-permission>\n" );
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
 		}
 		if ( permission_vibrate ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.VIBRATE\"></uses-permission>\n" );
@@ -1526,16 +1536,8 @@ android_dialog_continue:
 				case 6: strcat( newcontents, "screenOrientation=\"sensorLandscape" ); break;
 				case 7: 
 				{
-					// all now use API 23
+					// all now use API 23 with correct spelling
 					strcat( newcontents, "screenOrientation=\"sensorPortrait" ); 
-
-					// Google compiles with API 21 which fixes a spelling mistake, Amazon and Ouya compile with API 13 which still has the mistake
-					/*
-					if ( app_type == 0 )
-						strcat( newcontents, "screenOrientation=\"sensorPortrait" ); 
-					else
-						strcat( newcontents, "screenOrientation=\"sensorPortait" ); 
-						*/
 					break;
 				}
 				default: strcat( newcontents, "screenOrientation=\"fullSensor" ); break;
@@ -1556,13 +1558,36 @@ android_dialog_continue:
 			contents2 = contents3;
 		}
 
+		// replace application ID
+		contents3 = strstr( contents2, "${applicationId}" );
+		while ( contents3 )
+		{
+			*contents3 = 0;
+			contents3 += strlen("${applicationId}");
+
+			strcat( newcontents, contents2 );
+			strcat( newcontents, package_name );
+			contents2 = contents3;
+			contents3 = strstr( contents2, "${applicationId}" );
+		}
+
 		// write the rest of the manifest file
 		strcat( newcontents, contents2 );
+
+		if ( permission_expansion && app_type == 0 ) 
+		{
+			strcat( newcontents, "\n\
+		<service android:name=\"com.google.android.vending.expansion.downloader.impl.DownloaderService\"\n\
+            android:enabled=\"true\"/>\n\
+        <receiver android:name=\"com.google.android.vending.expansion.downloader.impl.DownloaderService$AlarmReceiver\"\n\
+            android:enabled=\"true\"/>" );
+		}
 
 		// Google sign in
 		if ( app_type == 0 )
 		{
-			strcat( newcontents, "\n<activity android:name=\"com.google.android.gms.auth.api.signin.internal.SignInHubActivity\"\n\
+			strcat( newcontents, "\n\
+		<activity android:name=\"com.google.android.gms.auth.api.signin.internal.SignInHubActivity\"\n\
             android:excludeFromRecents=\"true\"\n\
             android:exported=\"false\"\n\
             android:theme=\"@android:style/Theme.Translucent.NoTitleBar\" />\n\
@@ -1580,7 +1605,7 @@ android_dialog_continue:
 		}
 
 		// Google API Activity - for Game Services
-		if ( google_play_app_id && *google_play_app_id && app_type == 0 )
+		if ( includeGooglePlay )
 		{
 			strcat( newcontents, "\n\
         <activity android:name=\"com.google.android.gms.common.api.GoogleApiActivity\" \n\
@@ -1589,9 +1614,7 @@ android_dialog_continue:
 		}
 
 		// Firebase Init Provider - for Game Services and Firebase
-		if ( ((google_play_app_id && *google_play_app_id) 
-		      || (firebase_config && *firebase_config)) 
-		     && (app_type == 0 || app_type == 1) )
+		if ( includeGooglePlay || includeFirebase || includePushNotify )
 		{
 			strcat( newcontents, "\n        <provider android:authorities=\"" );
 			strcat( newcontents, package_name );
@@ -1602,26 +1625,34 @@ android_dialog_continue:
 		}
 
 		// Firebase activities
-		if ( firebase_config && *firebase_config && (app_type == 0 || app_type == 1) )
+		if ( includeFirebase )
 		{
 			strcat( newcontents, "\n\
-        <receiver android:name=\"com.google.android.gms.measurement.AppMeasurementReceiver\"\n\
-                  android:enabled=\"true\">\n\
-            <intent-filter>\n\
-                <action android:name=\"com.google.android.gms.measurement.UPLOAD\"/>\n\
-            </intent-filter>\n\
+        <receiver\n\
+            android:name=\"com.google.android.gms.measurement.AppMeasurementReceiver\"\n\
+            android:enabled=\"true\"\n\
+            android:exported=\"false\" >\n\
         </receiver>\n\
 \n\
         <service android:name=\"com.google.android.gms.measurement.AppMeasurementService\"\n\
                  android:enabled=\"true\"\n\
                  android:exported=\"false\"/>\n\
-\n\
+        <service\n\
+            android:name=\"com.google.android.gms.measurement.AppMeasurementJobService\"\n\
+            android:enabled=\"true\"\n\
+            android:exported=\"false\"\n\
+            android:permission=\"android.permission.BIND_JOB_SERVICE\" />" );
+		}
+
+		if ( includeFirebase || includePushNotify )
+		{
+			strcat( newcontents, "\n\
         <receiver android:name=\"com.google.firebase.iid.FirebaseInstanceIdReceiver\" \n\
                   android:exported=\"true\" \n\
                   android:permission=\"com.google.android.c2dm.permission.SEND\" > \n\
             <intent-filter> \n\
                 <action android:name=\"com.google.android.c2dm.intent.RECEIVE\" /> \n\
-                <action android:name=\"com.google.android.c2dm.intent.REGISTRATION\" /> \n\
+				<action android:name=\"com.google.android.c2dm.intent.REGISTRATION\" /> \n\
                 <category android:name=\"" ); 
 			strcat( newcontents, package_name );
 			strcat( newcontents, "\" />\n\
@@ -1633,6 +1664,19 @@ android_dialog_continue:
                  android:exported=\"true\" > \n\
             <intent-filter android:priority=\"-500\" > \n\
                 <action android:name=\"com.google.firebase.INSTANCE_ID_EVENT\" /> \n\
+            </intent-filter> \n\
+        </service>" );
+		}
+
+		if ( includePushNotify )
+		{
+			strcat( newcontents, "\n\
+		<meta-data android:name=\"com.google.firebase.messaging.default_notification_icon\"\n\
+            android:resource=\"@drawable/icon_white\" />\n\
+		<service android:name=\"com.google.firebase.messaging.FirebaseMessagingService\" \n\
+            android:exported=\"true\" > \n\
+            <intent-filter android:priority=\"-500\" > \n\
+                <action android:name=\"com.google.firebase.MESSAGING_EVENT\" /> \n\
             </intent-filter> \n\
         </service>" );
 		}
