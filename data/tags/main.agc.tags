@@ -1944,3 +1944,16 @@ OverrideConsentChartboost||(Integer consent)|
 AddHTTPHeader||(Integer iHTTP, String headerName, String headerValue)|
 RemoveHTTPHeader||(Integer iHTTP, String headerName)|
 GetHTTPStatusCode|Integer|(Integer iHTTP)|
+GetSpeechVoiceID|String|(Integer index)|
+SetSpeechLanguageByID||(String sID)|
+GetSpriteFlippedH|Integer|(Integer iSpriteIndex)|
+GetSpriteInScreen|Integer|(Integer iSpriteIndex)|
+GetSpriteFlippedV|Integer|(Integer iSpriteIndex)|
+DrawParticles||(Integer ID)|
+Draw3DParticles||(Integer ID)|
+SetClipboardText||(String szText)|
+GetClipboardText|String|()|
+SetEditBoxInputType||(Integer index, Integer inputType)|
+GetExpansionFileError|Integer|()|
+GetSkeleton2DDepth|Integer|(Integer iSkeleton)|
+GetEditBoxDepth|Integer|(Integer index)|
