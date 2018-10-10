@@ -923,8 +923,8 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 11;
 		g_free(app_sdk);
 				
-		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
-		AGK_CLEAR_STR(app->project->apk_settings.game_circle_api_key) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
+		AGK_CLEAR_STR(app->project->apk_settings.url_scheme) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		AGK_CLEAR_STR(app->project->apk_settings.play_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -1050,8 +1050,8 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		gchar szSDK[ 20 ];
 		sprintf( szSDK, "%d", sdk );
 		
-		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
-		gchar *gamecircle_api_key = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
+		gchar *url_scheme = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gchar *google_play_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -1288,7 +1288,7 @@ android_dialog_clean_up:
 		if ( ouya_icon ) g_free(ouya_icon);
 		if ( notif_icon ) g_free(notif_icon);
 		if ( firebase_config ) g_free(firebase_config);
-		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
+		if ( url_scheme ) g_free(url_scheme);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
@@ -1496,20 +1496,6 @@ android_dialog_continue:
 
 		// the order of these relacements is important, they must occur in the same order as they occur in the file
 
-		// replace GameCircle API key
-		contents3 = strstr( contents2, "<!--GAMECIRCLE_API_KEY-->" );
-		if ( contents3 )
-		{
-			*contents3 = 0;
-			contents3 += strlen("<!--GAMECIRCLE_API_KEY-->");
-
-			strcat( newcontents, contents2 );
-			strcat( newcontents, "<meta-data android:name=\"APIKey\" android:value=\"" );
-        	strcat( newcontents, gamecircle_api_key );
-			strcat( newcontents, "\" />" );
-			contents2 = contents3;
-		}
-
 		// replace Google Play application ID
 		contents3 = strstr( contents2, "<!--GOOGLE_PLAY_APPLICATION_ID-->" );
 		if ( contents3 )
@@ -1543,6 +1529,24 @@ android_dialog_continue:
 				default: strcat( newcontents, "screenOrientation=\"fullSensor" ); break;
 			}
 
+			contents2 = contents3;
+		}
+
+		// add intent filters
+		contents3 = strstr( contents2, "<!--ADDITIONAL_INTENT_FILTERS-->" );
+		if ( contents3 )
+		{
+			*contents3 = 0;
+			contents3 += strlen("<!--ADDITIONAL_INTENT_FILTERS-->");
+
+			strcat( newcontents, contents2 );
+			strcat( newcontents, "<intent-filter>\n\
+        <action android:name=\"android.intent.action.VIEW\" />\n\
+        <category android:name=\"android.intent.category.DEFAULT\" />\n\
+        <category android:name=\"android.intent.category.BROWSABLE\" />\n\
+        <data android:scheme=\"" );
+        	strcat( newcontents, url_scheme );
+			strcat( newcontents, "\" />\n    </intent-filter>\n" );
 			contents2 = contents3;
 		}
 
@@ -1897,52 +1901,45 @@ android_dialog_continue:
 			// if the config file contains multiple Android apps then there will be multiple mobilesdk_app_id's, and only the corect one will work
 			// look for the corresponding package_name that matches this export
 			{
-				// find package_name that matches the current package_name provided by the user
-				package_count = 0;
-				contentsOther2 = contentsOther;
-				while( *contentsOther2 && (contentsOther2 = strstr( contentsOther2, "\"package_name\": \"" )) )
-				{
-					package_count++;
-					contentsOther2 += strlen("\"package_name\": \"");
-					if ( strncmp( contentsOther2, package_name, strlen(package_name) ) == 0 )
-					{
-						contentsOther2 += strlen(package_name);
-						if ( *contentsOther2 == '\"' ) package_index = package_count;
-					}
-				}
-				
-				if ( package_index == 0 )
-				{
-					SHOW_ERR1( _("Could not find android package_name \"%s\" in the Firebase config file"), package_name );
-					goto android_dialog_cleanup2;
-				}
-
-				package_index = (package_index + 1) / 2; // two package_name's for every mobilesdk_app_id
-
-				// now find matching mobilesdk_app_id
 				package_count = 0;
 				contentsOther2 = contentsOther;
 				while( *contentsOther2 && (contentsOther2 = strstr( contentsOther2, "\"mobilesdk_app_id\": \"" )) )
 				{
 					package_count++;
-					if ( package_count == package_index ) break;
-					contentsOther2++;
-				}
+					contentsOther2 += strlen("\"mobilesdk_app_id\": \"");
+					contentsOther3 = strstr( contentsOther2, "\"" );
+					if ( !contentsOther3 )
+					{
+						SHOW_ERR( _("Could not find end of mobilesdk_app_id entry in Firebase config file") );
+						goto android_dialog_cleanup2;
+					}
+					*contentsOther3 = 0;
 
-				if ( package_count != package_index )
+					// look for the package_name for this mobilesdk_app_id
+					gchar* contentsOther4 = strstr( contentsOther3+1, "\"package_name\": \"" );
+					if ( !contentsOther4 )
+					{
+						SHOW_ERR( _("Could not find package_name for mobilesdk_app_id entry in Firebase config file") );
+						goto android_dialog_cleanup2;
+					}
+					contentsOther4 += strlen("\"package_name\": \"");
+					if ( strncmp( contentsOther4, package_name, strlen(package_name) ) == 0 )
+					{
+						contentsOther4 += strlen(package_name);
+						if ( *contentsOther4 == '\"' ) 
+						{
+							break;
+						}
+					}
+
+					*contentsOther3 = '"'; // repair file
+				}
+				
+				if ( !contentsOther2 || !*contentsOther2 )
 				{
-					SHOW_ERR( _("Could not find matching mobilesdk_app_id entry in Firebase config file") );
+					SHOW_ERR1( _("Could not find mobilesdk_app_id for android package_name \"%s\" in the Firebase config file"), package_name );
 					goto android_dialog_cleanup2;
 				}
-
-				contentsOther2 += strlen("\"mobilesdk_app_id\": \"");
-				contentsOther3 = strstr( contentsOther2, "\"" );
-				if ( !contentsOther3 )
-				{
-					SHOW_ERR( _("Could not find end of mobilesdk_app_id entry in Firebase config file") );
-					goto android_dialog_cleanup2;
-				}
-				*contentsOther3 = 0;
 
 				// find entry in newcontents2
 				contents2 = strstr( newcontents2, "<string name=\"google_app_id\" translatable=\"false\"" );
@@ -2757,7 +2754,7 @@ android_dialog_cleanup2:
 		if ( app_icon ) g_free(app_icon);
 		if ( ouya_icon ) g_free(ouya_icon);
 		if ( firebase_config ) g_free(firebase_config);
-		if ( gamecircle_api_key ) g_free(gamecircle_api_key);
+		if ( url_scheme ) g_free(url_scheme);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
@@ -2850,8 +2847,8 @@ void project_export_apk()
 		if ( version < 0 ) version = 0;
 		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), version );
 								
-		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
-		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.game_circle_api_key, "") );
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.url_scheme, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
@@ -3030,8 +3027,8 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 		if ( version < 0 ) version = 0;
 		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), version );
 								
-		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key");
-		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.game_circle_api_key, "") );
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.url_scheme, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
@@ -3511,6 +3508,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.facebook_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.url_scheme) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		app->project->ipa_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 				
@@ -3574,6 +3574,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 		gchar *facebook_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
+		gchar *url_scheme = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		int orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
@@ -3734,6 +3737,7 @@ ios_dialog_clean_up:
 		if ( app_splash3 ) g_free(app_splash3);
 		if ( app_splash4 ) g_free(app_splash4);
 		if ( facebook_id ) g_free(facebook_id);
+		if ( url_scheme ) g_free(url_scheme);
 		if ( version_number ) g_free(version_number);
 		if ( output_file ) g_free(output_file);
 
@@ -4257,6 +4261,21 @@ ios_dialog_continue:
 		utils_str_replace_all( &contents, "${EXECUTABLE_NAME}", app_name );
 		utils_str_replace_all( &contents, "com.thegamecreators.agk2player", bundle_id2 );
 		if ( facebook_id && *facebook_id ) utils_str_replace_all( &contents, "358083327620324", facebook_id );
+		const char* urlschemereplacement = "${URLSCHEMES}\n";
+		if ( strstr( contents, urlschemereplacement ) == 0 ) urlschemereplacement = "${URLSCHEMES}\r\n";
+		if ( url_scheme && *url_scheme ) 
+		{
+			gchar* newUrlSchemes = g_new0( gchar*, strlen(url_scheme) + 30 );
+			strcpy( newUrlSchemes, "<string>" );
+			strcat( newUrlSchemes, url_scheme );
+			strcat( newUrlSchemes, "</string>\n" );
+			utils_str_replace_all( &contents, urlschemereplacement, newUrlSchemes );
+			g_free( newUrlSchemes );
+		}
+		else
+		{
+			utils_str_replace_all( &contents, urlschemereplacement, "" );
+		}
 		switch( orientation )
 		{
 			case 0:
@@ -4985,6 +5004,7 @@ ios_dialog_cleanup2:
 		if ( app_icon ) g_free(app_icon);
 		if ( firebase_config ) g_free(firebase_config);
 		if ( facebook_id ) g_free(facebook_id);
+		if ( url_scheme ) g_free(url_scheme);
 		if ( version_number ) g_free(version_number);
 		if ( build_number ) g_free(build_number);
 		if ( output_file ) g_free(output_file);
@@ -5075,6 +5095,9 @@ void project_export_ipa()
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), "" );
 
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
 			
@@ -5133,6 +5156,9 @@ void project_export_ipa()
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_facebook_id_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.facebook_id, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.url_scheme, "") );
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->ipa_settings.orientation );
@@ -5228,7 +5254,7 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.notif_icon_path = 0;
 	project->apk_settings.app_name = 0;
 	project->apk_settings.app_type = 0; // Google
-	project->apk_settings.game_circle_api_key = 0;
+	project->apk_settings.url_scheme = 0;
 	project->apk_settings.keystore_path = 0;
 	project->apk_settings.orientation = 0;
 	project->apk_settings.output_path = 0;
@@ -5250,6 +5276,7 @@ void init_ios_settings( GeanyProject* project )
 	project->ipa_settings.build_number = 0;
 	project->ipa_settings.device_type = 0; // iPhone and iPad
 	project->ipa_settings.facebook_id = 0;
+	project->ipa_settings.url_scheme = 0;
 	project->ipa_settings.orientation = 0; // Landscape
 	project->ipa_settings.output_path = 0;
 	project->ipa_settings.prov_profile_path = 0;
@@ -5275,7 +5302,7 @@ void free_android_settings( GeanyProject* project )
 	if ( project->apk_settings.app_icon_path ) g_free(project->apk_settings.app_icon_path);
 	if ( project->apk_settings.notif_icon_path ) g_free(project->apk_settings.notif_icon_path);
 	if ( project->apk_settings.app_name ) g_free(project->apk_settings.app_name);
-	if ( project->apk_settings.game_circle_api_key ) g_free(project->apk_settings.game_circle_api_key);
+	if ( project->apk_settings.url_scheme ) g_free(project->apk_settings.url_scheme);
 	if ( project->apk_settings.keystore_path ) g_free(project->apk_settings.keystore_path);
 	if ( project->apk_settings.output_path ) g_free(project->apk_settings.output_path);
 	if ( project->apk_settings.ouya_icon_path ) g_free(project->apk_settings.ouya_icon_path);
@@ -5291,6 +5318,7 @@ void free_ios_settings( GeanyProject* project )
 	if ( project->ipa_settings.app_name ) g_free(project->ipa_settings.app_name);
 	if ( project->ipa_settings.build_number ) g_free(project->ipa_settings.build_number);
 	if ( project->ipa_settings.facebook_id ) g_free(project->ipa_settings.facebook_id);
+	if ( project->ipa_settings.url_scheme ) g_free(project->ipa_settings.url_scheme);
 	if ( project->ipa_settings.output_path ) g_free(project->ipa_settings.output_path);
 	if ( project->ipa_settings.prov_profile_path ) g_free(project->ipa_settings.prov_profile_path);
 	if ( project->ipa_settings.splash_1136_path ) g_free(project->ipa_settings.splash_1136_path);
@@ -5313,7 +5341,7 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "apk_settings", "notif_icon_path", FALLBACK(project->apk_settings.notif_icon_path,"") );
 	g_key_file_set_string( config, "apk_settings", "app_name", FALLBACK(project->apk_settings.app_name,"") );
 	g_key_file_set_integer( config, "apk_settings", "app_type", project->apk_settings.app_type ); 
-	g_key_file_set_string( config, "apk_settings", "game_circle_api_key", FALLBACK(project->apk_settings.game_circle_api_key,"") );
+	g_key_file_set_string( config, "apk_settings", "url_scheme", FALLBACK(project->apk_settings.url_scheme,"") );
 	g_key_file_set_string( config, "apk_settings", "keystore_path", FALLBACK(project->apk_settings.keystore_path,"") );
 	g_key_file_set_integer( config, "apk_settings", "orientation", project->apk_settings.orientation );
 	g_key_file_set_string( config, "apk_settings", "output_path", FALLBACK(project->apk_settings.output_path,"") );
@@ -5335,6 +5363,7 @@ void save_ios_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "ipa_settings", "build_number", FALLBACK(project->ipa_settings.build_number,"") );
 	g_key_file_set_integer( config, "ipa_settings", "device_type", project->ipa_settings.device_type );
 	g_key_file_set_string( config, "ipa_settings", "facebook_id", FALLBACK(project->ipa_settings.facebook_id,"") );
+	g_key_file_set_string( config, "ipa_settings", "url_scheme", FALLBACK(project->ipa_settings.url_scheme,"") );
 	g_key_file_set_integer( config, "ipa_settings", "orientation", project->ipa_settings.orientation );
 	g_key_file_set_string( config, "ipa_settings", "output_path", FALLBACK(project->ipa_settings.output_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "prov_profile_path", FALLBACK(project->ipa_settings.prov_profile_path,"") );
@@ -5361,7 +5390,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.notif_icon_path = g_key_file_get_string( config, "apk_settings", "notif_icon_path", 0 );
 	project->apk_settings.app_name = g_key_file_get_string( config, "apk_settings", "app_name", 0 );
 	project->apk_settings.app_type = utils_get_setting_integer( config, "apk_settings", "app_type", 0 ); 
-	project->apk_settings.game_circle_api_key = g_key_file_get_string( config, "apk_settings", "game_circle_api_key", 0 );
+	project->apk_settings.url_scheme = g_key_file_get_string( config, "apk_settings", "url_scheme", 0 );
 	project->apk_settings.keystore_path = g_key_file_get_string( config, "apk_settings", "keystore_path", 0 );
 	project->apk_settings.orientation = utils_get_setting_integer( config, "apk_settings", "orientation", 0 );
 	project->apk_settings.output_path = g_key_file_get_string( config, "apk_settings", "output_path", 0 );
@@ -5383,6 +5412,7 @@ void load_ios_settings( GKeyFile *config, GeanyProject* project )
 	project->ipa_settings.build_number = g_key_file_get_string( config, "ipa_settings", "build_number", 0 );
 	project->ipa_settings.device_type = utils_get_setting_integer( config, "ipa_settings", "device_type", 0 );
 	project->ipa_settings.facebook_id = g_key_file_get_string( config, "ipa_settings", "facebook_id", 0 );
+	project->ipa_settings.url_scheme = g_key_file_get_string( config, "ipa_settings", "url_scheme", 0 );
 	project->ipa_settings.orientation = utils_get_setting_integer( config, "ipa_settings", "orientation", 0 );
 	project->ipa_settings.output_path = g_key_file_get_string( config, "ipa_settings", "output_path", 0 );
 	project->ipa_settings.prov_profile_path = g_key_file_get_string( config, "ipa_settings", "prov_profile_path", 0 );

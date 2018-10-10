@@ -1369,7 +1369,7 @@ gint main(gint argc, gchar **argv)
 #endif
 	setup_window_position();
 
-#ifndef AGK_TRIAL_POPUP
+#if !defined(AGK_FREE_VERSION) && !defined(AGK_WEEKEND_VERSION)
 	// if not trial version then hide upgrade option
 	GtkWidget *menu_register = ui_lookup_widget(main_widgets.window, "help_menu_item_upgrade");
 	gtk_widget_hide(menu_register);
@@ -1506,6 +1506,10 @@ gint main(gint argc, gchar **argv)
 
 #ifdef G_OS_WIN32
 	win32_check_xinput();
+#endif
+
+#ifdef AGK_WEEKEND_VERSION
+	on_show_weekend_dialog();
 #endif
 
 	// disable F10 menu key so it can be used elsewhere

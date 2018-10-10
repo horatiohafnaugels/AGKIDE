@@ -55,15 +55,19 @@ G_BEGIN_DECLS
 
 // check these three for new versions
 //#define AGK_FREE_VERSION
-#define AGK_VERSION_TEXT "2018.08.30"
-#define AGK_VERSION_INT 40
+//#define AGK_WEEKEND_VERSION
+#define AGK_VERSION_TEXT "2018.10.10"
+#define AGK_VERSION_INT 41
 
 
 #ifdef AGK_FREE_VERSION
   #define AGK_VERSION AGK_VERSION_TEXT " Trial"
-  #define AGK_TRIAL_POPUP
 #else
-  #define AGK_VERSION AGK_VERSION_TEXT
+  #ifdef AGK_WEEKEND_VERSION
+    #define AGK_VERSION AGK_VERSION_TEXT " Weekend"
+  #else
+    #define AGK_VERSION AGK_VERSION_TEXT
+  #endif
 #endif
 
 /* Common forward declarations */

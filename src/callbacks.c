@@ -141,18 +141,6 @@ G_MODULE_EXPORT gboolean on_exit_clicked(GtkWidget *widget, gpointer gdata)
 
 	main_status.quitting = TRUE;
 
-#ifdef AGK_TRIAL_POPUP
-	/*
-	static int shown = 0;
-	if ( !shown )
-	{
-		shown = 1;
-		on_show_trial_dialog();
-		return TRUE;
-	}
-	*/
-#endif
-
 	if (! check_no_unsaved())
 	{
 		if (document_account_for_unsaved())
@@ -851,7 +839,6 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), TRUE );
-		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), TRUE );
 	}
@@ -868,7 +855,6 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), FALSE );
-		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), TRUE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), FALSE );
 	}
@@ -885,7 +871,6 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_ouya_icon_path"), TRUE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id"), FALSE );
-		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_gamecircle_key"), FALSE );
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), FALSE );
 	}
@@ -1537,7 +1522,13 @@ G_MODULE_EXPORT void on_help_menu_item_forum_activate(GtkMenuItem *item, gpointe
 
 G_MODULE_EXPORT void on_help_menu_item_upgrade_activate(GtkMenuItem *item, gpointer user_data)
 {
+#ifdef AGK_FREE_VERSION
 	on_show_trial_dialog();
+#else
+	#ifdef AGK_WEEKEND_VERSION
+		on_show_weekend_dialog();
+	#endif
+#endif
 }
 
 G_MODULE_EXPORT void on_help_menu_item_android_player_activate(GtkMenuItem *item, gpointer user_data)
@@ -1625,6 +1616,71 @@ void on_trial_dialog_response(GtkDialog *dialog, gint response, gpointer user_da
 
 	gtk_widget_hide(GTK_WIDGET(dialog));
 	if ( main_status.quitting ) on_exit_clicked( NULL, NULL );
+}
+
+G_MODULE_EXPORT void on_weekend_image_button_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+	if ( ui_widgets.weekend_dialog ) on_weekend_dialog_response( ui_widgets.weekend_dialog, 1, 0 );
+}
+
+G_MODULE_EXPORT void on_show_weekend_dialog()
+{
+	if (ui_widgets.weekend_dialog == NULL) 
+	{
+		ui_widgets.weekend_dialog = create_weekend_dialog();
+        gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.weekend_dialog), GTK_WINDOW(main_widgets.window));
+        
+		g_signal_connect(ui_widgets.weekend_dialog, "response", G_CALLBACK(on_weekend_dialog_response), NULL);
+		g_signal_connect(ui_widgets.weekend_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+	}
+
+	gint x, y, width, height;
+	gtk_window_get_position(GTK_WINDOW(main_widgets.window), &x, &y);
+	gtk_window_get_size(GTK_WINDOW(main_widgets.window), &width, &height);
+
+	gint x2 = width / 2 - 250 + x;
+	gint y2 = height / 2 - 180 + y;
+	
+	gtk_window_move( GTK_WINDOW(ui_widgets.weekend_dialog), x2, y2 );
+	gtk_window_present( GTK_WINDOW(ui_widgets.weekend_dialog) );
+}
+
+void on_weekend_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	if ( response == 1 ) 
+	{
+		utils_open_browser("https://store.steampowered.com/app/325180");
+	}
+
+	gtk_widget_hide(GTK_WIDGET(dialog));
+	if ( main_status.quitting ) on_exit_clicked( NULL, NULL );
+}
+
+G_MODULE_EXPORT void on_weekend_end_image_button_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+	if ( ui_widgets.weekend_end_dialog ) on_weekend_dialog_response( ui_widgets.weekend_end_dialog, 1, 0 );
+}
+
+G_MODULE_EXPORT void on_show_weekend_end_dialog()
+{
+	if (ui_widgets.weekend_end_dialog == NULL) 
+	{
+		ui_widgets.weekend_end_dialog = create_weekend_end_dialog();
+        gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.weekend_end_dialog), GTK_WINDOW(main_widgets.window));
+        
+		g_signal_connect(ui_widgets.weekend_end_dialog, "response", G_CALLBACK(on_weekend_dialog_response), NULL);
+		g_signal_connect(ui_widgets.weekend_end_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+	}
+
+	gint x, y, width, height;
+	gtk_window_get_position(GTK_WINDOW(main_widgets.window), &x, &y);
+	gtk_window_get_size(GTK_WINDOW(main_widgets.window), &width, &height);
+
+	gint x2 = width / 2 - 250 + x;
+	gint y2 = height / 2 - 180 + y;
+	
+	gtk_window_move( GTK_WINDOW(ui_widgets.weekend_end_dialog), x2, y2 );
+	gtk_window_present( GTK_WINDOW(ui_widgets.weekend_end_dialog) );
 }
 
 G_MODULE_EXPORT void on_comments_function_activate(GtkMenuItem *menuitem, gpointer user_data)

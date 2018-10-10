@@ -92,6 +92,8 @@ static GtkWidget* keystore_dialog = NULL;
 static GtkWidget* install_dialog = NULL;
 static GtkWidget* project_dialog = NULL;
 static GtkWidget* trial_dialog = NULL;
+static GtkWidget* weekend_dialog = NULL;
+static GtkWidget* weekend_end_dialog = NULL;
 
 static struct
 {
@@ -2692,6 +2694,16 @@ GtkWidget *create_trial_dialog(void)
 	return trial_dialog;
 }
 
+GtkWidget *create_weekend_dialog(void)
+{
+	return weekend_dialog;
+}
+
+GtkWidget *create_weekend_end_dialog(void)
+{
+	return weekend_end_dialog;
+}
+
 GtkWidget *create_window1(void)
 {
 	return window1;
@@ -2766,6 +2778,8 @@ void ui_init_builder(void)
 	project_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "project_dialog"));
 	toolbar_popup_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "toolbar_popup_menu1"));
 	trial_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "trial_dialog"));
+	weekend_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "weekend_dialog"));
+	weekend_end_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "weekend_end_dialog"));
 	window1 = GTK_WIDGET(gtk_builder_get_object(builder, "window1"));
 
 	g_object_set_data(G_OBJECT(edit_menu1), "edit_menu1", edit_menu1);
@@ -2779,6 +2793,8 @@ void ui_init_builder(void)
 	g_object_set_data(G_OBJECT(project_dialog), "project_dialog", project_dialog);
 	g_object_set_data(G_OBJECT(toolbar_popup_menu1), "toolbar_popup_menu1", toolbar_popup_menu1);
 	g_object_set_data(G_OBJECT(trial_dialog), "trial_dialog", trial_dialog);
+	g_object_set_data(G_OBJECT(weekend_dialog), "weekend_dialog", weekend_dialog);
+	g_object_set_data(G_OBJECT(weekend_end_dialog), "weekend_end_dialog", weekend_end_dialog);
 	g_object_set_data(G_OBJECT(window1), "window1", window1);
 
 	all_objects = gtk_builder_get_objects(builder);
@@ -2911,6 +2927,10 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(toolbar_popup_menu1);
 	if (GTK_IS_WIDGET(trial_dialog))
 		gtk_widget_destroy(trial_dialog);
+	if (GTK_IS_WIDGET(weekend_dialog))
+		gtk_widget_destroy(weekend_dialog);
+	if (GTK_IS_WIDGET(weekend_end_dialog))
+		gtk_widget_destroy(weekend_end_dialog);
 	if (GTK_IS_WIDGET(window1))
 		gtk_widget_destroy(window1);
 }

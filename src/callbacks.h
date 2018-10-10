@@ -273,6 +273,22 @@ G_MODULE_EXPORT void on_show_trial_dialog();
 void on_trial_dialog_response(GtkDialog *dialog, gint response, gpointer user_data);
 
 G_MODULE_EXPORT void
+on_weekend_image_event_button_press_event(GtkWidget *widget, 
+										GdkEvent *event, 
+										gpointer user_data);
+
+G_MODULE_EXPORT void on_show_weekend_dialog();
+
+void on_weekend_dialog_response(GtkDialog *dialog, gint response, gpointer user_data);
+
+G_MODULE_EXPORT void
+on_weekend_end_image_event_button_press_event(GtkWidget *widget, 
+										GdkEvent *event, 
+										gpointer user_data);
+
+G_MODULE_EXPORT void on_show_weekend_end_dialog();
+
+G_MODULE_EXPORT void
 on_help_menu_item_upgrade_activate		(GtkMenuItem	 *menuitem,
 										gpointer		 user_data);
 

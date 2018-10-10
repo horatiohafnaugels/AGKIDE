@@ -1957,3 +1957,9 @@ SetEditBoxInputType||(Integer index, Integer inputType)|
 GetExpansionFileError|Integer|()|
 GetSkeleton2DDepth|Integer|(Integer iSkeleton)|
 GetEditBoxDepth|Integer|(Integer index)|
+GetCharBuffer|String|()|
+GetCharBufferLength|Integer|()|
+GetRawJoystickSlider|Integer|(Integer index, Integer slider)|
+GetRawJoystickPOV|Integer|(Integer index, Integer pov)|
+CopyNetworkMessage|Integer|(Integer iFromMsgID)|
+GetURLSchemeText|String|()|

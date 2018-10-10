@@ -1897,6 +1897,28 @@ static void process_build_output_line(const gchar *str, gint color)
 		return;
 	}
 
+	if ( strncmp( msg, "Setting breakpad minidump AppID", strlen("Setting breakpad minidump AppID") ) == 0 )
+	{
+		g_free(msg);
+		return;
+	}
+
+	if ( strncmp( msg, "Steam_SetMinidumpSteamID", strlen("Steam_SetMinidumpSteamID") ) == 0 )
+	{
+		g_free(msg);
+		return;
+	}
+
+	if ( strstr( msg, "Steam free weekend has finished" ) )
+	{
+		on_show_weekend_end_dialog();
+	}
+
+	if ( strstr( msg, "free weekend version must be launched from within Steam" ) )
+	{
+		on_show_weekend_end_dialog();
+	}
+
 	if (build_parse_make_dir(msg, &tmp))
 	{
 		SETPTR(current_dir_entered, tmp);
