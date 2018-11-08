@@ -75,6 +75,7 @@ typedef struct GeanyProjectAPKSettings
 	unsigned int permission_flags;
 	gchar* play_app_id;
 	gchar* url_scheme;
+	gchar* deep_link;
 	gchar* keystore_path;
 	gchar* version_name;
 	int version_number;
@@ -99,6 +100,7 @@ typedef struct GeanyProjectIPASettings
 	gchar* build_number;
 	gchar* facebook_id;
 	gchar* url_scheme;
+	gchar* deep_link;
 	int device_type;
 	int uses_ads;
 	gchar* firebase_config_path;

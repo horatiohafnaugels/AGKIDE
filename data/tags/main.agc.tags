@@ -1963,3 +1963,16 @@ GetRawJoystickSlider|Integer|(Integer index, Integer slider)|
 GetRawJoystickPOV|Integer|(Integer index, Integer pov)|
 CopyNetworkMessage|Integer|(Integer iFromMsgID)|
 GetURLSchemeText|String|()|
+SetObjectAlpha||(Integer objID, Integer alpha)|
+GetObjectColorRed|Integer|(Integer objID)|
+GetObjectColorGreen|Integer|(Integer objID)|
+GetObjectColorBlue|Integer|(Integer objID)|
+GetObjectAlpha|Integer|(Integer objID)|
+ClearURLSchemeText||()|
+ExtractZip||(String zipfilename, String path, String password)|
+CreateObjectFromRawHeightMap|Integer|(String szFilename, Float width, Float height, Float length, Integer smoothing, Integer split, Integer rawWidth, Integer rawHeight)|
+CreateObjectFromRawHeightMap||(Integer objID, String szFilename, Float width, Float height, Float length, Integer smoothing, Integer split, Integer rawWidth, Integer rawHeight)|
+SetObjectMeshCollisionMode||(Integer objID, Integer meshIndex, Integer mode)|
+SetObjectMeshVisible||(Integer objID, Integer meshIndex, Integer mode)|
+GetObjectTextureName|String|(Integer objID, Integer textureIndex)|
+GetObjectNumTextures|Integer|(Integer objID)|

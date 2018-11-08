@@ -926,6 +926,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
 		AGK_CLEAR_STR(app->project->apk_settings.url_scheme) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_deep_link");
+		AGK_CLEAR_STR(app->project->apk_settings.deep_link) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		AGK_CLEAR_STR(app->project->apk_settings.play_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
@@ -1052,6 +1055,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
 		gchar *url_scheme = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_deep_link");
+		gchar *deep_link = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gchar *google_play_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
@@ -1208,6 +1214,30 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			last = package_name[i];
 		}
 
+		if ( url_scheme && *url_scheme )
+		{
+			if ( strchr(url_scheme, ':') || strchr(url_scheme, '/') )
+			{
+				SHOW_ERR(_("URL scheme must not contain : or /"));
+				goto android_dialog_clean_up; 
+			}
+		}
+
+		if ( deep_link && *deep_link )
+		{
+			if ( strncmp( deep_link, "https://", strlen("https://") ) != 0 && strncmp( deep_link, "http://", strlen("http://") ) != 0 )
+			{
+				SHOW_ERR(_("Deep link must start with http:// or https://"));
+				goto android_dialog_clean_up; 
+			}
+
+			if ( strcmp( deep_link, "https://" ) == 0 || strcmp( deep_link, "http://" ) == 0 )
+			{
+				SHOW_ERR(_("Deep link must have a domain after http:// or https://"));
+				goto android_dialog_clean_up; 
+			}
+		}
+
 		// check icon
 		//if ( !app_icon || !*app_icon ) { SHOW_ERR(_("You must select an app icon")); goto android_dialog_clean_up; }
 		if ( app_icon && *app_icon )
@@ -1289,6 +1319,7 @@ android_dialog_clean_up:
 		if ( notif_icon ) g_free(notif_icon);
 		if ( firebase_config ) g_free(firebase_config);
 		if ( url_scheme ) g_free(url_scheme);
+		if ( deep_link ) g_free(deep_link);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
@@ -1540,13 +1571,73 @@ android_dialog_continue:
 			contents3 += strlen("<!--ADDITIONAL_INTENT_FILTERS-->");
 
 			strcat( newcontents, contents2 );
-			strcat( newcontents, "<intent-filter>\n\
-        <action android:name=\"android.intent.action.VIEW\" />\n\
-        <category android:name=\"android.intent.category.DEFAULT\" />\n\
-        <category android:name=\"android.intent.category.BROWSABLE\" />\n\
-        <data android:scheme=\"" );
-        	strcat( newcontents, url_scheme );
-			strcat( newcontents, "\" />\n    </intent-filter>\n" );
+
+			if ( url_scheme && *url_scheme )
+			{
+				strcat( newcontents, "<intent-filter>\n\
+			<action android:name=\"android.intent.action.VIEW\" />\n\
+			<category android:name=\"android.intent.category.DEFAULT\" />\n\
+			<category android:name=\"android.intent.category.BROWSABLE\" />\n\
+			<data android:scheme=\"" );
+			
+				strcat( newcontents, url_scheme );
+				strcat( newcontents, "\" />\n    </intent-filter>\n" );
+			}
+
+			if ( deep_link && *deep_link )
+			{
+				gchar *szScheme = 0;
+				gchar *szHost = 0;
+				gchar *szPath = 0;
+				gchar *szTemp = strstr( deep_link, "://" );
+				if ( szTemp )
+				{
+					*szTemp = 0;
+					szScheme = g_strdup( deep_link );
+					*szTemp = ':';
+
+					szTemp += 3;
+					gchar *szTemp2 = strstr( szTemp, "/" );
+					if ( szTemp2 )
+					{
+						szPath = g_strdup( szTemp2 );
+						*szTemp2 = 0;
+						szHost = g_strdup( szTemp );
+						*szTemp2 = '/';
+					}
+					else szHost = g_strdup( szTemp );
+				}
+
+				if ( szScheme && *szScheme )
+				{
+					strcat( newcontents, "<intent-filter>\n\
+			<action android:name=\"android.intent.action.VIEW\" />\n\
+			<category android:name=\"android.intent.category.DEFAULT\" />\n\
+			<category android:name=\"android.intent.category.BROWSABLE\" />\n\
+			<data android:scheme=\"" );
+			
+					strcat( newcontents, szScheme );
+					if ( szHost && *szHost )
+					{
+						strcat( newcontents, "\" android:host=\"" );
+						strcat( newcontents, szHost );
+
+						if ( szPath && *szPath )
+						{
+							strcat( newcontents, "\" android:pathPrefix=\"" );
+							strcat( newcontents, szPath );
+						}
+					}
+			
+					strcat( newcontents, "\" />\n    </intent-filter>\n" );
+				}
+				
+
+				if ( szScheme ) g_free( szScheme );
+				if ( szHost ) g_free( szHost );
+				if ( szPath ) g_free( szPath );
+			}
+
 			contents2 = contents3;
 		}
 
@@ -2755,6 +2846,7 @@ android_dialog_cleanup2:
 		if ( ouya_icon ) g_free(ouya_icon);
 		if ( firebase_config ) g_free(firebase_config);
 		if ( url_scheme ) g_free(url_scheme);
+		if ( deep_link ) g_free(deep_link);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
@@ -2849,6 +2941,9 @@ void project_export_apk()
 								
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.url_scheme, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_deep_link");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.deep_link, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
@@ -3029,6 +3124,9 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 								
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.url_scheme, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_deep_link");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.deep_link, "") );
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
@@ -3511,6 +3609,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.url_scheme) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.deep_link) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		app->project->ipa_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 				
@@ -3577,6 +3678,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
 		gchar *url_scheme = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
+		gchar *deep_link = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		int orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
@@ -3719,10 +3823,28 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			}
 		}
 
+		if ( url_scheme && *url_scheme )
+		{
+			if ( strchr(url_scheme, ':') || strchr(url_scheme, '/') )
+			{
+				SHOW_ERR(_("URL scheme must not contain : or /"));
+				goto ios_dialog_clean_up; 
+			}
+		}
+
+		if ( deep_link && *deep_link )
+		{
+			if ( strchr( deep_link, '.' ) == 0 )
+			{
+				SHOW_ERR(_("Universal link must be a domain, e.g. www.appgamekit.com"));
+				goto ios_dialog_clean_up; 
+			}
+		}
+
 		if ( !g_file_test( "/Applications/XCode.app/Contents/Developer/usr/bin/actool", G_FILE_TEST_EXISTS ) )
 		{
 			SHOW_ERR(_("As of iOS 11 you must install XCode to export iOS apps from the AGK IDE. XCode can be downloaded from the Mac AppStore")); 
-			goto ios_dialog_clean_up; 
+			goto ios_dialog_clean_up;
 		}
 	
 		goto ios_dialog_continue;
@@ -3738,6 +3860,7 @@ ios_dialog_clean_up:
 		if ( app_splash4 ) g_free(app_splash4);
 		if ( facebook_id ) g_free(facebook_id);
 		if ( url_scheme ) g_free(url_scheme);
+		if ( deep_link ) g_free(deep_link);
 		if ( version_number ) g_free(version_number);
 		if ( output_file ) g_free(output_file);
 
@@ -4168,11 +4291,11 @@ ios_dialog_continue:
 		strcat( newcontents, bundle_id );
 		strcat( newcontents, "</string>\n	<key>com.apple.developer.team-identifier</key>\n	<string>" );
 		strcat( newcontents, team_id );
+		strcat( newcontents, "</string>\n" );
 		
 		if ( betaReports )
-			strcat( newcontents, "</string>\n	<key>beta-reports-active</key>\n	<true/>\n" );
-		else
-			strcat( newcontents, "</string>\n" );
+			strcat( newcontents, "	<key>beta-reports-active</key>\n	<true/>\n" );
+			
 
 		if ( pushNotifications == 1 )
 			strcat( newcontents, "	<key>aps-environment</key>\n	<string>development</string>\n" );
@@ -4190,10 +4313,23 @@ ios_dialog_continue:
 
 		if ( cloudKit )
 		{
-			strcat( newcontents, "<key>com.apple.developer.icloud-container-identifiers</key>\n	<array/>" );
-			strcat( newcontents, "key>com.apple.developer.ubiquity-kvstore-identifier</key>\n	<string>" );
+			strcat( newcontents, "  <key>com.apple.developer.icloud-container-identifiers</key>\n	<array/>" );
+			strcat( newcontents, "  <key>com.apple.developer.ubiquity-kvstore-identifier</key>\n	<string>" );
 			strcat( newcontents, bundle_id );
-			strcat( newcontents, "</string>" );
+			strcat( newcontents, "</string>\n" );
+		}
+
+		if ( deep_link )
+		{
+			gchar *szDomain = deep_link;
+			szDomain = strstr( szDomain, "://" );
+			if ( szDomain ) szDomain += 3;
+
+			gchar *szSlash = strchr( szDomain, '/' );
+			if ( szSlash ) *szSlash = 0;
+			strcat( newcontents, "  <key>com.apple.developer.associated-domains</key>\n <array>\n  <string>applinks:" );
+			strcat( newcontents, szDomain );
+			strcat( newcontents, "</string>\n</array>\n" );
 		}
 
 		strcat( newcontents, "</dict>\n</plist>" );
@@ -4276,6 +4412,7 @@ ios_dialog_continue:
 		{
 			utils_str_replace_all( &contents, urlschemereplacement, "" );
 		}
+
 		switch( orientation )
 		{
 			case 0:
@@ -5005,6 +5142,7 @@ ios_dialog_cleanup2:
 		if ( firebase_config ) g_free(firebase_config);
 		if ( facebook_id ) g_free(facebook_id);
 		if ( url_scheme ) g_free(url_scheme);
+		if ( deep_link ) g_free(deep_link);
 		if ( version_number ) g_free(version_number);
 		if ( build_number ) g_free(build_number);
 		if ( output_file ) g_free(output_file);
@@ -5098,6 +5236,9 @@ void project_export_ipa()
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), "" );
 
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
 			
@@ -5159,6 +5300,9 @@ void project_export_ipa()
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_url_scheme_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.url_scheme, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.deep_link, "") );
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->ipa_settings.orientation );
@@ -5255,6 +5399,7 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.app_name = 0;
 	project->apk_settings.app_type = 0; // Google
 	project->apk_settings.url_scheme = 0;
+	project->apk_settings.deep_link = 0;
 	project->apk_settings.keystore_path = 0;
 	project->apk_settings.orientation = 0;
 	project->apk_settings.output_path = 0;
@@ -5277,6 +5422,7 @@ void init_ios_settings( GeanyProject* project )
 	project->ipa_settings.device_type = 0; // iPhone and iPad
 	project->ipa_settings.facebook_id = 0;
 	project->ipa_settings.url_scheme = 0;
+	project->ipa_settings.deep_link = 0;
 	project->ipa_settings.orientation = 0; // Landscape
 	project->ipa_settings.output_path = 0;
 	project->ipa_settings.prov_profile_path = 0;
@@ -5303,6 +5449,7 @@ void free_android_settings( GeanyProject* project )
 	if ( project->apk_settings.notif_icon_path ) g_free(project->apk_settings.notif_icon_path);
 	if ( project->apk_settings.app_name ) g_free(project->apk_settings.app_name);
 	if ( project->apk_settings.url_scheme ) g_free(project->apk_settings.url_scheme);
+	if ( project->apk_settings.deep_link ) g_free(project->apk_settings.deep_link);
 	if ( project->apk_settings.keystore_path ) g_free(project->apk_settings.keystore_path);
 	if ( project->apk_settings.output_path ) g_free(project->apk_settings.output_path);
 	if ( project->apk_settings.ouya_icon_path ) g_free(project->apk_settings.ouya_icon_path);
@@ -5318,7 +5465,7 @@ void free_ios_settings( GeanyProject* project )
 	if ( project->ipa_settings.app_name ) g_free(project->ipa_settings.app_name);
 	if ( project->ipa_settings.build_number ) g_free(project->ipa_settings.build_number);
 	if ( project->ipa_settings.facebook_id ) g_free(project->ipa_settings.facebook_id);
-	if ( project->ipa_settings.url_scheme ) g_free(project->ipa_settings.url_scheme);
+	if ( project->ipa_settings.deep_link ) g_free(project->ipa_settings.deep_link);
 	if ( project->ipa_settings.output_path ) g_free(project->ipa_settings.output_path);
 	if ( project->ipa_settings.prov_profile_path ) g_free(project->ipa_settings.prov_profile_path);
 	if ( project->ipa_settings.splash_1136_path ) g_free(project->ipa_settings.splash_1136_path);
@@ -5342,6 +5489,7 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "apk_settings", "app_name", FALLBACK(project->apk_settings.app_name,"") );
 	g_key_file_set_integer( config, "apk_settings", "app_type", project->apk_settings.app_type ); 
 	g_key_file_set_string( config, "apk_settings", "url_scheme", FALLBACK(project->apk_settings.url_scheme,"") );
+	g_key_file_set_string( config, "apk_settings", "deep_link", FALLBACK(project->apk_settings.deep_link,"") );
 	g_key_file_set_string( config, "apk_settings", "keystore_path", FALLBACK(project->apk_settings.keystore_path,"") );
 	g_key_file_set_integer( config, "apk_settings", "orientation", project->apk_settings.orientation );
 	g_key_file_set_string( config, "apk_settings", "output_path", FALLBACK(project->apk_settings.output_path,"") );
@@ -5364,6 +5512,7 @@ void save_ios_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_integer( config, "ipa_settings", "device_type", project->ipa_settings.device_type );
 	g_key_file_set_string( config, "ipa_settings", "facebook_id", FALLBACK(project->ipa_settings.facebook_id,"") );
 	g_key_file_set_string( config, "ipa_settings", "url_scheme", FALLBACK(project->ipa_settings.url_scheme,"") );
+	g_key_file_set_string( config, "ipa_settings", "deep_link", FALLBACK(project->ipa_settings.deep_link,"") );
 	g_key_file_set_integer( config, "ipa_settings", "orientation", project->ipa_settings.orientation );
 	g_key_file_set_string( config, "ipa_settings", "output_path", FALLBACK(project->ipa_settings.output_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "prov_profile_path", FALLBACK(project->ipa_settings.prov_profile_path,"") );
@@ -5391,6 +5540,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.app_name = g_key_file_get_string( config, "apk_settings", "app_name", 0 );
 	project->apk_settings.app_type = utils_get_setting_integer( config, "apk_settings", "app_type", 0 ); 
 	project->apk_settings.url_scheme = g_key_file_get_string( config, "apk_settings", "url_scheme", 0 );
+	project->apk_settings.deep_link = g_key_file_get_string( config, "apk_settings", "deep_link", 0 );
 	project->apk_settings.keystore_path = g_key_file_get_string( config, "apk_settings", "keystore_path", 0 );
 	project->apk_settings.orientation = utils_get_setting_integer( config, "apk_settings", "orientation", 0 );
 	project->apk_settings.output_path = g_key_file_get_string( config, "apk_settings", "output_path", 0 );
@@ -5413,6 +5563,7 @@ void load_ios_settings( GKeyFile *config, GeanyProject* project )
 	project->ipa_settings.device_type = utils_get_setting_integer( config, "ipa_settings", "device_type", 0 );
 	project->ipa_settings.facebook_id = g_key_file_get_string( config, "ipa_settings", "facebook_id", 0 );
 	project->ipa_settings.url_scheme = g_key_file_get_string( config, "ipa_settings", "url_scheme", 0 );
+	project->ipa_settings.deep_link = g_key_file_get_string( config, "ipa_settings", "deep_link", 0 );
 	project->ipa_settings.orientation = utils_get_setting_integer( config, "ipa_settings", "orientation", 0 );
 	project->ipa_settings.output_path = g_key_file_get_string( config, "ipa_settings", "output_path", 0 );
 	project->ipa_settings.prov_profile_path = g_key_file_get_string( config, "ipa_settings", "prov_profile_path", 0 );
