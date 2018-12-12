@@ -1976,3 +1976,6 @@ SetObjectMeshCollisionMode||(Integer objID, Integer meshIndex, Integer mode)|
 SetObjectMeshVisible||(Integer objID, Integer meshIndex, Integer mode)|
 GetObjectTextureName|String|(Integer objID, Integer textureIndex)|
 GetObjectNumTextures|Integer|(Integer objID)|
+GetRawJoystickName|String|(Integer index)|
+PlayYoutubeVideo||(String developerKey, String videoID, Float startTime)|
+ShareFile||(String szFilename)|

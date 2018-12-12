@@ -3489,7 +3489,7 @@ keystore_dialog_continue:
 		argv[8] = g_strdup("-keysize");
 		argv[9] = g_strdup("2048");
 		argv[10] = g_strdup("-validity");
-		argv[11] = g_strdup("10000");
+		argv[11] = g_strdup("20000");
 		argv[12] = g_strdup("-storepass");
 		argv[13] = g_strdup(password1);
 		argv[14] = g_strdup("-keypass");
@@ -3565,6 +3565,41 @@ void project_generate_keystore()
 	}
 
 	gtk_window_present(GTK_WINDOW(ui_widgets.keystore_dialog));
+}
+
+static int ios_convert_to_cgbi_png( const char* oldfilename, const char* newfilename )
+{
+	gint status = 0;
+	GError *error = NULL;
+
+	gchar** argv = g_new0( gchar*, 8 );
+	argv[0] = g_strdup( "/usr/bin/xcrun" );
+	argv[1] = g_strdup("-sdk");
+	argv[2] = g_strdup("iphoneos");
+	argv[3] = g_strdup("pngcrush");
+	argv[4] = g_strdup("-iphone");
+	argv[5] = g_strdup(oldfilename);
+	argv[6] = g_strdup(newfilename);
+	argv[7] = NULL;
+
+	if ( !utils_spawn_sync( "/", argv, NULL, 0, NULL, NULL, NULL, NULL, &status, &error) )
+	{
+		SHOW_ERR1( _("Failed to run \"pngcrush\" program: %s"), error->message );
+		g_error_free(error);
+		error = NULL;
+		g_strfreev(argv);
+		return 0;
+	}
+		
+	if ( !g_file_test (newfilename, G_FILE_TEST_EXISTS) )
+	{
+		SHOW_ERR1( _("Failed to convert png file \"%s\" to Apple's CgBI format"), newfilename );
+		g_strfreev(argv);
+		return 0;
+	}
+
+	g_strfreev(argv);
+	return 1;
 }
 
 static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
@@ -3939,6 +3974,7 @@ ios_dialog_continue:
 		gchar *build_string = NULL;
 		gchar *bundle_id2 = NULL; // don't free, pointer to sub string
 		gchar *image_filename = NULL;
+		gchar *temp_image_filename = NULL;
 		GdkPixbuf *icon_scaled_image = NULL;
 		GdkPixbuf *icon_image = NULL;
 		GdkPixbuf *splash_image = NULL;
@@ -4319,11 +4355,11 @@ ios_dialog_continue:
 			strcat( newcontents, "</string>\n" );
 		}
 
-		if ( deep_link )
+		if ( deep_link && *deep_link )
 		{
-			gchar *szDomain = deep_link;
-			szDomain = strstr( szDomain, "://" );
+			gchar *szDomain = strstr( deep_link, "://" );
 			if ( szDomain ) szDomain += 3;
+			else szDomain = deep_link;
 
 			gchar *szSlash = strchr( szDomain, '/' );
 			if ( szSlash ) *szSlash = 0;
@@ -4495,11 +4531,13 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 
+			temp_image_filename = g_build_path( "/", icons_sub_folder, "temp.png", NULL );
+
 			// scale it and save it
 			// 152x152
 			image_filename = g_build_path( "/", icons_sub_folder, "icon-152.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 152, 152, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save 152x152 icon: %s"), error->message );
 				g_error_free(error);
@@ -4507,12 +4545,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 180x180
 			image_filename = g_build_path( "/", icons_sub_folder, "icon-180.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 180, 180, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save 180x180 icon: %s"), error->message );
 				g_error_free(error);
@@ -4520,12 +4560,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 167x167
 			image_filename = g_build_path( "/", icons_sub_folder, "icon-167.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 167, 167, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save 167x167 icon: %s"), error->message );
 				g_error_free(error);
@@ -4533,12 +4575,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 120x120
 			image_filename = g_build_path( "/", icons_sub_folder, "icon-120.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 120, 120, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save 120x120 icon: %s"), error->message );
 				g_error_free(error);
@@ -4546,12 +4590,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 76x76
 			image_filename = g_build_path( "/", icons_sub_folder, "icon-76.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 76, 76, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save 76x76 icon: %s"), error->message );
 				g_error_free(error);
@@ -4559,12 +4605,15 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
+			/*
 			// 60x60
 			image_filename = g_build_path( "/", icons_sub_folder, "icon-60.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 60, 60, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save 60x60 icon: %s"), error->message );
 				g_error_free(error);
@@ -4572,12 +4621,15 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
+			*/
 
 			// 1024x1024
 			image_filename = g_build_path( "/", icons_sub_folder, "icon-1024.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( icon_image, 1024, 1024, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save 1024x1024 icon: %s"), error->message );
 				g_error_free(error);
@@ -4585,13 +4637,17 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
+			g_free( temp_image_filename );
 
 			icon_scaled_image = NULL;
 			image_filename = NULL;
+			temp_image_filename = NULL;
 
 			// run actool to compile asset catalog, it will copy the app icons to the app_folder and create the Assets.car file
-			argv = g_new0( gchar*, 19 );
+			argv = g_new0( gchar*, 20 );
 			argv[0] = g_strdup( path_to_actool );
 			argv[1] = g_strdup("--output-partial-info-plist");
 			argv[2] = g_strdup("temp.plist");
@@ -4602,15 +4658,16 @@ ios_dialog_continue:
 			argv[7] = g_strdup("--target-device");
 			argv[8] = g_strdup("ipad");
 			argv[9] = g_strdup("--minimum-deployment-target");
-			argv[10] = g_strdup("7.0");
+			argv[10] = g_strdup("8.0");
 			argv[11] = g_strdup("--platform");
 			argv[12] = g_strdup("iphoneos");
 			argv[13] = g_strdup("--product-type");
 			argv[14] = g_strdup("com.apple.product-type.application");
-			argv[15] = g_strdup("--compile");
-			argv[16] = g_strdup(app_folder_name);
-			argv[17] = g_strdup("Icons.xcassets");
-			argv[18] = NULL;
+			argv[15] = g_strdup("--compress-pngs");
+			argv[16] = g_strdup("--compile");
+			argv[17] = g_strdup(app_folder_name);
+			argv[18] = g_strdup("Icons.xcassets");
+			argv[19] = NULL;
 
 			if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 			{
@@ -4659,9 +4716,10 @@ ios_dialog_continue:
 
 			// scale it and save it
 			// 640x960 Default@2x.png
+			temp_image_filename = g_build_path( "/", app_folder, "temp.png", NULL );
 			image_filename = g_build_path( "/", app_folder, "Default@2x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 640, 960, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default@2x.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4669,10 +4727,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
+			g_free( temp_image_filename );
 
 			icon_scaled_image = NULL;
 			image_filename = NULL;
+			temp_image_filename = NULL;
 
 			gdk_pixbuf_unref( splash_image );
 			splash_image = NULL;
@@ -4698,11 +4760,13 @@ ios_dialog_continue:
 				dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Splash screen (640x1136) should have an aspect ratio near 0.56 (e.g. 640x1136 or 1080x1920) otherwise it will look stretched when scaled. Export will continue.") );
 			}
 
+			temp_image_filename = g_build_path( "/", app_folder, "temp.png", NULL );
+
 			// scale it and save it
 			// 640x1136 Default-568h@2x.png
 			image_filename = g_build_path( "/", app_folder, "Default-568h@2x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 640, 1136, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-568h@2x.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4710,12 +4774,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 750x1334 Default-375w-667h@2x.png
 			image_filename = g_build_path( "/", app_folder, "Default-375w-667h@2x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 750, 1334, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-375w-667h@2x.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4723,12 +4789,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 1242x2208 Default-414w-736h@3x.png
 			image_filename = g_build_path( "/", app_folder, "Default-414w-736h@3x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1242, 2208, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-414w-736h@3x.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4736,10 +4804,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
+			g_free( temp_image_filename );
 
 			icon_scaled_image = NULL;
 			image_filename = NULL;
+			temp_image_filename = NULL;
 
 			gdk_pixbuf_unref( splash_image );
 			splash_image = NULL;
@@ -4760,16 +4832,18 @@ ios_dialog_continue:
 			int width = gdk_pixbuf_get_width( splash_image );
 			int height = gdk_pixbuf_get_height( splash_image );
 			float aspect = width / (float) height;
-			if ( aspect > 0.43f || aspect < 0.49f )
+			if ( aspect < 0.43f || aspect > 0.49f )
 			{
 				dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Splash screen (1125x2436) should have an aspect ratio near 0.46 otherwise it will look stretched when scaled. Export will continue.") );
 			}
+
+			temp_image_filename = g_build_path( "/", app_folder, "temp.png", NULL );
 
 			// scale it and save it
 			// 1125x2436 Default-375w-812h@3x.png
 			image_filename = g_build_path( "/", app_folder, "Default-375w-812h@3x.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1125, 2436, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-375w-812h@3x.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4777,10 +4851,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
+			g_free( temp_image_filename );
 
 			icon_scaled_image = NULL;
 			image_filename = NULL;
+			temp_image_filename = NULL;
 
 			gdk_pixbuf_unref( splash_image );
 			splash_image = NULL;
@@ -4806,11 +4884,13 @@ ios_dialog_continue:
 				dialogs_show_msgbox(GTK_MESSAGE_WARNING, _("Splash screen (1536x2048) should have an aspect ratio near 0.75 (e.g. 768x1024 or 1536x2048) otherwise it will look stretched when scaled. Export will continue.") );
 			}
 
+			temp_image_filename = g_build_path( "/", app_folder, "temp.png", NULL );
+
 			// scale it and save it
 			// 768x1024 Default-Portrait~ipad.png
 			image_filename = g_build_path( "/", app_folder, "Default-Portrait~ipad.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 768, 1024, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-Portrait~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4818,12 +4898,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 1536x2048 Default-Portrait@2x~ipad.png
 			image_filename = g_build_path( "/", app_folder, "Default-Portrait@2x~ipad.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 1536, 2048, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-Portrait@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4831,12 +4913,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 1536x2048 Default-Portrait-1366h@2x~ipad.png
 			image_filename = g_build_path( "/", app_folder, "Default-Portrait-1366h@2x~ipad.png", NULL );
 			icon_scaled_image = gdk_pixbuf_scale_simple( splash_image, 2048, 2732, GDK_INTERP_HYPER );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-Portrait-1366h@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4844,6 +4928,8 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 1024x768 Default-Landscape~ipad.png
@@ -4851,7 +4937,7 @@ ios_dialog_continue:
 			GdkPixbuf *temp_image = gdk_pixbuf_scale_simple( splash_image, 768, 1024, GDK_INTERP_HYPER );
 			icon_scaled_image = gdk_pixbuf_rotate_simple( temp_image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE );
 			gdk_pixbuf_unref( temp_image );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-Landscape~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4859,6 +4945,8 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 2048x1536 Default-Landscape@2x~ipad.png
@@ -4866,7 +4954,7 @@ ios_dialog_continue:
 			temp_image = gdk_pixbuf_scale_simple( splash_image, 1536, 2048, GDK_INTERP_HYPER );
 			icon_scaled_image = gdk_pixbuf_rotate_simple( temp_image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE );
 			gdk_pixbuf_unref( temp_image );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-Landscape@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4874,6 +4962,8 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
 
 			// 2048x1536 Default-Landscape-1366h@2x~ipad.png
@@ -4881,7 +4971,7 @@ ios_dialog_continue:
 			temp_image = gdk_pixbuf_scale_simple( splash_image, 2048, 2732, GDK_INTERP_HYPER );
 			icon_scaled_image = gdk_pixbuf_rotate_simple( temp_image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE );
 			gdk_pixbuf_unref( temp_image );
-			if ( !gdk_pixbuf_save( icon_scaled_image, image_filename, "png", &error, "compression", "9", NULL ) )
+			if ( !gdk_pixbuf_save( icon_scaled_image, temp_image_filename, "png", &error, "compression", "9", NULL ) )
 			{
 				SHOW_ERR1( _("Failed to save Default-Landscape-1366h@2x~ipad.png splash screen: %s"), error->message );
 				g_error_free(error);
@@ -4889,10 +4979,14 @@ ios_dialog_continue:
 				goto ios_dialog_cleanup2;
 			}
 			gdk_pixbuf_unref( icon_scaled_image );
+			if ( !ios_convert_to_cgbi_png( temp_image_filename, image_filename ) ) goto ios_dialog_cleanup2;
+			g_unlink( temp_image_filename );
 			g_free( image_filename );
+			g_free( temp_image_filename );
 
 			icon_scaled_image = NULL;
 			image_filename = NULL;
+			temp_image_filename = NULL;
 
 			gdk_pixbuf_unref( splash_image );
 			splash_image = NULL;

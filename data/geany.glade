@@ -3704,7 +3704,7 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                                   <object class="GtkEntry" id="ios_app_icon_entry">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="tooltip_text" translatable="yes">Must be at least 1024x1024 pixels, PNG only, can contain transparency</property>
+                                    <property name="tooltip_text" translatable="yes">Must be at least 1024x1024 pixels, PNG only, must not contain transparency</property>
                                     <property name="invisible_char">●</property>
                                     <property name="invisible_char_set">True</property>
                                     <property name="primary_icon_activatable">False</property>
@@ -9815,6 +9815,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9835,6 +9838,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
