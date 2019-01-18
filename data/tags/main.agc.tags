@@ -1985,3 +1985,8 @@ CreateUDPListener|Integer|(Integer listenerID, String ip, Integer port)|
 SendUDPNetworkMessage||(Integer listenerID, Integer messageID, String toIP, Integer toPort)|
 GetUDPNetworkMessage|Integer|(Integer listenerID)|
 DeleteUDPListener||(Integer listenerID)|
+ExtractZipASync||(String zipfilename, String path, String password)|
+GetZipExtractProgress|Float|()|
+GetZipExtractComplete|Integer|()|
+GetWindowWidth|Integer|()|
+GetWindowHeight|Integer|()|

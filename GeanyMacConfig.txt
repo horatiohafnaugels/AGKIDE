@@ -28,13 +28,12 @@ $ export PKG_CONFIG_PATH="../../../../../gtk/source/gtk+-2.24.28:../../../../../
 
 now run
 
-$ export CFLAGS="-I$HOME/gtk/inst/include -x objective-c -mmacosx-version-min=10.7"
+$ export CFLAGS="-O2 -I$HOME/gtk/inst/include -x objective-c -mmacosx-version-min=10.7"
 $ export LIBS="-lgtkmacintegration-gtk2 -L/Users/paulj/gtk/inst/lib"
 
 and finally run this with the prefix path set to where you want the final IDE executable to be, for your first attempt I recommend using this path, the bundler uses it later
 
-$ chmod 0775 configure
-$ ./configure --prefix="$HOME/Projects/Geany-Compiled" --disable-vte
+$ ./autogen.sh --prefix="$HOME/Projects/Geany-Compiled" --disable-vte
 
 
 IDE building

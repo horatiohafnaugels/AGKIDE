@@ -1909,7 +1909,7 @@ gint ScintillaGTK::ScrollEvent(GtkWidget *widget, GdkEventScroll *event) {
 		// Note that this is disabled on OS X (Darwin) where the X11 server already has
 		// and adaptive scrolling algorithm that fights with this one
 		int cLineScroll;
-#if defined(__MWERKS__) || defined(__APPLE_CPP__) || defined(__APPLE_CC__)
+#if defined(__APPLE__) && !defined(GDK_WINDOWING_QUARTZ)
 		cLineScroll = sciThis->linesPerScroll;
 		if (cLineScroll == 0)
 			cLineScroll = 4;
