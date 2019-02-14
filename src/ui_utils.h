@@ -161,6 +161,7 @@ typedef struct UIWidgets
 	GtkWidget	*trial_dialog;
 	GtkWidget	*weekend_dialog;
 	GtkWidget	*weekend_end_dialog;
+	GtkWidget	*what_notifications_dialog;
 
 	/* other widgets not needed in GeanyMainWidgets */
 	GtkWidget	*statusbar;			/* use ui_set_statusbar() to set */
@@ -252,6 +253,7 @@ GtkWidget *create_toolbar_popup_menu1(void);
 GtkWidget *create_trial_dialog(void);
 GtkWidget *create_weekend_dialog(void);
 GtkWidget *create_weekend_end_dialog(void);
+GtkWidget *create_what_notifications_dialog(void);
 GtkWidget *create_window1(void);
 
 void ui_widget_set_sensitive(GtkWidget *widget, gboolean set);

@@ -33,6 +33,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <stdio.h>
+#include <time.h>
+
+#include <windows.h>
+#include <wininet.h>
+
 #include "geany.h"
 #include <glib/gstdio.h>
 
@@ -1511,6 +1517,223 @@ gint main(gint argc, gchar **argv)
 #ifdef AGK_WEEKEND_VERSION
 	on_show_weekend_dialog();
 #endif
+
+	// generate unique code for AGK install if none available
+	char* pUniqueCodeFile = "installcode.dat";
+	char pUniqueCode[33];
+	memset ( pUniqueCode, 33, 0 );
+	FILE *file = fopen(pUniqueCodeFile, "r");
+	if ( file == NULL )
+	{
+		// generate
+		time_t mtime;
+		mtime = time(0);
+		srand(mtime);
+		int n = 0;
+		for (; n < 32; n++ ) 
+		{
+			pUniqueCode[n] = 65+(rand()%22);
+		}
+		pUniqueCode[32] = 0;
+		FILE* fp = fopen( pUniqueCodeFile , "w" );
+		fwrite(pUniqueCode , 1 , 32 , fp );
+		fclose(fp);
+	}
+	else
+	{
+		// read
+		fread(pUniqueCode, 1, 32, file);
+		fclose(file);
+	}
+	pUniqueCode[32] = 0;
+	//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pUniqueCode );
+
+	// request news from server
+	UINT iError = 0;
+	char pDataReturned[10240];
+	memset ( pDataReturned, 0, sizeof(pDataReturned) );
+	HINTERNET m_hInet = InternetOpen( "InternetConnection", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0 );
+	if ( m_hInet == NULL )
+	{
+		iError = GetLastError( );
+	}
+	else
+	{
+		unsigned short wHTTPType = INTERNET_DEFAULT_HTTPS_PORT;
+		HINTERNET m_hInetConnect = InternetConnect( m_hInet, "www.thegamecreators.com", wHTTPType, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0 );
+		if ( m_hInetConnect == NULL )
+		{
+			iError = GetLastError( );
+		}
+		else
+		{
+			int m_iTimeout = 5000;
+			InternetSetOption( m_hInetConnect, INTERNET_OPTION_CONNECT_TIMEOUT, (void*)&m_iTimeout, sizeof(m_iTimeout) );  
+			HINTERNET hHttpRequest = HttpOpenRequest( m_hInetConnect, "POST", "/api/agk/ide/announcement", "HTTP/1.1", NULL, NULL, INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE, 0 );
+			if ( hHttpRequest == NULL )
+			{
+				iError = GetLastError( );
+			}
+			else
+			{
+				HttpAddRequestHeaders( hHttpRequest, "Content-Type: application/x-www-form-urlencoded", -1, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
+				char m_szPostData[1024];
+				strcpy ( m_szPostData, "k=vIo3sc2z&uid=" );
+				strcat ( m_szPostData, pUniqueCode );
+				int bSendResult = HttpSendRequest( hHttpRequest, NULL, -1, (void*)(m_szPostData), strlen(m_szPostData) );
+				if ( bSendResult == 0 )
+				{
+					iError = GetLastError( );
+				}
+				else
+				{
+					int m_iStatusCode = 0;
+					char m_szContentType[150];
+					unsigned int dwBufferSize = sizeof(int);
+					unsigned int dwHeaderIndex = 0;
+					HttpQueryInfo( hHttpRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, (void*)&m_iStatusCode, &dwBufferSize, &dwHeaderIndex );
+					dwHeaderIndex = 0;
+					unsigned int dwContentLength = 0;
+					HttpQueryInfo( hHttpRequest, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, (void*)&dwContentLength, &dwBufferSize, &dwHeaderIndex );
+					dwHeaderIndex = 0;
+					unsigned int ContentTypeLength = 150;
+					HttpQueryInfo( hHttpRequest, HTTP_QUERY_CONTENT_TYPE, (void*)m_szContentType, &ContentTypeLength, &dwHeaderIndex );
+
+					unsigned int dwDataLength = 0;
+					char pBuffer[ 20000 ];
+					for(;;)
+					{
+						unsigned int written = 0;
+						if( !InternetReadFile( hHttpRequest, (void*) pBuffer, 20000, &written ) )
+						{
+							// error
+						}
+						if ( written == 0 ) break;
+						memcpy( pDataReturned + dwDataLength, pBuffer, written );
+						dwDataLength = dwDataLength + written;
+					}
+					InternetCloseHandle( hHttpRequest );
+				}
+			}
+			InternetCloseHandle( m_hInetConnect );
+		}
+		InternetCloseHandle( m_hInet );
+	}
+	if ( iError > 0 )
+	{
+		char *szError = 0;
+		if ( iError > 12000 && iError < 12174 ) 
+			FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE, GetModuleHandle("wininet.dll"), iError, 0, (char*)&szError, 0, 0 );
+		else 
+			FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, iError, 0, (char*)&szError, 0, 0 );
+		if ( szError )
+		{
+			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, szError );
+			LocalFree( szError );
+		}
+	}
+
+	// break up response string
+	char* updated_at[1024];
+	memset ( updated_at, 0, sizeof(updated_at) );
+	char pNewsText[10240];
+	strcpy ( pNewsText, "" );
+	char pURLText[10240];
+	strcpy ( pURLText, "" );
+	char pWorkStr[10240];
+	strcpy ( pWorkStr, pDataReturned );
+	if ( pWorkStr[0]=='{' ) strcpy ( pWorkStr, pWorkStr+1 );
+	int n = 10200;
+	for (; n>0; n-- ) if ( pWorkStr[n] == '}' ) { pWorkStr[n] = 0; break; }
+	char* pChop = strstr ( pWorkStr, "," );
+	char pStatusStr[10240];
+	strcpy ( pStatusStr, pWorkStr );
+	pStatusStr[pChop-pWorkStr] = 0;
+	char* pStatusValue = strstr ( pStatusStr, ":" ) + 1;
+	if ( pChop[0]=',' ) pChop += 1;
+	if ( strstr ( pStatusValue, "success" ) != NULL )
+	{
+		// success
+		// news
+		pChop = strstr ( pChop, ":" ) + 2;
+		strcpy ( pNewsText, pChop );
+		char pEndOfChunk[4];
+		pEndOfChunk[0]='"';
+		pEndOfChunk[1]=',';
+		pEndOfChunk[2]='"';
+		pEndOfChunk[3]=0;
+		char* pNewsTextEnd = strstr ( pNewsText, pEndOfChunk );
+		pNewsText[pNewsTextEnd-pNewsText] = 0;
+		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pNewsText );
+		pChop += strlen(pNewsText);
+
+		// go through news and replace \n with real carriage returns
+		int n = 0;
+		char* pReplacePos = pNewsText;
+		for(;;)
+		{
+			pReplacePos = strstr ( pReplacePos, "\\r\\n" );
+			if ( pReplacePos != NULL )
+			{
+				pReplacePos[0]=' ';
+				pReplacePos[1]=' ';
+				pReplacePos[2]=' ';
+				pReplacePos[3]='\n';
+				pReplacePos+=4;
+			}
+			else
+				break;
+		}
+
+		// url
+		strcpy ( pURLText, pChop );
+		pEndOfChunk[0]='"';
+		pEndOfChunk[1]=',';
+		pEndOfChunk[2]='"';
+		strcpy ( pURLText, strstr ( pURLText, pEndOfChunk ) + 9 );
+		char* pURLEnd = strstr ( pURLText, pEndOfChunk );
+		pURLText[pURLEnd-pURLText] = 0;
+		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pURLText );
+		pChop += strlen(pURLText) + 9;
+
+		// updated_at
+		char pUpdatedAt[10240];
+		pEndOfChunk[0]='"';
+		pEndOfChunk[1]=':';
+		pEndOfChunk[2]='{';
+		pChop = strstr ( pChop, pEndOfChunk ) + 2 + 9;
+		strcpy ( pUpdatedAt, pChop );
+		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pUpdatedAt );
+		memcpy ( updated_at, pUpdatedAt, 33 );
+		updated_at[32] = 0;
+	}
+	else
+	{
+		// error
+		char* pMessageValue = strstr ( pChop, ":" ) + 1;
+		dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pMessageValue );
+	}
+
+	// show what_notifications dialog if news available
+	char* install_stamp_at[1024];
+	memset ( install_stamp_at, 0, sizeof(install_stamp_at) );
+	char* pInstallStampFile = "installstamp.dat";
+	file = fopen(pInstallStampFile, "r");
+	if ( file != NULL )
+	{
+		fread(install_stamp_at, 1, 33, file);
+		fclose(file);
+	}
+	if ( strcmp ( updated_at, install_stamp_at ) != NULL )
+	{
+		// different updated_at entry, show new news
+		on_show_what_notifications_dialog ( pNewsText, pURLText );
+
+		// update install stamp so we know news has been read
+		FILE* fp = fopen( pInstallStampFile , "w" );
+		fwrite(updated_at , 1 , 33 , fp );
+		fclose(fp);
+	}
 
 	// disable F10 menu key so it can be used elsewhere
 	gtk_settings_set_string_property(gtk_settings_get_default(),

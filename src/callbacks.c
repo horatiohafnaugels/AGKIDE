@@ -1683,6 +1683,59 @@ G_MODULE_EXPORT void on_show_weekend_end_dialog()
 	gtk_window_present( GTK_WINDOW(ui_widgets.weekend_end_dialog) );
 }
 
+G_MODULE_EXPORT void on_what_notifications_button_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+	if ( ui_widgets.what_notifications_dialog ) on_what_notifications_dialog_response( ui_widgets.what_notifications_dialog, 1, 0 );
+}
+
+G_MODULE_EXPORT void on_show_what_notifications_dialog ( char* pNewsText, char* pURLText )
+{
+	if (ui_widgets.what_notifications_dialog == NULL) 
+	{
+		ui_widgets.what_notifications_dialog = create_what_notifications_dialog();
+        gtk_window_set_transient_for(GTK_WINDOW(ui_widgets.what_notifications_dialog), GTK_WINDOW(main_widgets.window));
+		
+		gchar* userdata = NULL;
+		userdata = g_new0(gchar, strlen(pURLText)+1);
+		strcpy ( userdata, pURLText );
+
+		g_signal_connect(ui_widgets.what_notifications_dialog, "response", G_CALLBACK(on_what_notifications_dialog_response), userdata);
+		g_signal_connect(ui_widgets.what_notifications_dialog, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+	}
+
+	gint x, y, width, height;
+	gtk_window_get_position(GTK_WINDOW(main_widgets.window), &x, &y);
+	gtk_window_get_size(GTK_WINDOW(main_widgets.window), &width, &height);
+
+	gint x2 = width / 2 - 250 + x;
+	gint y2 = height / 2 - 180 + y;
+	
+	gtk_window_move( GTK_WINDOW(ui_widgets.what_notifications_dialog), x2, y2 );
+	gtk_window_present( GTK_WINDOW(ui_widgets.what_notifications_dialog) );
+
+	GtkWidget* textwidget = ui_lookup_widget(ui_widgets.what_notifications_dialog, "what_notifications_text");
+	GtkTextBuffer *buffer = gtk_text_buffer_new(NULL);
+	gtk_text_buffer_set_text(buffer, pNewsText, -1);
+	gtk_text_view_set_buffer(GTK_TEXT_VIEW(textwidget), buffer);
+
+	if ( strlen(pURLText) == 0 )
+	{
+		GtkWidget* textwidget = ui_lookup_widget(ui_widgets.what_notifications_dialog, "what_notifications_button_link");
+		gtk_widget_hide ( textwidget );
+	}
+}
+
+void on_what_notifications_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
+{
+	if ( response == 1 ) 
+	{
+		utils_open_browser(user_data); // https://www.appgamekit.com/news
+	}
+
+	gtk_widget_hide(GTK_WIDGET(dialog));
+	if ( main_status.quitting ) on_exit_clicked( NULL, NULL );
+}
+
 G_MODULE_EXPORT void on_comments_function_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 	GeanyDocument *doc = document_get_current();

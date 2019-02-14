@@ -94,6 +94,7 @@ static GtkWidget* project_dialog = NULL;
 static GtkWidget* trial_dialog = NULL;
 static GtkWidget* weekend_dialog = NULL;
 static GtkWidget* weekend_end_dialog = NULL;
+static GtkWidget* what_notifications_dialog = NULL;
 
 static struct
 {
@@ -2704,6 +2705,11 @@ GtkWidget *create_weekend_end_dialog(void)
 	return weekend_end_dialog;
 }
 
+GtkWidget *create_what_notifications_dialog(void)
+{
+	return what_notifications_dialog;
+}
+
 GtkWidget *create_window1(void)
 {
 	return window1;
@@ -2780,6 +2786,7 @@ void ui_init_builder(void)
 	trial_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "trial_dialog"));
 	weekend_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "weekend_dialog"));
 	weekend_end_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "weekend_end_dialog"));
+	what_notifications_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "what_notifications_dialog"));
 	window1 = GTK_WIDGET(gtk_builder_get_object(builder, "window1"));
 
 	g_object_set_data(G_OBJECT(edit_menu1), "edit_menu1", edit_menu1);
@@ -2795,6 +2802,7 @@ void ui_init_builder(void)
 	g_object_set_data(G_OBJECT(trial_dialog), "trial_dialog", trial_dialog);
 	g_object_set_data(G_OBJECT(weekend_dialog), "weekend_dialog", weekend_dialog);
 	g_object_set_data(G_OBJECT(weekend_end_dialog), "weekend_end_dialog", weekend_end_dialog);
+	g_object_set_data(G_OBJECT(what_notifications_dialog), "what_notifications_dialog", what_notifications_dialog);
 	g_object_set_data(G_OBJECT(window1), "window1", window1);
 
 	all_objects = gtk_builder_get_objects(builder);
@@ -2931,6 +2939,8 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(weekend_dialog);
 	if (GTK_IS_WIDGET(weekend_end_dialog))
 		gtk_widget_destroy(weekend_end_dialog);
+	if (GTK_IS_WIDGET(what_notifications_dialog))
+		gtk_widget_destroy(what_notifications_dialog);
 	if (GTK_IS_WIDGET(window1))
 		gtk_widget_destroy(window1);
 }
