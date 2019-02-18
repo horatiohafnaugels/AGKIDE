@@ -1990,3 +1990,5 @@ GetZipExtractProgress|Float|()|
 GetZipExtractComplete|Integer|()|
 GetWindowWidth|Integer|()|
 GetWindowHeight|Integer|()|
+CancelZipExtract||()|
+GameCenterLogout||()|

@@ -1727,13 +1727,12 @@ G_MODULE_EXPORT void on_show_what_notifications_dialog ( char* pNewsText, char* 
 
 void on_what_notifications_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 {
-	if ( response == 1 ) 
+	if ( response == 1 && user_data ) 
 	{
 		utils_open_browser(user_data); // https://www.appgamekit.com/news
 	}
 
 	gtk_widget_hide(GTK_WIDGET(dialog));
-	if ( main_status.quitting ) on_exit_clicked( NULL, NULL );
 }
 
 G_MODULE_EXPORT void on_comments_function_activate(GtkMenuItem *menuitem, gpointer user_data)
