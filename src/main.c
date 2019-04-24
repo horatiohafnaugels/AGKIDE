@@ -33,17 +33,18 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <stdio.h>
-#include <time.h>
-
-#include <windows.h>
-#include <wininet.h>
-
 #include "geany.h"
 #include <glib/gstdio.h>
 
 #ifdef HAVE_LOCALE_H
 # include <locale.h>
+#endif
+
+#ifdef G_OS_WIN32
+	#include <stdio.h>
+	#include <time.h>
+	#include <windows.h>
+	#include <wininet.h>
 #endif
 
 #include "main.h"
@@ -1518,8 +1519,11 @@ gint main(gint argc, gchar **argv)
 	on_show_weekend_dialog();
 #endif
 
+#ifdef G_OS_WIN32
 	// generate unique code for AGK install if none available
-	char* pUniqueCodeFile = "installcode.dat";
+	char pUniqueCodeFile[ 1024 ];
+	strcpy( pUniqueCodeFile, app->configdir );
+	strcat( pUniqueCodeFile, "\\installcode.dat" );
 	char pUniqueCode[33];
 	memset ( pUniqueCode, 33, 0 );
 	FILE *file = fopen(pUniqueCodeFile, "r");
@@ -1549,8 +1553,9 @@ gint main(gint argc, gchar **argv)
 	//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pUniqueCode );
 
 	// request news from server
+	#define DATA_RETURN_SIZE 10240
 	UINT iError = 0;
-	char pDataReturned[10240];
+	char pDataReturned[DATA_RETURN_SIZE];
 	memset ( pDataReturned, 0, sizeof(pDataReturned) );
 	HINTERNET m_hInet = InternetOpen( "InternetConnection", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0 );
 	if ( m_hInet == NULL )
@@ -1567,7 +1572,7 @@ gint main(gint argc, gchar **argv)
 		}
 		else
 		{
-			int m_iTimeout = 5000;
+			int m_iTimeout = 2000;
 			InternetSetOption( m_hInetConnect, INTERNET_OPTION_CONNECT_TIMEOUT, (void*)&m_iTimeout, sizeof(m_iTimeout) );  
 			HINTERNET hHttpRequest = HttpOpenRequest( m_hInetConnect, "POST", "/api/agk/ide/announcement", "HTTP/1.1", NULL, NULL, INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE, 0 );
 			if ( hHttpRequest == NULL )
@@ -1609,8 +1614,10 @@ gint main(gint argc, gchar **argv)
 							// error
 						}
 						if ( written == 0 ) break;
+						if ( dwDataLength + written > DATA_RETURN_SIZE ) written = DATA_RETURN_SIZE - dwDataLength;
 						memcpy( pDataReturned + dwDataLength, pBuffer, written );
 						dwDataLength = dwDataLength + written;
+						if ( dwDataLength >= DATA_RETURN_SIZE ) break;
 					}
 					InternetCloseHandle( hHttpRequest );
 				}
@@ -1632,108 +1639,115 @@ gint main(gint argc, gchar **argv)
 			LocalFree( szError );
 		}
 	}
-
-	// break up response string
-	char* updated_at[1024];
-	memset ( updated_at, 0, sizeof(updated_at) );
-	char pNewsText[10240];
-	strcpy ( pNewsText, "" );
-	char pURLText[10240];
-	strcpy ( pURLText, "" );
-	char pWorkStr[10240];
-	strcpy ( pWorkStr, pDataReturned );
-	if ( pWorkStr[0]=='{' ) strcpy ( pWorkStr, pWorkStr+1 );
-	int n = 10200;
-	for (; n>0; n-- ) if ( pWorkStr[n] == '}' ) { pWorkStr[n] = 0; break; }
-	char* pChop = strstr ( pWorkStr, "," );
-	char pStatusStr[10240];
-	strcpy ( pStatusStr, pWorkStr );
-	pStatusStr[pChop-pWorkStr] = 0;
-	char* pStatusValue = strstr ( pStatusStr, ":" ) + 1;
-	if ( pChop[0]=',' ) pChop += 1;
-	if ( strstr ( pStatusValue, "success" ) != NULL )
+	else if ( *pDataReturned != 0 && strchr(pDataReturned, '{') != 0 )
 	{
-		// success
-		// news
-		pChop = strstr ( pChop, ":" ) + 2;
-		strcpy ( pNewsText, pChop );
-		char pEndOfChunk[4];
-		pEndOfChunk[0]='"';
-		pEndOfChunk[1]=',';
-		pEndOfChunk[2]='"';
-		pEndOfChunk[3]=0;
-		char* pNewsTextEnd = strstr ( pNewsText, pEndOfChunk );
-		pNewsText[pNewsTextEnd-pNewsText] = 0;
-		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pNewsText );
-		pChop += strlen(pNewsText);
-
-		// go through news and replace \n with real carriage returns
-		int n = 0;
-		char* pReplacePos = pNewsText;
-		for(;;)
+		// break up response string
+		char* updated_at[1024];
+		memset ( updated_at, 0, sizeof(updated_at) );
+		char pNewsText[DATA_RETURN_SIZE];
+		strcpy ( pNewsText, "" );
+		char pURLText[DATA_RETURN_SIZE];
+		strcpy ( pURLText, "" );
+		char pWorkStr[DATA_RETURN_SIZE];
+		strcpy ( pWorkStr, pDataReturned );
+		if ( pWorkStr[0]=='{' ) strcpy ( pWorkStr, pWorkStr+1 );
+		int n = 10200;
+		for (; n>0; n-- ) if ( pWorkStr[n] == '}' ) { pWorkStr[n] = 0; break; }
+		char* pChop = strstr ( pWorkStr, "," );
+		char pStatusStr[DATA_RETURN_SIZE];
+		strcpy ( pStatusStr, pWorkStr );
+		if ( pChop ) pStatusStr[pChop-pWorkStr] = 0;
+		char* pStatusValue = strstr ( pStatusStr, ":" ) + 1;
+		if ( pChop[0]==',' ) pChop += 1;
+		if ( strstr ( pStatusValue, "success" ) != NULL )
 		{
-			pReplacePos = strstr ( pReplacePos, "\\r\\n" );
-			if ( pReplacePos != NULL )
+			// success
+			// news
+			pChop = strstr ( pChop, ":" ) + 2;
+			strcpy ( pNewsText, pChop );
+			char pEndOfChunk[4];
+			pEndOfChunk[0]='"';
+			pEndOfChunk[1]=',';
+			pEndOfChunk[2]='"';
+			pEndOfChunk[3]=0;
+			char* pNewsTextEnd = strstr ( pNewsText, pEndOfChunk );
+			pNewsText[pNewsTextEnd-pNewsText] = 0;
+			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pNewsText );
+			pChop += strlen(pNewsText);
+
+			// go through news and replace \n with real carriage returns
+			int n = 0;
+			char* pReplacePos = pNewsText;
+			for(;;)
 			{
-				pReplacePos[0]=' ';
-				pReplacePos[1]=' ';
-				pReplacePos[2]=' ';
-				pReplacePos[3]='\n';
-				pReplacePos+=4;
+				pReplacePos = strstr ( pReplacePos, "\\r\\n" );
+				if ( pReplacePos != NULL )
+				{
+					pReplacePos[0]=' ';
+					pReplacePos[1]=' ';
+					pReplacePos[2]=' ';
+					pReplacePos[3]='\n';
+					pReplacePos+=4;
+				}
+				else
+					break;
 			}
-			else
-				break;
+
+			// url
+			strcpy ( pURLText, pChop );
+			pEndOfChunk[0]='"';
+			pEndOfChunk[1]=',';
+			pEndOfChunk[2]='"';
+			strcpy ( pURLText, strstr ( pURLText, pEndOfChunk ) + 9 );
+			char* pURLEnd = strstr ( pURLText, pEndOfChunk );
+			pURLText[pURLEnd-pURLText] = 0;
+			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pURLText );
+			pChop += strlen(pURLText) + 9;
+
+			// updated_at
+			char pUpdatedAt[DATA_RETURN_SIZE];
+			pEndOfChunk[0]='"';
+			pEndOfChunk[1]=':';
+			pEndOfChunk[2]='{';
+			pChop = strstr ( pChop, pEndOfChunk ) + 2 + 9;
+			strcpy ( pUpdatedAt, pChop );
+			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pUpdatedAt );
+			memcpy ( updated_at, pUpdatedAt, 19 );
+			updated_at[19] = 0;
+
+			// show what_notifications dialog if news available
+			char* install_stamp_at[1024];
+			memset ( install_stamp_at, 0, sizeof(install_stamp_at) );
+			
+			char pInstallStampFile[ 1024 ];
+			strcpy( pInstallStampFile, app->configdir );
+			strcat( pInstallStampFile, "\\installstamp.dat" );
+			file = fopen(pInstallStampFile, "r");
+			if ( file != NULL )
+			{
+				fread(install_stamp_at, 1, 19, file);
+				install_stamp_at[ 19 ] = 0;
+				fclose(file);
+			}
+			if ( strcmp ( updated_at, install_stamp_at ) != NULL )
+			{
+				// different updated_at entry, show new news
+				on_show_what_notifications_dialog ( pNewsText, pURLText );
+
+				// update install stamp so we know news has been read
+				FILE* fp = fopen( pInstallStampFile , "w" );
+				fwrite(updated_at , 1 , 19 , fp );
+				fclose(fp);
+			}
 		}
-
-		// url
-		strcpy ( pURLText, pChop );
-		pEndOfChunk[0]='"';
-		pEndOfChunk[1]=',';
-		pEndOfChunk[2]='"';
-		strcpy ( pURLText, strstr ( pURLText, pEndOfChunk ) + 9 );
-		char* pURLEnd = strstr ( pURLText, pEndOfChunk );
-		pURLText[pURLEnd-pURLText] = 0;
-		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pURLText );
-		pChop += strlen(pURLText) + 9;
-
-		// updated_at
-		char pUpdatedAt[10240];
-		pEndOfChunk[0]='"';
-		pEndOfChunk[1]=':';
-		pEndOfChunk[2]='{';
-		pChop = strstr ( pChop, pEndOfChunk ) + 2 + 9;
-		strcpy ( pUpdatedAt, pChop );
-		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pUpdatedAt );
-		memcpy ( updated_at, pUpdatedAt, 33 );
-		updated_at[32] = 0;
+		else
+		{
+			// error
+			char* pMessageValue = strstr ( pChop, ":" ) + 1;
+			dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pMessageValue );
+		}
 	}
-	else
-	{
-		// error
-		char* pMessageValue = strstr ( pChop, ":" ) + 1;
-		dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pMessageValue );
-	}
-
-	// show what_notifications dialog if news available
-	char* install_stamp_at[1024];
-	memset ( install_stamp_at, 0, sizeof(install_stamp_at) );
-	char* pInstallStampFile = "installstamp.dat";
-	file = fopen(pInstallStampFile, "r");
-	if ( file != NULL )
-	{
-		fread(install_stamp_at, 1, 33, file);
-		fclose(file);
-	}
-	if ( strcmp ( updated_at, install_stamp_at ) != NULL )
-	{
-		// different updated_at entry, show new news
-		on_show_what_notifications_dialog ( pNewsText, pURLText );
-
-		// update install stamp so we know news has been read
-		FILE* fp = fopen( pInstallStampFile , "w" );
-		fwrite(updated_at , 1 , 33 , fp );
-		fclose(fp);
-	}
+#endif
 
 	// disable F10 menu key so it can be used elsewhere
 	gtk_settings_set_string_property(gtk_settings_get_default(),
