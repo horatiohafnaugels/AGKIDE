@@ -2757,6 +2757,9 @@ void ui_init_builder(void)
 
 	error = NULL;
 	interface_file = g_build_filename(app->datadir, "geany.glade", NULL);
+
+	//	dialogs_show_msgbox_with_secondary(GTK_MESSAGE_ERROR, _("root data folder?"), app->datadir);
+
 	if (! gtk_builder_add_from_file(builder, interface_file, &error))
 	{
 		/* Show the user this message so they know WTF happened */

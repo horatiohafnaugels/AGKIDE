@@ -1552,6 +1552,19 @@ gint main(gint argc, gchar **argv)
 	pUniqueCode[32] = 0;
 	//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pUniqueCode );
 
+	// are we a special IDE?
+	int iSpecialIDEForViewingTestAnnouncements = 0;
+	char pSpecialIDETestFile[2048];
+	strcpy ( pSpecialIDETestFile, app->datadir );
+	strcat ( pSpecialIDETestFile, "\\SHOWTEST.dat" );
+	FILE* showtestfile = fopen(pSpecialIDETestFile, "r");
+	if ( showtestfile != NULL )
+	{
+		dialogs_show_msgbox ( GTK_MESSAGE_WARNING, "Running in IDE Announcement Test Mode" );
+		iSpecialIDEForViewingTestAnnouncements = 1;
+		fclose(showtestfile);
+	}				
+
 	// request news from server
 	#define DATA_RETURN_SIZE 10240
 	UINT iError = 0;
@@ -1583,7 +1596,9 @@ gint main(gint argc, gchar **argv)
 			{
 				HttpAddRequestHeaders( hHttpRequest, "Content-Type: application/x-www-form-urlencoded", -1, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
 				char m_szPostData[1024];
-				strcpy ( m_szPostData, "k=vIo3sc2z&uid=" );
+				strcpy ( m_szPostData, "k=vIo3sc2z" );
+				strcat ( m_szPostData, "&app=agkc" );
+				strcat ( m_szPostData, "&uid=" );
 				strcat ( m_szPostData, pUniqueCode );
 				int bSendResult = HttpSendRequest( hHttpRequest, NULL, -1, (void*)(m_szPostData), strlen(m_szPostData) );
 				if ( bSendResult == 0 )
@@ -1650,6 +1665,7 @@ gint main(gint argc, gchar **argv)
 		strcpy ( pURLText, "" );
 		char pWorkStr[DATA_RETURN_SIZE];
 		strcpy ( pWorkStr, pDataReturned );
+		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pWorkStr );
 		if ( pWorkStr[0]=='{' ) strcpy ( pWorkStr, pWorkStr+1 );
 		int n = 10200;
 		for (; n>0; n-- ) if ( pWorkStr[n] == '}' ) { pWorkStr[n] = 0; break; }
@@ -1704,6 +1720,20 @@ gint main(gint argc, gchar **argv)
 			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pURLText );
 			pChop += strlen(pURLText) + 9;
 
+			// test flag
+			int iTestAnnouncement = 0;
+			pChop += 9; // get past ","test":
+			if ( *pChop == '0' )
+			{
+				iTestAnnouncement = 0;
+				//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, "no test" );
+			}
+			else
+			{
+				iTestAnnouncement = 1;
+				//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, "yes test" );
+			}
+
 			// updated_at
 			char pUpdatedAt[DATA_RETURN_SIZE];
 			pEndOfChunk[0]='"';
@@ -1719,25 +1749,35 @@ gint main(gint argc, gchar **argv)
 			char* install_stamp_at[1024];
 			memset ( install_stamp_at, 0, sizeof(install_stamp_at) );
 			
-			char pInstallStampFile[ 1024 ];
-			strcpy( pInstallStampFile, app->configdir );
-			strcat( pInstallStampFile, "\\installstamp.dat" );
-			file = fopen(pInstallStampFile, "r");
-			if ( file != NULL )
+			// real announcement or test announcement
+			if ( iTestAnnouncement == 1 && iSpecialIDEForViewingTestAnnouncements == 1 )
 			{
-				fread(install_stamp_at, 1, 19, file);
-				install_stamp_at[ 19 ] = 0;
-				fclose(file);
-			}
-			if ( strcmp ( updated_at, install_stamp_at ) != NULL )
-			{
-				// different updated_at entry, show new news
+				// show the test announcement
 				on_show_what_notifications_dialog ( pNewsText, pURLText );
+			}
+			if ( iTestAnnouncement == 0 && iSpecialIDEForViewingTestAnnouncements == 0 )
+			{
+				char pInstallStampFile[ 1024 ];
+				strcpy( pInstallStampFile, app->configdir );
+				strcat( pInstallStampFile, "\\installstamp.dat" );
+				//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pInstallStampFile );
+				file = fopen(pInstallStampFile, "r");
+				if ( file != NULL )
+				{
+					fread(install_stamp_at, 1, 19, file);
+					install_stamp_at[ 19 ] = 0;
+					fclose(file);
+				}
+				if ( strcmp ( updated_at, install_stamp_at ) != NULL )
+				{
+					// different updated_at entry, show new news
+					on_show_what_notifications_dialog ( pNewsText, pURLText );
 
-				// update install stamp so we know news has been read
-				FILE* fp = fopen( pInstallStampFile , "w" );
-				fwrite(updated_at , 1 , 19 , fp );
-				fclose(fp);
+					// update install stamp so we know news has been read
+					FILE* fp = fopen( pInstallStampFile , "w" );
+					fwrite(updated_at , 1 , 19 , fp );
+					fclose(fp);
+				}
 			}
 		}
 		else
