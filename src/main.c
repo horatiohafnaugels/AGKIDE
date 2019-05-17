@@ -1187,6 +1187,128 @@ void dlc_init()
 	g_free(pathDLC);
 }
 
+#ifdef G_OS_WIN32
+#define DATA_RETURN_SIZE 10240
+UINT OpenURLForDataOrFile ( LPSTR pDataReturned, DWORD* pReturnDataSize, LPSTR pUniqueCode, LPSTR pVerb, LPSTR urlWhere, LPSTR pLocalFileForImageOrNews )
+{
+	UINT iError = 0;
+	unsigned int dwDataLength = 0;
+	HINTERNET m_hInet = InternetOpen( "InternetConnection", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0 );
+	if ( m_hInet == NULL )
+	{
+		iError = GetLastError( );
+	}
+	else
+	{
+		unsigned short wHTTPType = INTERNET_DEFAULT_HTTPS_PORT;
+		HINTERNET m_hInetConnect = InternetConnect( m_hInet, "www.thegamecreators.com", wHTTPType, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0 );
+		if ( m_hInetConnect == NULL )
+		{
+			iError = GetLastError( );
+		}
+		else
+		{
+			int m_iTimeout = 2000;
+			InternetSetOption( m_hInetConnect, INTERNET_OPTION_CONNECT_TIMEOUT, (void*)&m_iTimeout, sizeof(m_iTimeout) );  
+			HINTERNET hHttpRequest = HttpOpenRequest( m_hInetConnect, pVerb, urlWhere, "HTTP/1.1", NULL, NULL, INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE, 0 );
+			if ( hHttpRequest == NULL )
+			{
+				iError = GetLastError( );
+			}
+			else
+			{
+				HttpAddRequestHeaders( hHttpRequest, "Content-Type: application/x-www-form-urlencoded", -1, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
+				int bSendResult = 0;
+				FILE* fpImageLocalFile = NULL;
+				if ( pLocalFileForImageOrNews == NULL )
+				{
+					// News
+					char m_szPostData[1024];
+					strcpy ( m_szPostData, "k=vIo3sc2z" );
+					strcat ( m_szPostData, "&app=agkc" );
+					strcat ( m_szPostData, "&uid=" );
+					strcat ( m_szPostData, pUniqueCode );
+					bSendResult = HttpSendRequest( hHttpRequest, NULL, -1, (void*)(m_szPostData), strlen(m_szPostData) );
+				}
+				else
+				{
+					// Image URL, open local file for writing
+					bSendResult = HttpSendRequest( hHttpRequest, NULL, -1, NULL, NULL );
+					fpImageLocalFile = fopen( pLocalFileForImageOrNews , "wb" );
+				}
+				if ( bSendResult == 0 )
+				{
+					iError = GetLastError( );
+				}
+				else
+				{
+					int m_iStatusCode = 0;
+					char m_szContentType[150];
+					unsigned int dwBufferSize = sizeof(int);
+					unsigned int dwHeaderIndex = 0;
+					HttpQueryInfo( hHttpRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, (void*)&m_iStatusCode, &dwBufferSize, &dwHeaderIndex );
+					dwHeaderIndex = 0;
+					unsigned int dwContentLength = 0;
+					HttpQueryInfo( hHttpRequest, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, (void*)&dwContentLength, &dwBufferSize, &dwHeaderIndex );
+					dwHeaderIndex = 0;
+					unsigned int ContentTypeLength = 150;
+					HttpQueryInfo( hHttpRequest, HTTP_QUERY_CONTENT_TYPE, (void*)m_szContentType, &ContentTypeLength, &dwHeaderIndex );
+					char pBuffer[ 20000 ];
+					for(;;)
+					{
+						unsigned int written = 0;
+						if( !InternetReadFile( hHttpRequest, (void*) pBuffer, 2000, &written ) )
+						//if( !InternetReadFile( hHttpRequest, (void*) pBuffer, 20000, &written ) )
+						{
+							// error
+						}
+						if ( written == 0 ) break;
+						if ( fpImageLocalFile )
+						{
+							// write direct to local image file
+							fwrite(pBuffer, 1, written, fpImageLocalFile );
+						}
+						else
+						{
+							// comple news for return string
+							if ( dwDataLength + written > DATA_RETURN_SIZE ) written = DATA_RETURN_SIZE - dwDataLength;
+							memcpy( pDataReturned + dwDataLength, pBuffer, written );
+							dwDataLength = dwDataLength + written;
+							if ( dwDataLength >= DATA_RETURN_SIZE ) break;
+						}
+					}
+					InternetCloseHandle( hHttpRequest );
+				}
+				if ( fpImageLocalFile )
+				{
+					fclose(fpImageLocalFile);
+					fpImageLocalFile = NULL;
+				}
+			}
+			InternetCloseHandle( m_hInetConnect );
+		}
+		InternetCloseHandle( m_hInet );
+	}
+	if ( iError > 0 )
+	{
+		char *szError = 0;
+		if ( iError > 12000 && iError < 12174 ) 
+			FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE, GetModuleHandle("wininet.dll"), iError, 0, (char*)&szError, 0, 0 );
+		else 
+			FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, iError, 0, (char*)&szError, 0, 0 );
+		if ( szError )
+		{
+			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, szError );
+			LocalFree( szError );
+		}
+	}
+
+	// complete
+	*pReturnDataSize = dwDataLength;
+	return iError;
+}
+#endif
+
 gint main(gint argc, gchar **argv)
 {
 	GeanyDocument *doc;
@@ -1566,95 +1688,10 @@ gint main(gint argc, gchar **argv)
 	}				
 
 	// request news from server
-	#define DATA_RETURN_SIZE 10240
-	UINT iError = 0;
+	DWORD dwDataReturnedSize = 0;
 	char pDataReturned[DATA_RETURN_SIZE];
-	memset ( pDataReturned, 0, sizeof(pDataReturned) );
-	HINTERNET m_hInet = InternetOpen( "InternetConnection", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0 );
-	if ( m_hInet == NULL )
-	{
-		iError = GetLastError( );
-	}
-	else
-	{
-		unsigned short wHTTPType = INTERNET_DEFAULT_HTTPS_PORT;
-		HINTERNET m_hInetConnect = InternetConnect( m_hInet, "www.thegamecreators.com", wHTTPType, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0 );
-		if ( m_hInetConnect == NULL )
-		{
-			iError = GetLastError( );
-		}
-		else
-		{
-			int m_iTimeout = 2000;
-			InternetSetOption( m_hInetConnect, INTERNET_OPTION_CONNECT_TIMEOUT, (void*)&m_iTimeout, sizeof(m_iTimeout) );  
-			HINTERNET hHttpRequest = HttpOpenRequest( m_hInetConnect, "POST", "/api/agk/ide/announcement", "HTTP/1.1", NULL, NULL, INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE, 0 );
-			if ( hHttpRequest == NULL )
-			{
-				iError = GetLastError( );
-			}
-			else
-			{
-				HttpAddRequestHeaders( hHttpRequest, "Content-Type: application/x-www-form-urlencoded", -1, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
-				char m_szPostData[1024];
-				strcpy ( m_szPostData, "k=vIo3sc2z" );
-				strcat ( m_szPostData, "&app=agkc" );
-				strcat ( m_szPostData, "&uid=" );
-				strcat ( m_szPostData, pUniqueCode );
-				int bSendResult = HttpSendRequest( hHttpRequest, NULL, -1, (void*)(m_szPostData), strlen(m_szPostData) );
-				if ( bSendResult == 0 )
-				{
-					iError = GetLastError( );
-				}
-				else
-				{
-					int m_iStatusCode = 0;
-					char m_szContentType[150];
-					unsigned int dwBufferSize = sizeof(int);
-					unsigned int dwHeaderIndex = 0;
-					HttpQueryInfo( hHttpRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, (void*)&m_iStatusCode, &dwBufferSize, &dwHeaderIndex );
-					dwHeaderIndex = 0;
-					unsigned int dwContentLength = 0;
-					HttpQueryInfo( hHttpRequest, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, (void*)&dwContentLength, &dwBufferSize, &dwHeaderIndex );
-					dwHeaderIndex = 0;
-					unsigned int ContentTypeLength = 150;
-					HttpQueryInfo( hHttpRequest, HTTP_QUERY_CONTENT_TYPE, (void*)m_szContentType, &ContentTypeLength, &dwHeaderIndex );
-
-					unsigned int dwDataLength = 0;
-					char pBuffer[ 20000 ];
-					for(;;)
-					{
-						unsigned int written = 0;
-						if( !InternetReadFile( hHttpRequest, (void*) pBuffer, 20000, &written ) )
-						{
-							// error
-						}
-						if ( written == 0 ) break;
-						if ( dwDataLength + written > DATA_RETURN_SIZE ) written = DATA_RETURN_SIZE - dwDataLength;
-						memcpy( pDataReturned + dwDataLength, pBuffer, written );
-						dwDataLength = dwDataLength + written;
-						if ( dwDataLength >= DATA_RETURN_SIZE ) break;
-					}
-					InternetCloseHandle( hHttpRequest );
-				}
-			}
-			InternetCloseHandle( m_hInetConnect );
-		}
-		InternetCloseHandle( m_hInet );
-	}
-	if ( iError > 0 )
-	{
-		char *szError = 0;
-		if ( iError > 12000 && iError < 12174 ) 
-			FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE, GetModuleHandle("wininet.dll"), iError, 0, (char*)&szError, 0, 0 );
-		else 
-			FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, iError, 0, (char*)&szError, 0, 0 );
-		if ( szError )
-		{
-			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, szError );
-			LocalFree( szError );
-		}
-	}
-	else if ( *pDataReturned != 0 && strchr(pDataReturned, '{') != 0 )
+	UINT iError = OpenURLForDataOrFile ( pDataReturned, &dwDataReturnedSize, pUniqueCode, "POST", "/api/app/announcement", NULL );
+	if ( iError <= 0 && *pDataReturned != 0 && strchr(pDataReturned, '{') != 0 )
 	{
 		// break up response string
 		char* updated_at[1024];
@@ -1663,6 +1700,8 @@ gint main(gint argc, gchar **argv)
 		strcpy ( pNewsText, "" );
 		char pURLText[DATA_RETURN_SIZE];
 		strcpy ( pURLText, "" );
+		char pImageURL[DATA_RETURN_SIZE];
+		strcpy ( pImageURL, "" );
 		char pWorkStr[DATA_RETURN_SIZE];
 		strcpy ( pWorkStr, pDataReturned );
 		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pWorkStr );
@@ -1720,9 +1759,18 @@ gint main(gint argc, gchar **argv)
 			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pURLText );
 			pChop += strlen(pURLText) + 9;
 
+			// image_url
+			pChop = strstr ( pChop, "image_url" );
+			pChop += 11; // skips past image_url":
+			LPSTR pEndOfImageURL = strstr ( pChop, ",\"test" );
+			DWORD dwLength = pEndOfImageURL-pChop;
+			memcpy ( pImageURL, pChop, dwLength );
+			pImageURL[dwLength] = 0;
+
 			// test flag
 			int iTestAnnouncement = 0;
-			pChop += 9; // get past ","test":
+			pChop = strstr ( pChop, ",\"test\":" );
+			pChop += 8; // get past ,"test":
 			if ( *pChop == '0' )
 			{
 				iTestAnnouncement = 0;
@@ -1748,12 +1796,58 @@ gint main(gint argc, gchar **argv)
 			// show what_notifications dialog if news available
 			char* install_stamp_at[1024];
 			memset ( install_stamp_at, 0, sizeof(install_stamp_at) );
-			
+
+			// Image Handling
+			char pImageLocalFile[2048];
+			strcpy ( pImageLocalFile, app->datadir );
+			strcat ( pImageLocalFile, "\\agk-news-banner.png" );
+
+			// hack in IMAGE URL TEST
+			//if ( 0 )
+			//{
+			//	strcpy ( pImageURL, "https://www.thegamecreators.com/media/ide/agks/1557927910.png" );
+			//	char pDownloadMessage[1024];
+			//	sprintf ( pDownloadMessage, "Forced the image file : %s", pImageURL );
+			//	dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pDownloadMessage );
+			//}
+
+			// so we download an image
+			char pNoDomainPart[1024];
+			strcpy ( pNoDomainPart, "" );
+			if ( strcmp ( pImageURL, "null" ) != NULL )
+			{
+				// get filename only
+				strcpy ( pNoDomainPart, pImageURL );
+				strrev ( pNoDomainPart );
+				pNoDomainPart[strlen("https://www.thegamecreators.co")] = 0;
+				strrev ( pNoDomainPart );
+
+				// get file ext
+				char pFileExt[1024];
+				strcpy ( pFileExt, pNoDomainPart + strlen(pNoDomainPart) - 4 );
+
+				// Download the image file
+				DWORD dwImageReturnedSize = 0;
+				char pImageReturned[DATA_RETURN_SIZE];
+				sprintf ( pImageLocalFile, "%s\\localimagefile%s",  app->configdir, pFileExt );				
+				UINT iImageError = OpenURLForDataOrFile ( pImageReturned, &dwImageReturnedSize, "", "GET", pNoDomainPart, pImageLocalFile );
+				if ( iImageError == 0 )
+				{
+					// load local image file into GtkImage
+				}
+				else
+				{
+					// if image not downloaded for some reason, revert to default
+					strcpy ( pImageLocalFile, app->datadir );
+					strcat ( pImageLocalFile, "\\agk-news-banner.png" );
+				}
+			}
+
 			// real announcement or test announcement
-			if ( iTestAnnouncement == 1 && iSpecialIDEForViewingTestAnnouncements == 1 )
+			if ( iSpecialIDEForViewingTestAnnouncements == 1 )
 			{
 				// show the test announcement
-				on_show_what_notifications_dialog ( pNewsText, pURLText );
+				on_show_what_notifications_dialog ( pNewsText, pURLText, pImageLocalFile );
 			}
 			if ( iTestAnnouncement == 0 && iSpecialIDEForViewingTestAnnouncements == 0 )
 			{
@@ -1771,7 +1865,7 @@ gint main(gint argc, gchar **argv)
 				if ( strcmp ( updated_at, install_stamp_at ) != NULL )
 				{
 					// different updated_at entry, show new news
-					on_show_what_notifications_dialog ( pNewsText, pURLText );
+					on_show_what_notifications_dialog ( pNewsText, pURLText, pImageLocalFile );
 
 					// update install stamp so we know news has been read
 					FILE* fp = fopen( pInstallStampFile , "w" );

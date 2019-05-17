@@ -1688,7 +1688,7 @@ G_MODULE_EXPORT void on_what_notifications_button_press_event(GtkWidget *widget,
 	if ( ui_widgets.what_notifications_dialog ) on_what_notifications_dialog_response( ui_widgets.what_notifications_dialog, 1, 0 );
 }
 
-G_MODULE_EXPORT void on_show_what_notifications_dialog ( char* pNewsText, char* pURLText )
+G_MODULE_EXPORT void on_show_what_notifications_dialog ( char* pNewsText, char* pURLText, char* pImageFile )
 {
 	if (ui_widgets.what_notifications_dialog == NULL) 
 	{
@@ -1713,16 +1713,23 @@ G_MODULE_EXPORT void on_show_what_notifications_dialog ( char* pNewsText, char* 
 	gtk_window_move( GTK_WINDOW(ui_widgets.what_notifications_dialog), x2, y2 );
 	gtk_window_present( GTK_WINDOW(ui_widgets.what_notifications_dialog) );
 
+	//GtkWidget* textwidget = ui_lookup_widget(ui_widgets.what_notifications_dialog, "what_notifications_text");
+	//GtkTextBuffer *buffer = gtk_text_buffer_new(NULL);
+	//gtk_text_buffer_set_text(buffer, pNewsText, -1);
+	//gtk_text_view_set_buffer(GTK_TEXT_VIEW(textwidget), buffer);
 	GtkWidget* textwidget = ui_lookup_widget(ui_widgets.what_notifications_dialog, "what_notifications_text");
-	GtkTextBuffer *buffer = gtk_text_buffer_new(NULL);
-	gtk_text_buffer_set_text(buffer, pNewsText, -1);
-	gtk_text_view_set_buffer(GTK_TEXT_VIEW(textwidget), buffer);
+	gtk_label_set_text(GTK_LABEL(textwidget), pNewsText);
 
 	if ( strlen(pURLText) == 0 )
 	{
 		GtkWidget* textwidget = ui_lookup_widget(ui_widgets.what_notifications_dialog, "what_notifications_button_link");
 		gtk_widget_hide ( textwidget );
 	}
+
+	// load image into gadget 
+	GtkWidget* imagewidget = ui_lookup_widget(ui_widgets.what_notifications_dialog, "what_notifications_image");
+	gtk_image_set_from_file ( imagewidget, pImageFile );
+	gtk_widget_set_size_request ( imagewidget, 535, 160 );
 }
 
 void on_what_notifications_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
