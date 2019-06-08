@@ -1187,6 +1187,37 @@ void dlc_init()
 	g_free(pathDLC);
 }
 
+void CleanStringOfEscapeSlashes ( LPSTR pText )
+{
+	// clean up string (removing escape characters)
+	//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pText );
+	char pCleaned[2048];
+	int iCleanedPtr = 0;
+	int nn = 0;
+	for (; nn < strlen(pText); nn++ )
+	{
+		if ( pText[nn] == '"' )
+		{
+			// ignore speech marks
+		}
+		else
+		{
+			if ( pText[nn] == '\\' && pText[nn+1] == '/' )
+			{
+				pCleaned[iCleanedPtr] = '/'; nn++;
+			}
+			else
+			{
+				pCleaned[iCleanedPtr] = pText[nn];
+			}
+			iCleanedPtr++;
+		}
+	}
+	pCleaned[iCleanedPtr] = 0;
+	strcpy ( pText, pCleaned );
+	//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pText );
+}
+
 #ifdef G_OS_WIN32
 #define DATA_RETURN_SIZE 10240
 UINT OpenURLForDataOrFile ( LPSTR pDataReturned, DWORD* pReturnDataSize, LPSTR pUniqueCode, LPSTR pVerb, LPSTR urlWhere, LPSTR pLocalFileForImageOrNews )
@@ -1704,7 +1735,6 @@ gint main(gint argc, gchar **argv)
 		strcpy ( pImageURL, "" );
 		char pWorkStr[DATA_RETURN_SIZE];
 		strcpy ( pWorkStr, pDataReturned );
-		//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pWorkStr );
 		if ( pWorkStr[0]=='{' ) strcpy ( pWorkStr, pWorkStr+1 );
 		int n = 10200;
 		for (; n>0; n-- ) if ( pWorkStr[n] == '}' ) { pWorkStr[n] = 0; break; }
@@ -1717,6 +1747,8 @@ gint main(gint argc, gchar **argv)
 		if ( strstr ( pStatusValue, "success" ) != NULL )
 		{
 			// success
+			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pDataReturned );
+
 			// news
 			pChop = strstr ( pChop, ":" ) + 2;
 			strcpy ( pNewsText, pChop );
@@ -1756,8 +1788,8 @@ gint main(gint argc, gchar **argv)
 			strcpy ( pURLText, strstr ( pURLText, pEndOfChunk ) + 9 );
 			char* pURLEnd = strstr ( pURLText, pEndOfChunk );
 			pURLText[pURLEnd-pURLText] = 0;
-			//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pURLText );
 			pChop += strlen(pURLText) + 9;
+			CleanStringOfEscapeSlashes ( pURLText );
 
 			// image_url
 			pChop = strstr ( pChop, "image_url" );
@@ -1766,6 +1798,7 @@ gint main(gint argc, gchar **argv)
 			DWORD dwLength = pEndOfImageURL-pChop;
 			memcpy ( pImageURL, pChop, dwLength );
 			pImageURL[dwLength] = 0;
+			CleanStringOfEscapeSlashes ( pImageURL );
 
 			// test flag
 			int iTestAnnouncement = 0;
