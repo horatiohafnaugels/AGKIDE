@@ -1187,35 +1187,45 @@ void dlc_init()
 	g_free(pathDLC);
 }
 
-void CleanStringOfEscapeSlashes ( LPSTR pText )
+void CleanStringOfEscapeSlashes ( char* pText )
 {
-	// clean up string (removing escape characters)
-	//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pText );
-	char pCleaned[2048];
-	int iCleanedPtr = 0;
-	int nn = 0;
-	for (; nn < strlen(pText); nn++ )
+	char *str = pText;
+	char *str2 = pText;
+	
+	while ( *str )
 	{
-		if ( pText[nn] == '"' )
+		if ( *str == '"' )
 		{
-			// ignore speech marks
+			str++;
 		}
 		else
 		{
-			if ( pText[nn] == '\\' && pText[nn+1] == '/' )
+			if ( *str == '\\' )
 			{
-				pCleaned[iCleanedPtr] = '/'; nn++;
+				str++;
+				switch( *str )
+				{
+					case 'n': *str2 = '\n'; break;
+					case 'r': *str2 = '\r'; break;
+					case '"': *str2 = '"'; break;
+					case 'b': *str2 = '\b'; break;
+					case 'f': *str2 = '\f'; break;
+					case 't': *str2 = '\t'; break;
+					case '/': *str2 = '/'; break;
+					case '\\': *str2 = '\\'; break;
+					default: *str2 = *str;
+				}
 			}
 			else
 			{
-				pCleaned[iCleanedPtr] = pText[nn];
+				*str2 = *str;
 			}
-			iCleanedPtr++;
+			str++;
+			str2++;
 		}
 	}
-	pCleaned[iCleanedPtr] = 0;
-	strcpy ( pText, pCleaned );
-	//dialogs_show_msgbox ( GTK_MESSAGE_WARNING, pText );
+
+	*str2 = 0;
 }
 
 #ifdef G_OS_WIN32
