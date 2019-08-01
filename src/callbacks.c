@@ -882,7 +882,7 @@ G_MODULE_EXPORT void on_android_arcore_combo_changed( GtkComboBox *combo, gpoint
 	if ( !text ) return;
 	if ( strcmp( text, "Required" ) == 0 )
 	{
-		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 8 ); 
+		gtk_combo_box_set_active( GTK_COMBO_BOX(ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo")), 7 ); 
 		gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(ui_lookup_widget(ui_widgets.android_dialog, "android_permission_camera")), 1 );
 	}
 	else if ( strcmp( text, "Optional" ) == 0 )

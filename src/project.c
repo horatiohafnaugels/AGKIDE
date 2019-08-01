@@ -910,17 +910,18 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->apk_settings.sdk_version = 1; // 4.0.3
-		if ( strncmp(app_sdk,"4.1",3) == 0 ) app->project->apk_settings.sdk_version = 2;
-		if ( strncmp(app_sdk,"4.2",3) == 0 ) app->project->apk_settings.sdk_version = 3;
-		if ( strncmp(app_sdk,"4.3",3) == 0 ) app->project->apk_settings.sdk_version = 4;
-		if ( strncmp(app_sdk,"4.4",3) == 0 ) app->project->apk_settings.sdk_version = 5;
-		if ( strncmp(app_sdk,"5.0",3) == 0 ) app->project->apk_settings.sdk_version = 6;
-		if ( strncmp(app_sdk,"5.1",3) == 0 ) app->project->apk_settings.sdk_version = 7;
-		if ( strncmp(app_sdk,"6.0",3) == 0 ) app->project->apk_settings.sdk_version = 8;
-		if ( strncmp(app_sdk,"7.0",3) == 0 ) app->project->apk_settings.sdk_version = 9;
-		if ( strncmp(app_sdk,"7.1",3) == 0 ) app->project->apk_settings.sdk_version = 10;
-		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 11;
+		app->project->apk_settings.sdk_version = 1; // 4.1
+		if ( strncmp(app_sdk,"4.2",3) == 0 ) app->project->apk_settings.sdk_version = 2;
+		if ( strncmp(app_sdk,"4.3",3) == 0 ) app->project->apk_settings.sdk_version = 3;
+		if ( strncmp(app_sdk,"4.4",3) == 0 ) app->project->apk_settings.sdk_version = 4;
+		if ( strncmp(app_sdk,"5.0",3) == 0 ) app->project->apk_settings.sdk_version = 5;
+		if ( strncmp(app_sdk,"5.1",3) == 0 ) app->project->apk_settings.sdk_version = 6;
+		if ( strncmp(app_sdk,"6.0",3) == 0 ) app->project->apk_settings.sdk_version = 7;
+		if ( strncmp(app_sdk,"7.0",3) == 0 ) app->project->apk_settings.sdk_version = 8;
+		if ( strncmp(app_sdk,"7.1",3) == 0 ) app->project->apk_settings.sdk_version = 9;
+		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 10;
+		if ( strncmp(app_sdk,"8.1",3) == 0 ) app->project->apk_settings.sdk_version = 11;
+		if ( strncmp(app_sdk,"9.0",3) == 0 ) app->project->apk_settings.sdk_version = 12;
 		g_free(app_sdk);
 				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
@@ -931,6 +932,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		AGK_CLEAR_STR(app->project->apk_settings.play_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
+		AGK_CLEAR_STR(app->project->apk_settings.admob_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		// permissions
 		app->project->apk_settings.permission_flags = 0;
@@ -1037,8 +1041,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		int sdk = 10;
-		if ( strncmp(app_sdk,"4.0.3",5) == 0 ) sdk = 15;
+		int sdk = 16;
 		if ( strncmp(app_sdk,"4.1",3) == 0 ) sdk = 16;
 		if ( strncmp(app_sdk,"4.2",3) == 0 ) sdk = 17;
 		if ( strncmp(app_sdk,"4.3",3) == 0 ) sdk = 18;
@@ -1049,6 +1052,8 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		if ( strncmp(app_sdk,"7.0",3) == 0 ) sdk = 24;
 		if ( strncmp(app_sdk,"7.1",3) == 0 ) sdk = 25;
 		if ( strncmp(app_sdk,"8.0",3) == 0 ) sdk = 26;
+		if ( strncmp(app_sdk,"8.1",3) == 0 ) sdk = 27;
+		if ( strncmp(app_sdk,"9.0",3) == 0 ) sdk = 28;
 		g_free(app_sdk);
 		gchar szSDK[ 20 ];
 		sprintf( szSDK, "%d", sdk );
@@ -1061,6 +1066,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gchar *google_play_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
+		gchar *admob_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -1302,6 +1310,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		int includeFirebase = (firebase_config && *firebase_config && (app_type == 0 || app_type == 1)) ? 1 : 0;
 		int includePushNotify = (permission_push && app_type == 0) ? 1 : 0;
 		int includeGooglePlay = (google_play_app_id && *google_play_app_id && app_type == 0) ? 1 : 0;
+		int includeAdMob = (admob_app_id && *admob_app_id && app_type == 0) ? 1 : 0;
 
 		if ( includePushNotify && !includeFirebase )
 		{
@@ -1321,6 +1330,7 @@ android_dialog_clean_up:
 		if ( url_scheme ) g_free(url_scheme);
 		if ( deep_link ) g_free(deep_link);
 		if ( google_play_app_id ) g_free(google_play_app_id);
+		if ( admob_app_id ) g_free(admob_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -1342,8 +1352,7 @@ android_dialog_continue:
 
 		// CHECKS COMPLETE, START EXPORT
 
-		const char* androidJar = "android26.jar";
-		//if ( app_type == 0 ) androidJar = "android21.jar";
+		const char* androidJar = "android28.jar";
 
 #ifdef G_OS_WIN32
 		gchar* path_to_aapt2 = g_build_path( "\\", app->datadir, "android", "aapt2.exe", NULL );
@@ -1475,7 +1484,7 @@ android_dialog_continue:
 			
 		strcat( newcontents, "\" android:targetSdkVersion=\"" );
 		if ( app_type == 0 )
-			strcat( newcontents, "26" );
+			strcat( newcontents, "28" );
 		else
 			strcat( newcontents, "15" );
 		strcat( newcontents, "\" />\n\n" );
@@ -1526,18 +1535,6 @@ android_dialog_continue:
 		contents3 = 0;
 
 		// the order of these relacements is important, they must occur in the same order as they occur in the file
-
-		// replace Google Play application ID
-		contents3 = strstr( contents2, "<!--GOOGLE_PLAY_APPLICATION_ID-->" );
-		if ( contents3 )
-		{
-			*contents3 = 0;
-			contents3 += strlen("<!--GOOGLE_PLAY_APPLICATION_ID-->");
-
-			strcat( newcontents, contents2 );
-			strcat( newcontents, "<meta-data android:name=\"com.google.android.gms.games.APP_ID\" android:value=\"@string/games_app_id\" />" );
-			contents2 = contents3;
-		}
 
 		// replace orientation
 		contents3 = strstr( contents2, "screenOrientation=\"fullSensor\"" );
@@ -1736,7 +1733,17 @@ android_dialog_continue:
             android:name=\"com.google.android.gms.measurement.AppMeasurementJobService\"\n\
             android:enabled=\"true\"\n\
             android:exported=\"false\"\n\
-            android:permission=\"android.permission.BIND_JOB_SERVICE\" />" );
+            android:permission=\"android.permission.BIND_JOB_SERVICE\" />\n\
+		<service\n\
+            android:name=\"com.google.firebase.components.ComponentDiscoveryService\"\n\
+            android:exported=\"false\" >\n\
+            <meta-data\n\
+                android:name=\"com.google.firebase.components:com.google.firebase.analytics.connector.internal.AnalyticsConnectorRegistrar\"\n\
+                android:value=\"com.google.firebase.components.ComponentRegistrar\" />\n\
+            <meta-data\n\
+                android:name=\"com.google.firebase.components:com.google.firebase.iid.Registrar\"\n\
+                android:value=\"com.google.firebase.components.ComponentRegistrar\" />\n\
+        </service>" );
 		}
 
 		if ( includeFirebase || includePushNotify )
@@ -1747,20 +1754,8 @@ android_dialog_continue:
                   android:permission=\"com.google.android.c2dm.permission.SEND\" > \n\
             <intent-filter> \n\
                 <action android:name=\"com.google.android.c2dm.intent.RECEIVE\" /> \n\
-				<action android:name=\"com.google.android.c2dm.intent.REGISTRATION\" /> \n\
-                <category android:name=\"" ); 
-			strcat( newcontents, package_name );
-			strcat( newcontents, "\" />\n\
             </intent-filter> \n\
-        </receiver>\n\
-        <receiver android:name=\"com.google.firebase.iid.FirebaseInstanceIdInternalReceiver\" \n\
-                  android:exported=\"false\" /> \n\
-        <service android:name=\"com.google.firebase.iid.FirebaseInstanceIdService\" \n\
-                 android:exported=\"true\" > \n\
-            <intent-filter android:priority=\"-500\" > \n\
-                <action android:name=\"com.google.firebase.INSTANCE_ID_EVENT\" /> \n\
-            </intent-filter> \n\
-        </service>" );
+        </receiver>" );
 		}
 
 		if ( includePushNotify )
@@ -1776,6 +1771,18 @@ android_dialog_continue:
         </service>" );
 		}
 
+		if ( includeAdMob )
+		{
+			strcat( newcontents, "\n\
+        <provider\n\
+            android:name=\"com.google.android.gms.ads.MobileAdsInitProvider\"\n\
+            android:authorities=\"" );
+			strcat( newcontents, package_name );
+			strcat( newcontents, ".mobileadsinitprovider\"\n\
+            android:exported=\"false\"\n\
+            android:initOrder=\"100\" />" );
+		}
+
 		// arcore activity
 		if ( arcore_mode > 0 )
 		{
@@ -1784,8 +1791,7 @@ android_dialog_continue:
 			if ( arcore_mode == 1 ) strcat( newcontents, "optional" );
 			else strcat( newcontents, "required" );
 			strcat( newcontents, "\" />\n\
-		<meta-data android:name=\"com.google.ar.core.min_apk_version\" android:value=\"180129103\" />\n\
-		<meta-data android:name=\"android.support.VERSION\" android:value=\"26.0.2\" />\n\
+		<meta-data android:name=\"com.google.ar.core.min_apk_version\" android:value=\"190519000\" />\n\
         <activity\n\
             android:name=\"com.google.ar.core.InstallActivity\"\n\
             android:configChanges=\"keyboardHidden|orientation|screenSize\"\n\
@@ -1872,6 +1878,38 @@ android_dialog_continue:
 			strcpy( newcontents, newcontents2 );
 			strcat( newcontents, ">" );
 			strcat( newcontents, google_play_app_id );
+			strcat( newcontents, contents3 );
+
+			// repair original file
+			*contents2 = '>';
+		}
+
+		// admob app id
+		if ( app_type == 0 && admob_app_id && *admob_app_id )
+		{
+			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+			contents2 = strstr( newcontents2, "<string name=\"admob_app_id\">" );
+			if ( !contents2 )
+			{
+				SHOW_ERR( _("Could not find admob_app_id entry in values.xml file") );
+				goto android_dialog_cleanup2;
+			}
+
+			contents2 += strlen("<string name=\"admob_app_id\"");
+			*contents2 = 0;
+			contents3 = contents2;
+			contents3++;
+			contents3 = strstr( contents3, "</string>" );
+			if ( !contents3 )
+			{
+				SHOW_ERR( _("Could not find end of admob_app_id entry in values.xml file") );
+				goto android_dialog_cleanup2;
+			}
+
+			// write resources file
+			strcpy( newcontents, newcontents2 );
+			strcat( newcontents, ">" );
+			strcat( newcontents, admob_app_id );
 			strcat( newcontents, contents3 );
 
 			// repair original file
@@ -2848,6 +2886,7 @@ android_dialog_cleanup2:
 		if ( url_scheme ) g_free(url_scheme);
 		if ( deep_link ) g_free(deep_link);
 		if ( google_play_app_id ) g_free(google_play_app_id);
+		if ( admob_app_id ) g_free(admob_app_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -2947,6 +2986,9 @@ void project_export_apk()
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.admob_app_id, "") );
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -3130,6 +3172,9 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_google_play_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.play_app_id, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.admob_app_id, "") );
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -3647,6 +3692,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.deep_link) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.admob_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		app->project->ipa_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 				
@@ -3716,6 +3764,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
 		gchar *deep_link = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
+		gchar *admob_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		int orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
@@ -3876,6 +3927,15 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 			}
 		}
 
+		if ( admob_app_id && *admob_app_id )
+		{
+			if ( strchr( admob_app_id, '~' ) == 0 )
+			{
+				SHOW_ERR(_("AdMob App ID must include a ~ character, for example \"ca-app-pub-3940256099942544~1458002511\""));
+				goto ios_dialog_clean_up; 
+			}
+		}
+
 		if ( !g_file_test( "/Applications/XCode.app/Contents/Developer/usr/bin/actool", G_FILE_TEST_EXISTS ) )
 		{
 			SHOW_ERR(_("As of iOS 11 you must install XCode to export iOS apps from the AGK IDE. XCode can be downloaded from the Mac AppStore")); 
@@ -3896,6 +3956,7 @@ ios_dialog_clean_up:
 		if ( facebook_id ) g_free(facebook_id);
 		if ( url_scheme ) g_free(url_scheme);
 		if ( deep_link ) g_free(deep_link);
+		if ( admob_app_id ) g_free(admob_app_id);
 		if ( version_number ) g_free(version_number);
 		if ( output_file ) g_free(output_file);
 
@@ -4431,10 +4492,11 @@ ios_dialog_continue:
 
 		utils_str_replace_all( &contents, "${PRODUCT_NAME}", app_name );
 		utils_str_replace_all( &contents, "${EXECUTABLE_NAME}", app_name );
+		if ( admob_app_id && *admob_app_id ) utils_str_replace_all( &contents, "${ADMOB_APP_ID}", admob_app_id );
 		utils_str_replace_all( &contents, "com.thegamecreators.agk2player", bundle_id2 );
 		if ( facebook_id && *facebook_id ) utils_str_replace_all( &contents, "358083327620324", facebook_id );
-		const char* urlschemereplacement = "${URLSCHEMES}\n";
-		if ( strstr( contents, urlschemereplacement ) == 0 ) urlschemereplacement = "${URLSCHEMES}\r\n";
+		const char* urlschemereplacement = "<string>${URLSCHEMES}<string>\n";
+		if ( strstr( contents, urlschemereplacement ) == 0 ) urlschemereplacement = "<string>${URLSCHEMES}</string>\r\n";
 		if ( url_scheme && *url_scheme ) 
 		{
 			gchar* newUrlSchemes = g_new0( gchar*, strlen(url_scheme) + 30 );
@@ -5237,6 +5299,7 @@ ios_dialog_cleanup2:
 		if ( facebook_id ) g_free(facebook_id);
 		if ( url_scheme ) g_free(url_scheme);
 		if ( deep_link ) g_free(deep_link);
+		if ( admob_app_id ) g_free(admob_app_id);
 		if ( version_number ) g_free(version_number);
 		if ( build_number ) g_free(build_number);
 		if ( output_file ) g_free(output_file);
@@ -5333,6 +5396,9 @@ void project_export_ipa()
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), "" );
 
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
 			
@@ -5397,6 +5463,9 @@ void project_export_ipa()
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_deep_link_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.deep_link, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.admob_app_id, "") );
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->ipa_settings.orientation );
@@ -5501,7 +5570,8 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.package_name = 0;
 	project->apk_settings.permission_flags = AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE;
 	project->apk_settings.play_app_id = 0;
-	project->apk_settings.sdk_version = 1; // 4.0.3
+	project->apk_settings.admob_app_id = 0;
+	project->apk_settings.sdk_version = 1; // 4.1
 	project->apk_settings.version_name = 0;
 	project->apk_settings.version_number = 0;
 	project->apk_settings.firebase_config_path = 0;
@@ -5517,6 +5587,7 @@ void init_ios_settings( GeanyProject* project )
 	project->ipa_settings.facebook_id = 0;
 	project->ipa_settings.url_scheme = 0;
 	project->ipa_settings.deep_link = 0;
+	project->ipa_settings.admob_app_id = 0;
 	project->ipa_settings.orientation = 0; // Landscape
 	project->ipa_settings.output_path = 0;
 	project->ipa_settings.prov_profile_path = 0;
@@ -5549,6 +5620,7 @@ void free_android_settings( GeanyProject* project )
 	if ( project->apk_settings.ouya_icon_path ) g_free(project->apk_settings.ouya_icon_path);
 	if ( project->apk_settings.package_name ) g_free(project->apk_settings.package_name);
 	if ( project->apk_settings.play_app_id ) g_free(project->apk_settings.play_app_id);
+	if ( project->apk_settings.admob_app_id ) g_free(project->apk_settings.admob_app_id);
 	if ( project->apk_settings.version_name ) g_free(project->apk_settings.version_name);
 	if ( project->apk_settings.firebase_config_path ) g_free(project->apk_settings.firebase_config_path);
 }
@@ -5560,6 +5632,7 @@ void free_ios_settings( GeanyProject* project )
 	if ( project->ipa_settings.build_number ) g_free(project->ipa_settings.build_number);
 	if ( project->ipa_settings.facebook_id ) g_free(project->ipa_settings.facebook_id);
 	if ( project->ipa_settings.deep_link ) g_free(project->ipa_settings.deep_link);
+	if ( project->ipa_settings.admob_app_id ) g_free(project->ipa_settings.admob_app_id);
 	if ( project->ipa_settings.output_path ) g_free(project->ipa_settings.output_path);
 	if ( project->ipa_settings.prov_profile_path ) g_free(project->ipa_settings.prov_profile_path);
 	if ( project->ipa_settings.splash_1136_path ) g_free(project->ipa_settings.splash_1136_path);
@@ -5591,6 +5664,7 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "apk_settings", "package_name", FALLBACK(project->apk_settings.package_name,"") );
 	g_key_file_set_integer( config, "apk_settings", "permission_flags", project->apk_settings.permission_flags );
 	g_key_file_set_string( config, "apk_settings", "play_app_id", FALLBACK(project->apk_settings.play_app_id,"") );
+	g_key_file_set_string( config, "apk_settings", "admob_app_id", FALLBACK(project->apk_settings.admob_app_id,"") );
 	g_key_file_set_integer( config, "apk_settings", "sdk_version", project->apk_settings.sdk_version ); 
 	g_key_file_set_integer( config, "apk_settings", "arcore", project->apk_settings.arcore ); 
 	g_key_file_set_string( config, "apk_settings", "version_name", FALLBACK(project->apk_settings.version_name,"") );
@@ -5607,6 +5681,7 @@ void save_ios_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "ipa_settings", "facebook_id", FALLBACK(project->ipa_settings.facebook_id,"") );
 	g_key_file_set_string( config, "ipa_settings", "url_scheme", FALLBACK(project->ipa_settings.url_scheme,"") );
 	g_key_file_set_string( config, "ipa_settings", "deep_link", FALLBACK(project->ipa_settings.deep_link,"") );
+	g_key_file_set_string( config, "ipa_settings", "admob_app_id", FALLBACK(project->ipa_settings.admob_app_id,"") );
 	g_key_file_set_integer( config, "ipa_settings", "orientation", project->ipa_settings.orientation );
 	g_key_file_set_string( config, "ipa_settings", "output_path", FALLBACK(project->ipa_settings.output_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "prov_profile_path", FALLBACK(project->ipa_settings.prov_profile_path,"") );
@@ -5642,6 +5717,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.package_name = g_key_file_get_string( config, "apk_settings", "package_name", 0 );
 	project->apk_settings.permission_flags = utils_get_setting_integer( config, "apk_settings", "permission_flags", AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE );
 	project->apk_settings.play_app_id = g_key_file_get_string( config, "apk_settings", "play_app_id", 0 );
+	project->apk_settings.admob_app_id = g_key_file_get_string( config, "apk_settings", "admob_app_id", 0 );
 	project->apk_settings.sdk_version = utils_get_setting_integer( config, "apk_settings", "sdk_version", 0 );
 	project->apk_settings.arcore = utils_get_setting_integer( config, "apk_settings", "arcore", 0 );
 	project->apk_settings.version_name = g_key_file_get_string( config, "apk_settings", "version_name", 0 );
@@ -5658,6 +5734,7 @@ void load_ios_settings( GKeyFile *config, GeanyProject* project )
 	project->ipa_settings.facebook_id = g_key_file_get_string( config, "ipa_settings", "facebook_id", 0 );
 	project->ipa_settings.url_scheme = g_key_file_get_string( config, "ipa_settings", "url_scheme", 0 );
 	project->ipa_settings.deep_link = g_key_file_get_string( config, "ipa_settings", "deep_link", 0 );
+	project->ipa_settings.admob_app_id = g_key_file_get_string( config, "ipa_settings", "admob_app_id", 0 );
 	project->ipa_settings.orientation = utils_get_setting_integer( config, "ipa_settings", "orientation", 0 );
 	project->ipa_settings.output_path = g_key_file_get_string( config, "ipa_settings", "output_path", 0 );
 	project->ipa_settings.prov_profile_path = g_key_file_get_string( config, "ipa_settings", "prov_profile_path", 0 );

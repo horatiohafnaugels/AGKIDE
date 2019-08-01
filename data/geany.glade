@@ -606,7 +606,6 @@
                                         <property name="tooltip_text" translatable="yes">Only applies to Google and Amazon export. For maximum compatibility choose 4.0.3, or restrict your app to chosen minimum version. If you choose 6.0 (API 23) or above then you must use the RequestPermission command to request any required permissions before using certain commands </property>
                                         <property name="active">0</property>
                                         <items>
-                                          <item>4.0.3 (API 15)</item>
                                           <item>4.1 (API 16)</item>
                                           <item>4.2 (API 17)</item>
                                           <item>4.3 (API 18)</item>
@@ -617,6 +616,8 @@
                                           <item>7.0 (API 24)</item>
                                           <item>7.1 (API 25)</item>
                                           <item>8.0 (API 26)</item>
+                                          <item>8.1 (API 27)</item>
+                                          <item>9.0 (API 28)</item>
                                         </items>
                                       </object>
                                       <packing>
@@ -1033,7 +1034,7 @@
                               <object class="GtkTable" id="table35">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="n_rows">4</property>
+                                <property name="n_rows">5</property>
                                 <property name="n_columns">2</property>
                                 <property name="column_spacing">5</property>
                                 <property name="row_spacing">3</property>
@@ -1046,6 +1047,8 @@
                                     <property name="label" translatable="yes">Google Game Services App ID:</property>
                                   </object>
                                   <packing>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
@@ -1080,6 +1083,8 @@
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                     <property name="y_options"/>
                                   </packing>
                                 </child>
@@ -1092,8 +1097,8 @@
                                     <property name="label" translatable="yes">Firebase Config File (.json):</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
@@ -1143,8 +1148,8 @@
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
                                     <property name="y_options"/>
                                   </packing>
                                 </child>
@@ -1157,8 +1162,8 @@
                                     <property name="label" translatable="yes">URL Scheme:</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
@@ -1172,8 +1177,8 @@
                                     <property name="label" translatable="yes">Deep Link:</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">3</property>
-                                    <property name="bottom_attach">4</property>
+                                    <property name="top_attach">4</property>
+                                    <property name="bottom_attach">5</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
@@ -1208,8 +1213,8 @@
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
                                 </child>
@@ -1229,8 +1234,40 @@
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="top_attach">3</property>
-                                    <property name="bottom_attach">4</property>
+                                    <property name="top_attach">4</property>
+                                    <property name="bottom_attach">5</property>
+                                    <property name="y_options">GTK_FILL</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="android_google_app_id_label1">
+                                    <property name="width_request">155</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="xalign">0</property>
+                                    <property name="label" translatable="yes">AdMob App ID:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="x_options">GTK_FILL</property>
+                                    <property name="y_options"/>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="android_admob_app_id">
+                                    <property name="width_request">120</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">The AdMob App ID fror this app, this can be found in the apps page of your AdMob account and should look like this "ca-app-pub-3940256099942544~3347511713". App IDs have the ~ character whereas Ad IDs have a forward slash</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
                                 </child>
@@ -4142,7 +4179,7 @@ Note that only AdHoc and App Store provisioning profiles will work with this exp
                           <object class="GtkTable" id="table38">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="n_rows">6</property>
+                            <property name="n_rows">7</property>
                             <property name="n_columns">2</property>
                             <property name="column_spacing">5</property>
                             <property name="row_spacing">3</property>
@@ -4416,6 +4453,40 @@ Install Tracking:</property>
                                 <property name="right_attach">2</property>
                                 <property name="top_attach">3</property>
                                 <property name="bottom_attach">4</property>
+                                <property name="y_options">GTK_FILL</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="ios_device_label2">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">AdMob App ID:</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
+                                <property name="x_options">GTK_FILL</property>
+                                <property name="y_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="ios_admob_app_id_entry">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">The AdMob App ID fror this app, this can be found in the apps page of your AdMob account and should look like this "ca-app-pub-3940256099942544~3347511713". App IDs have the ~ character whereas Ad IDs have a forward slash</property>
+                                <property name="invisible_char">●</property>
+                                <property name="invisible_char_set">True</property>
+                                <property name="primary_icon_activatable">False</property>
+                                <property name="secondary_icon_activatable">False</property>
+                                <property name="primary_icon_sensitive">True</property>
+                                <property name="secondary_icon_sensitive">True</property>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
                                 <property name="y_options">GTK_FILL</property>
                               </packing>
                             </child>
@@ -9833,6 +9904,12 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9853,6 +9930,12 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -15790,6 +15873,18 @@ To generate a keystore file you need to submit some information about you or you
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="spacing">2</property>
+        <child>
+          <object class="GtkImage" id="what_notifications_image">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="stock">gtk-missing-image</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
         <child internal-child="action_area">
           <object class="GtkHButtonBox" id="dialog-action_area20">
             <property name="width_request">500</property>
@@ -15831,26 +15926,15 @@ To generate a keystore file you need to submit some information about you or you
             <property name="fill">True</property>
             <property name="position">0</property>
           </packing>
-		</child>
-		<child>
-		  <object class="GtkImage" id="what_notifications_image">
-			<property name="visible">True</property>
-			<property name="can_focus">False</property>
-			<property name="stock">gtk-missing-image</property>
-		  </object>
-		  <packing>
-			<property name="expand">True</property>
-			<property name="fill">True</property>
-			<property name="position">0</property>
-		  </packing>
-		</child>
+        </child>
         <child>
           <object class="GtkLabel" id="what_notifications_text">
+            <property name="width_request">450</property>
             <property name="visible">True</property>
-			<property name="justify">center</property>
-			<property name="wrap">True</property>	
-			<property name="width_request">450</property>
-		  </object>
+            <property name="can_focus">False</property>
+            <property name="justify">center</property>
+            <property name="wrap">True</property>
+          </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
