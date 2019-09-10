@@ -936,6 +936,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
 		AGK_CLEAR_STR(app->project->apk_settings.admob_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_snapchat_client_id");
+		AGK_CLEAR_STR(app->project->apk_settings.snapchat_client_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		// permissions
 		app->project->apk_settings.permission_flags = 0;
 
@@ -1069,6 +1072,9 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
 		gchar *admob_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_snapchat_client_id");
+		gchar *snapchat_client_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -1331,6 +1337,7 @@ android_dialog_clean_up:
 		if ( deep_link ) g_free(deep_link);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 		if ( admob_app_id ) g_free(admob_app_id);
+		if ( snapchat_client_id ) g_free(snapchat_client_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -1910,6 +1917,38 @@ android_dialog_continue:
 			strcpy( newcontents, newcontents2 );
 			strcat( newcontents, ">" );
 			strcat( newcontents, admob_app_id );
+			strcat( newcontents, contents3 );
+
+			// repair original file
+			*contents2 = '>';
+		}
+
+		// snapchat client id
+		if ( app_type == 0 && snapchat_client_id && *snapchat_client_id )
+		{
+			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
+			contents2 = strstr( newcontents2, "<string name=\"snap_chat_id\">" );
+			if ( !contents2 )
+			{
+				SHOW_ERR( _("Could not find snap_chat_id entry in values.xml file") );
+				goto android_dialog_cleanup2;
+			}
+
+			contents2 += strlen("<string name=\"snap_chat_id\"");
+			*contents2 = 0;
+			contents3 = contents2;
+			contents3++;
+			contents3 = strstr( contents3, "</string>" );
+			if ( !contents3 )
+			{
+				SHOW_ERR( _("Could not find end of snap_chat_id entry in values.xml file") );
+				goto android_dialog_cleanup2;
+			}
+
+			// write resources file
+			strcpy( newcontents, newcontents2 );
+			strcat( newcontents, ">" );
+			strcat( newcontents, snapchat_client_id );
 			strcat( newcontents, contents3 );
 
 			// repair original file
@@ -2887,6 +2926,7 @@ android_dialog_cleanup2:
 		if ( deep_link ) g_free(deep_link);
 		if ( google_play_app_id ) g_free(google_play_app_id);
 		if ( admob_app_id ) g_free(admob_app_id);
+		if ( snapchat_client_id ) g_free(snapchat_client_id);
 
 		if ( keystore_file ) g_free(keystore_file);
 		if ( keystore_password ) g_free(keystore_password);
@@ -2989,6 +3029,9 @@ void project_export_apk()
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.admob_app_id, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_snapchat_client_id");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.snapchat_client_id, "") );
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -3175,6 +3218,9 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_admob_app_id");
 		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.admob_app_id, "") );
+
+		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_snapchat_client_id");
+		gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->apk_settings.snapchat_client_id, "") );
 
 		// permissions
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_permission_external_storage");
@@ -3695,6 +3741,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
 		AGK_CLEAR_STR(app->project->ipa_settings.admob_app_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_snapchat_client_id_entry");
+		AGK_CLEAR_STR(app->project->ipa_settings.snapchat_client_id) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		app->project->ipa_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 				
@@ -3767,6 +3816,9 @@ static void on_ios_dialog_response(GtkDialog *dialog, gint response, gpointer us
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
 		gchar *admob_app_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
+
+		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_snapchat_client_id_entry");
+		gchar *snapchat_client_id = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 		int orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
@@ -3957,6 +4009,7 @@ ios_dialog_clean_up:
 		if ( url_scheme ) g_free(url_scheme);
 		if ( deep_link ) g_free(deep_link);
 		if ( admob_app_id ) g_free(admob_app_id);
+		if ( snapchat_client_id ) g_free(snapchat_client_id);
 		if ( version_number ) g_free(version_number);
 		if ( output_file ) g_free(output_file);
 
@@ -4493,9 +4546,10 @@ ios_dialog_continue:
 		utils_str_replace_all( &contents, "${PRODUCT_NAME}", app_name );
 		utils_str_replace_all( &contents, "${EXECUTABLE_NAME}", app_name );
 		if ( admob_app_id && *admob_app_id ) utils_str_replace_all( &contents, "${ADMOB_APP_ID}", admob_app_id );
+		if ( snapchat_client_id && *snapchat_client_id ) utils_str_replace_all( &contents, "${SNAPCHAT_ID}", snapchat_client_id );
 		utils_str_replace_all( &contents, "com.thegamecreators.agk2player", bundle_id2 );
 		if ( facebook_id && *facebook_id ) utils_str_replace_all( &contents, "358083327620324", facebook_id );
-		const char* urlschemereplacement = "<string>${URLSCHEMES}<string>\n";
+		const char* urlschemereplacement = "<string>${URLSCHEMES}</string>\n";
 		if ( strstr( contents, urlschemereplacement ) == 0 ) urlschemereplacement = "<string>${URLSCHEMES}</string>\r\n";
 		if ( url_scheme && *url_scheme ) 
 		{
@@ -5300,6 +5354,7 @@ ios_dialog_cleanup2:
 		if ( url_scheme ) g_free(url_scheme);
 		if ( deep_link ) g_free(deep_link);
 		if ( admob_app_id ) g_free(admob_app_id);
+		if ( snapchat_client_id ) g_free(snapchat_client_id);
 		if ( version_number ) g_free(version_number);
 		if ( build_number ) g_free(build_number);
 		if ( output_file ) g_free(output_file);
@@ -5399,6 +5454,9 @@ void project_export_ipa()
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), "" );
 
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_snapchat_client_id_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), "" );
+
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 0 );
 			
@@ -5466,6 +5524,9 @@ void project_export_ipa()
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_admob_app_id_entry");
 			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.admob_app_id, "") );
+
+			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_snapchat_client_id_entry");
+			gtk_entry_set_text( GTK_ENTRY(widget), FALLBACK(app->project->ipa_settings.snapchat_client_id, "") );
 
 			widget = ui_lookup_widget(ui_widgets.ios_dialog, "ios_orientation_combo");
 			gtk_combo_box_set_active( GTK_COMBO_BOX(widget), app->project->ipa_settings.orientation );
@@ -5571,6 +5632,7 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.permission_flags = AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE;
 	project->apk_settings.play_app_id = 0;
 	project->apk_settings.admob_app_id = 0;
+	project->apk_settings.snapchat_client_id = 0;
 	project->apk_settings.sdk_version = 1; // 4.1
 	project->apk_settings.version_name = 0;
 	project->apk_settings.version_number = 0;
@@ -5588,6 +5650,7 @@ void init_ios_settings( GeanyProject* project )
 	project->ipa_settings.url_scheme = 0;
 	project->ipa_settings.deep_link = 0;
 	project->ipa_settings.admob_app_id = 0;
+	project->ipa_settings.snapchat_client_id = 0;
 	project->ipa_settings.orientation = 0; // Landscape
 	project->ipa_settings.output_path = 0;
 	project->ipa_settings.prov_profile_path = 0;
@@ -5621,6 +5684,7 @@ void free_android_settings( GeanyProject* project )
 	if ( project->apk_settings.package_name ) g_free(project->apk_settings.package_name);
 	if ( project->apk_settings.play_app_id ) g_free(project->apk_settings.play_app_id);
 	if ( project->apk_settings.admob_app_id ) g_free(project->apk_settings.admob_app_id);
+	if ( project->apk_settings.snapchat_client_id ) g_free(project->apk_settings.snapchat_client_id);
 	if ( project->apk_settings.version_name ) g_free(project->apk_settings.version_name);
 	if ( project->apk_settings.firebase_config_path ) g_free(project->apk_settings.firebase_config_path);
 }
@@ -5633,6 +5697,7 @@ void free_ios_settings( GeanyProject* project )
 	if ( project->ipa_settings.facebook_id ) g_free(project->ipa_settings.facebook_id);
 	if ( project->ipa_settings.deep_link ) g_free(project->ipa_settings.deep_link);
 	if ( project->ipa_settings.admob_app_id ) g_free(project->ipa_settings.admob_app_id);
+	if ( project->ipa_settings.snapchat_client_id ) g_free(project->ipa_settings.snapchat_client_id);
 	if ( project->ipa_settings.output_path ) g_free(project->ipa_settings.output_path);
 	if ( project->ipa_settings.prov_profile_path ) g_free(project->ipa_settings.prov_profile_path);
 	if ( project->ipa_settings.splash_1136_path ) g_free(project->ipa_settings.splash_1136_path);
@@ -5665,6 +5730,7 @@ void save_android_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_integer( config, "apk_settings", "permission_flags", project->apk_settings.permission_flags );
 	g_key_file_set_string( config, "apk_settings", "play_app_id", FALLBACK(project->apk_settings.play_app_id,"") );
 	g_key_file_set_string( config, "apk_settings", "admob_app_id", FALLBACK(project->apk_settings.admob_app_id,"") );
+	g_key_file_set_string( config, "apk_settings", "snapchat_client_id", FALLBACK(project->apk_settings.snapchat_client_id,"") );
 	g_key_file_set_integer( config, "apk_settings", "sdk_version", project->apk_settings.sdk_version ); 
 	g_key_file_set_integer( config, "apk_settings", "arcore", project->apk_settings.arcore ); 
 	g_key_file_set_string( config, "apk_settings", "version_name", FALLBACK(project->apk_settings.version_name,"") );
@@ -5682,6 +5748,7 @@ void save_ios_settings( GKeyFile *config, GeanyProject* project )
 	g_key_file_set_string( config, "ipa_settings", "url_scheme", FALLBACK(project->ipa_settings.url_scheme,"") );
 	g_key_file_set_string( config, "ipa_settings", "deep_link", FALLBACK(project->ipa_settings.deep_link,"") );
 	g_key_file_set_string( config, "ipa_settings", "admob_app_id", FALLBACK(project->ipa_settings.admob_app_id,"") );
+	g_key_file_set_string( config, "ipa_settings", "snapchat_client_id", FALLBACK(project->ipa_settings.snapchat_client_id,"") );
 	g_key_file_set_integer( config, "ipa_settings", "orientation", project->ipa_settings.orientation );
 	g_key_file_set_string( config, "ipa_settings", "output_path", FALLBACK(project->ipa_settings.output_path,"") );
 	g_key_file_set_string( config, "ipa_settings", "prov_profile_path", FALLBACK(project->ipa_settings.prov_profile_path,"") );
@@ -5718,6 +5785,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.permission_flags = utils_get_setting_integer( config, "apk_settings", "permission_flags", AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE );
 	project->apk_settings.play_app_id = g_key_file_get_string( config, "apk_settings", "play_app_id", 0 );
 	project->apk_settings.admob_app_id = g_key_file_get_string( config, "apk_settings", "admob_app_id", 0 );
+	project->apk_settings.snapchat_client_id = g_key_file_get_string( config, "apk_settings", "snapchat_client_id", 0 );
 	project->apk_settings.sdk_version = utils_get_setting_integer( config, "apk_settings", "sdk_version", 0 );
 	project->apk_settings.arcore = utils_get_setting_integer( config, "apk_settings", "arcore", 0 );
 	project->apk_settings.version_name = g_key_file_get_string( config, "apk_settings", "version_name", 0 );
@@ -5735,6 +5803,7 @@ void load_ios_settings( GKeyFile *config, GeanyProject* project )
 	project->ipa_settings.url_scheme = g_key_file_get_string( config, "ipa_settings", "url_scheme", 0 );
 	project->ipa_settings.deep_link = g_key_file_get_string( config, "ipa_settings", "deep_link", 0 );
 	project->ipa_settings.admob_app_id = g_key_file_get_string( config, "ipa_settings", "admob_app_id", 0 );
+	project->ipa_settings.snapchat_client_id = g_key_file_get_string( config, "ipa_settings", "snapchat_client_id", 0 );
 	project->ipa_settings.orientation = utils_get_setting_integer( config, "ipa_settings", "orientation", 0 );
 	project->ipa_settings.output_path = g_key_file_get_string( config, "ipa_settings", "output_path", 0 );
 	project->ipa_settings.prov_profile_path = g_key_file_get_string( config, "ipa_settings", "prov_profile_path", 0 );

@@ -1993,3 +1993,25 @@ GetWindowHeight|Integer|()|
 CancelZipExtract||()|
 GameCenterLogout||()|
 GetImageSizeFromFile|Integer|(String filename)|
+SetObjectMeshCastShadow||(Integer objID, Integer meshIndex, Integer mode)|
+SetObjectShaderConstantArrayFloatByName||(Integer objID, String szName, Integer arrayIndex, Float value)|
+SetObjectShaderConstantArrayVec2ByName||(Integer objID, String szName, Integer arrayIndex, Float value1, Float value2)|
+SetObjectShaderConstantArrayVec3ByName||(Integer objID, String szName, Integer arrayIndex, Float value1, Float value2, Float value3)|
+SetObjectShaderConstantArrayVec4ByName||(Integer objID, String szName, Integer arrayIndex, Float value1, Float value2, Float value3, Float value4)|
+SetShaderErrorMode||(Integer mode)|
+SetShaderConstantArrayFloatByName||(Integer shaderID, String szName, Integer arrayIndex, Float value)|
+SetShaderConstantArrayVec2ByName||(Integer shaderID, String szName, Integer arrayIndex, Float value1, Float value2)|
+SetShaderConstantArrayVec3ByName||(Integer shaderID, String szName, Integer arrayIndex, Float value1, Float value2, Float value3)|
+SetShaderConstantArrayVec4ByName||(Integer shaderID, String szName, Integer arrayIndex, Float value1, Float value2, Float value3, Float value4)|
+GetObject3DPhysicsMaxLinearVelocity|Float|(Integer objID)|
+IsInvertedDepth|Integer|()|
+GetClipSpaceMode|Integer|()|
+IsTopLeftOrigin|Integer|()|
+GetDrawing3DSetupTime|Float|()|
+MakeColor|Integer|(Integer red, Integer green, Integer blue, Integer alpha)|
+GetColorAlpha|Integer|(Integer color)|
+SetPresentMode||(Integer mode)|
+ForcePresent||()|
+GetAppInstalled|Integer|(String packageName)|
+SetSnapChatStickerSettings||(Float x, Float y, Integer width, Integer height, Float angle)|
+ShareSnapChatImage||(String imageFile, String stickerFile, String caption, String url)|
