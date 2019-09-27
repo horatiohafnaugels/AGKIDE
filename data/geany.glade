@@ -606,9 +606,6 @@
                                         <property name="tooltip_text" translatable="yes">Only applies to Google and Amazon export. For maximum compatibility choose 4.0.3, or restrict your app to chosen minimum version. If you choose 6.0 (API 23) or above then you must use the RequestPermission command to request any required permissions before using certain commands </property>
                                         <property name="active">0</property>
                                         <items>
-                                          <item>4.1 (API 16)</item>
-                                          <item>4.2 (API 17)</item>
-                                          <item>4.3 (API 18)</item>
                                           <item>4.4 (API 19)</item>
                                           <item>5.0 (API 21)</item>
                                           <item>5.1 (API 22)</item>
@@ -9986,6 +9983,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -10006,6 +10006,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

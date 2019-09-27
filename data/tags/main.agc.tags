@@ -2015,3 +2015,4 @@ ForcePresent||()|
 GetAppInstalled|Integer|(String packageName)|
 SetSnapChatStickerSettings||(Float x, Float y, Integer width, Integer height, Float angle)|
 ShareSnapChatImage||(String imageFile, String stickerFile, String caption, String url)|
+SetLocalNotification||(Integer iID, Integer datetime, String szMessage, String szDeepLink)|

@@ -903,25 +903,22 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		AGK_CLEAR_STR(app->project->apk_settings.firebase_config_path) = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_orientation_combo");
-		app->project->apk_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));;
+		app->project->apk_settings.orientation = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo");
-		app->project->apk_settings.arcore = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));;
+		app->project->apk_settings.arcore = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->apk_settings.sdk_version = 1; // 4.1
-		if ( strncmp(app_sdk,"4.2",3) == 0 ) app->project->apk_settings.sdk_version = 2;
-		if ( strncmp(app_sdk,"4.3",3) == 0 ) app->project->apk_settings.sdk_version = 3;
-		if ( strncmp(app_sdk,"4.4",3) == 0 ) app->project->apk_settings.sdk_version = 4;
-		if ( strncmp(app_sdk,"5.0",3) == 0 ) app->project->apk_settings.sdk_version = 5;
-		if ( strncmp(app_sdk,"5.1",3) == 0 ) app->project->apk_settings.sdk_version = 6;
-		if ( strncmp(app_sdk,"6.0",3) == 0 ) app->project->apk_settings.sdk_version = 7;
-		if ( strncmp(app_sdk,"7.0",3) == 0 ) app->project->apk_settings.sdk_version = 8;
-		if ( strncmp(app_sdk,"7.1",3) == 0 ) app->project->apk_settings.sdk_version = 9;
-		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 10;
-		if ( strncmp(app_sdk,"8.1",3) == 0 ) app->project->apk_settings.sdk_version = 11;
-		if ( strncmp(app_sdk,"9.0",3) == 0 ) app->project->apk_settings.sdk_version = 12;
+		app->project->apk_settings.sdk_version = 1; // 4.4
+		if ( strncmp(app_sdk,"5.0",3) == 0 ) app->project->apk_settings.sdk_version = 2;
+		if ( strncmp(app_sdk,"5.1",3) == 0 ) app->project->apk_settings.sdk_version = 3;
+		if ( strncmp(app_sdk,"6.0",3) == 0 ) app->project->apk_settings.sdk_version = 4;
+		if ( strncmp(app_sdk,"7.0",3) == 0 ) app->project->apk_settings.sdk_version = 5;
+		if ( strncmp(app_sdk,"7.1",3) == 0 ) app->project->apk_settings.sdk_version = 6;
+		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 7;
+		if ( strncmp(app_sdk,"8.1",3) == 0 ) app->project->apk_settings.sdk_version = 8;
+		if ( strncmp(app_sdk,"9.0",3) == 0 ) app->project->apk_settings.sdk_version = 9;
 		g_free(app_sdk);
 				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
@@ -1045,9 +1042,6 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		int sdk = 16;
-		if ( strncmp(app_sdk,"4.1",3) == 0 ) sdk = 16;
-		if ( strncmp(app_sdk,"4.2",3) == 0 ) sdk = 17;
-		if ( strncmp(app_sdk,"4.3",3) == 0 ) sdk = 18;
 		if ( strncmp(app_sdk,"4.4",3) == 0 ) sdk = 19;
 		if ( strncmp(app_sdk,"5.0",3) == 0 ) sdk = 21;
 		if ( strncmp(app_sdk,"5.1",3) == 0 ) sdk = 22;
@@ -1522,6 +1516,7 @@ android_dialog_continue:
 		{
 			//strcat( newcontents, "    <uses-permission android:name=\"android.permission.GET_ACCOUNTS\"></uses-permission>\n" );
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
+			strcat( newcontents, "    <uses-permission android:name=\"android.permission.FOREGROUND_SERVICE\"></uses-permission>\n" );
 		}
 		if ( permission_vibrate ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.VIBRATE\"></uses-permission>\n" );
 		if ( permission_record_audio ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"></uses-permission>\n" );
@@ -2742,10 +2737,6 @@ android_dialog_continue:
 		zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libandroid_player.so", NULL );
 		mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libandroid_player.so", zip_add_file, NULL, 0, 9 );
 		
-		g_free( zip_add_file );
-		zip_add_file = g_build_path( "/", android_folder, "lib", "x86", "libandroid_player.so", NULL );
-		mz_zip_writer_add_file( &zip_archive, "lib/x86/libandroid_player.so", zip_add_file, NULL, 0, 9 );
-		
 		if ( arcore_mode > 0 )
 		{
 			// use real ARCore lib
@@ -2756,10 +2747,17 @@ android_dialog_continue:
 			g_free( zip_add_file );
 			zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libarcore_sdk.so", NULL );
 			mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
+		}
+
+		if ( snapchat_client_id && *snapchat_client_id )
+		{
+			g_free( zip_add_file );
+			zip_add_file = g_build_path( "/", android_folder, "lib", "arm64-v8a", "libpruneau.so", NULL );
+			mz_zip_writer_add_file( &zip_archive, "lib/arm64-v8a/libpruneau.so", zip_add_file, NULL, 0, 9 );
 
 			g_free( zip_add_file );
-			zip_add_file = g_build_path( "/", android_folder, "lib", "x86", "libarcore_sdk.so", NULL );
-			mz_zip_writer_add_file( &zip_archive, "lib/x86/libarcore_sdk.so", zip_add_file, NULL, 0, 9 );
+			zip_add_file = g_build_path( "/", android_folder, "lib", "armeabi-v7a", "libpruneau.so", NULL );
+			mz_zip_writer_add_file( &zip_archive, "lib/armeabi-v7a/libpruneau.so", zip_add_file, NULL, 0, 9 );
 		}
 		
 		while (gtk_events_pending())
@@ -5238,8 +5236,49 @@ ios_dialog_continue:
 		str_out = 0;
 		g_strfreev(argv);
 
-		// sign bundle
+		// sign SnapChat
+		if ( temp_filename2 ) g_free(temp_filename2);
+		temp_filename2 = g_build_filename( app_folder, "Frameworks/SCSDKCoreKit.framework", NULL );
 		argv = g_new0( gchar*, 10 );
+		argv[0] = g_strdup( path_to_codesign );
+		argv[1] = g_strdup("--force");
+		argv[2] = g_strdup("--sign");
+		argv[3] = g_strdup(cert_hash);
+		//argv[4] = g_strdup("--entitlements");
+		//argv[5] = g_strdup(entitlements_file);
+		argv[4] = g_strdup(temp_filename2);
+		argv[5] = NULL;
+        
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( _("Failed to run codesign program: %s"), error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+
+		// sign SnapChat2
+		if ( temp_filename2 ) g_free(temp_filename2);
+		temp_filename2 = g_build_filename( app_folder, "Frameworks/SCSDKCreativeKit.framework", NULL );
+		argv[0] = g_strdup( path_to_codesign );
+		argv[1] = g_strdup("--force");
+		argv[2] = g_strdup("--sign");
+		argv[3] = g_strdup(cert_hash);
+		//argv[4] = g_strdup("--entitlements");
+		//argv[5] = g_strdup(entitlements_file);
+		argv[4] = g_strdup(temp_filename2);
+		argv[5] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( _("Failed to run codesign program: %s"), error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
+
+
+		// sign bundle
 		argv[0] = g_strdup( path_to_codesign );
 		argv[1] = g_strdup("--force");
 		argv[2] = g_strdup("--sign");
@@ -5267,6 +5306,15 @@ ios_dialog_continue:
 			goto ios_dialog_cleanup2;
 		}
          */
+				
+        
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( _("Failed to run codesign program: %s"), error->message );
+			g_error_free(error);
+			error = NULL;
+			goto ios_dialog_cleanup2;
+		}
 
 		// create IPA zip file
 		if ( !mz_zip_writer_init_file( &zip_archive, output_file_zip, 0 ) )
@@ -5633,7 +5681,7 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.play_app_id = 0;
 	project->apk_settings.admob_app_id = 0;
 	project->apk_settings.snapchat_client_id = 0;
-	project->apk_settings.sdk_version = 1; // 4.1
+	project->apk_settings.sdk_version = 1; // 4.4
 	project->apk_settings.version_name = 0;
 	project->apk_settings.version_number = 0;
 	project->apk_settings.firebase_config_path = 0;

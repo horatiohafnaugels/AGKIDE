@@ -3555,7 +3555,7 @@ gpointer CopyAdditionalFiles(gpointer data)
 		gchar *slash = strrchr( szRoot, '/' );
 		if ( slash ) *slash = 0;
 		projects_path = g_build_filename(szRoot, "../Resources/Projects", NULL);
-		tier2_path = g_build_filename(szRoot, "../Resources/Tier 2", NULL);
+		tier2_path = g_build_filename(szRoot, "../../../Tier 2", NULL);
 	}
 #else
 	gchar szExePath[1024];
