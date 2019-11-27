@@ -86,10 +86,6 @@ files, visit Geany's homepage. But you should know, that the Windows
 version is not yet well tested and there are some features missing:
 - build support (implemented but might be still buggy)
 - embedded terminal emulation (VTE)
-- Windows 9x users: in order to run Geany on Windows 95, 98 or ME you
-  need to install the file SHFolder.dll either in the Geany installation
-  directory or in your Windows directory. For more information please
-  visit http://support.microsoft.com/kb/241733.
 
 
 License

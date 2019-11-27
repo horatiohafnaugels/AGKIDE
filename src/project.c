@@ -910,15 +910,19 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		app->project->apk_settings.sdk_version = 1; // 4.4
-		if ( strncmp(app_sdk,"5.0",3) == 0 ) app->project->apk_settings.sdk_version = 2;
-		if ( strncmp(app_sdk,"5.1",3) == 0 ) app->project->apk_settings.sdk_version = 3;
-		if ( strncmp(app_sdk,"6.0",3) == 0 ) app->project->apk_settings.sdk_version = 4;
-		if ( strncmp(app_sdk,"7.0",3) == 0 ) app->project->apk_settings.sdk_version = 5;
-		if ( strncmp(app_sdk,"7.1",3) == 0 ) app->project->apk_settings.sdk_version = 6;
-		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 7;
-		if ( strncmp(app_sdk,"8.1",3) == 0 ) app->project->apk_settings.sdk_version = 8;
-		if ( strncmp(app_sdk,"9.0",3) == 0 ) app->project->apk_settings.sdk_version = 9;
+		app->project->apk_settings.sdk_version = 1; // 4.0.3
+		if ( strncmp(app_sdk,"4.1",3) == 0 ) app->project->apk_settings.sdk_version = 2;
+		if ( strncmp(app_sdk,"4.2",3) == 0 ) app->project->apk_settings.sdk_version = 3;
+		if ( strncmp(app_sdk,"4.3",3) == 0 ) app->project->apk_settings.sdk_version = 4;
+		if ( strncmp(app_sdk,"4.4",3) == 0 ) app->project->apk_settings.sdk_version = 5;
+		if ( strncmp(app_sdk,"5.0",3) == 0 ) app->project->apk_settings.sdk_version = 6;
+		if ( strncmp(app_sdk,"5.1",3) == 0 ) app->project->apk_settings.sdk_version = 7;
+		if ( strncmp(app_sdk,"6.0",3) == 0 ) app->project->apk_settings.sdk_version = 8;
+		if ( strncmp(app_sdk,"7.0",3) == 0 ) app->project->apk_settings.sdk_version = 9;
+		if ( strncmp(app_sdk,"7.1",3) == 0 ) app->project->apk_settings.sdk_version = 10;
+		if ( strncmp(app_sdk,"8.0",3) == 0 ) app->project->apk_settings.sdk_version = 11;
+		if ( strncmp(app_sdk,"8.1",3) == 0 ) app->project->apk_settings.sdk_version = 12;
+		if ( strncmp(app_sdk,"9.0",3) == 0 ) app->project->apk_settings.sdk_version = 13;
 		g_free(app_sdk);
 				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_url_scheme");
@@ -1041,7 +1045,10 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 				
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_sdk_combo");
 		gchar *app_sdk = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
-		int sdk = 16;
+		int sdk = 15;
+		if ( strncmp(app_sdk,"4.1",3) == 0 ) sdk = 16;
+		if ( strncmp(app_sdk,"4.2",3) == 0 ) sdk = 17;
+		if ( strncmp(app_sdk,"4.3",3) == 0 ) sdk = 18;
 		if ( strncmp(app_sdk,"4.4",3) == 0 ) sdk = 19;
 		if ( strncmp(app_sdk,"5.0",3) == 0 ) sdk = 21;
 		if ( strncmp(app_sdk,"5.1",3) == 0 ) sdk = 22;
@@ -1262,9 +1269,12 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		if ( app_type == 2 )
 		{
-			if ( !ouya_icon || !*ouya_icon ) { SHOW_ERR(_("You must select an Ouya large icon")); goto android_dialog_clean_up; }
-			if ( !strrchr( ouya_icon, '.' ) || utils_str_casecmp( strrchr( ouya_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Ouya large icon must be a PNG file")); goto android_dialog_clean_up; }
-			if ( !g_file_test( ouya_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find ouya large icon location")); goto android_dialog_clean_up; }
+			//if ( !ouya_icon || !*ouya_icon ) { SHOW_ERR(_("You must select an Ouya large icon")); goto android_dialog_clean_up; }
+			if ( ouya_icon && *ouya_icon )
+			{
+				if ( !strrchr( ouya_icon, '.' ) || utils_str_casecmp( strrchr( ouya_icon, '.' ), ".png" ) != 0 ) { SHOW_ERR(_("Ouya large icon must be a PNG file")); goto android_dialog_clean_up; }
+				if ( !g_file_test( ouya_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find ouya large icon location")); goto android_dialog_clean_up; }
+			}
 		}
 
 		// check firebase config file
@@ -1478,15 +1488,15 @@ android_dialog_continue:
 		strcat( newcontents, " android:installLocation=\"auto\">\n\
     <uses-feature android:glEsVersion=\"0x00020000\"></uses-feature>\n\
     <uses-sdk android:minSdkVersion=\"" );
-		if ( app_type == 0 || app_type == 1 )
-			strcat( newcontents, szSDK );
-		else 
-			strcat( newcontents, "15" );
+		
+		strcat( newcontents, szSDK );
 			
 		strcat( newcontents, "\" android:targetSdkVersion=\"" );
-		if ( app_type == 0 )
+		if ( app_type == 0 ) // Google
 			strcat( newcontents, "28" );
-		else
+		else if ( app_type == 1 ) // amazon
+			strcat( newcontents, "22" );
+		else // Ouya (legacy)
 			strcat( newcontents, "15" );
 		strcat( newcontents, "\" />\n\n" );
 
@@ -2579,7 +2589,7 @@ android_dialog_continue:
 		}
 
 		// load ouya icon and check size
-		if ( app_type == 2 )
+		if ( app_type == 2 && ouya_icon && *ouya_icon )
 		{
 			if ( icon_image ) gdk_pixbuf_unref(icon_image);
 			icon_image = gdk_pixbuf_new_from_file( ouya_icon, &error );
@@ -5681,7 +5691,7 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.play_app_id = 0;
 	project->apk_settings.admob_app_id = 0;
 	project->apk_settings.snapchat_client_id = 0;
-	project->apk_settings.sdk_version = 1; // 4.4
+	project->apk_settings.sdk_version = 1; // 4.0.3
 	project->apk_settings.version_name = 0;
 	project->apk_settings.version_number = 0;
 	project->apk_settings.firebase_config_path = 0;
