@@ -5317,14 +5317,6 @@ ios_dialog_continue:
 		}
          */
 				
-        
-		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
-		{
-			SHOW_ERR1( _("Failed to run codesign program: %s"), error->message );
-			g_error_free(error);
-			error = NULL;
-			goto ios_dialog_cleanup2;
-		}
 
 		// create IPA zip file
 		if ( !mz_zip_writer_init_file( &zip_archive, output_file_zip, 0 ) )

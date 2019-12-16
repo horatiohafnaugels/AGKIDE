@@ -2016,3 +2016,12 @@ GetAppInstalled|Integer|(String packageName)|
 SetSnapChatStickerSettings||(Float x, Float y, Integer width, Integer height, Float angle)|
 ShareSnapChatImage||(String imageFile, String stickerFile, String caption, String url)|
 SetLocalNotification||(Integer iID, Integer datetime, String szMessage, String szDeepLink)|
+GetRendererName|String|()|
+GetNetworkClientIP|String|(Integer iNetID, Integer client)|
+GetNetworkServerIP|String|(Integer iNetID)|
+GetRawMouseFourthPressed|Integer|()|
+GetRawMouseFourthState|Integer|()|
+GetRawMouseFourthReleased|Integer|()|
+GetRawMouseFifthPressed|Integer|()|
+GetRawMouseFifthState|Integer|()|
+GetRawMouseFifthReleased|Integer|()|
