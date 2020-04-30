@@ -1596,6 +1596,11 @@ gint main(gint argc, gchar **argv)
 	// if IDE has updated update projects and libraries folders
 	if ( editor_prefs.IDE_version < AGK_VERSION_INT )
 	{
+        // delete Android export files
+        gchar* android_export_path = g_build_path( "/", app->configdir, "AndroidExport", NULL );
+        utils_remove_folder_recursive( android_export_path );
+        g_free(android_export_path);
+        
 		if ( install_prefs.update_projects_mode == -1 || install_prefs.update_tier2_mode == -1 )
 		{
 			// first time, show install dialog

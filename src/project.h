@@ -93,10 +93,8 @@ typedef struct GeanyProjectIPASettings
 	gchar* app_name;
 	gchar* app_icon_path;
 	gchar* prov_profile_path;
-	gchar* splash_960_path;
-	gchar* splash_1136_path;
-	gchar* splash_2436_path;
-	gchar* splash_2048_path;
+	gchar* splash_logo;
+	gchar* splash_color;
 	int orientation;
 	gchar* version_number;
 	gchar* build_number;

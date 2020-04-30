@@ -2025,3 +2025,10 @@ GetRawMouseFourthReleased|Integer|()|
 GetRawMouseFifthPressed|Integer|()|
 GetRawMouseFifthState|Integer|()|
 GetRawMouseFifthReleased|Integer|()|
+SetSoundDeviceMode||(Integer mode)|
+AddNetworkMessageByte||(Integer iMsgID, Integer value)|
+GetNetworkMessageByte|Integer|(Integer iMsgID)|
+GetCameraWorldX|Float|(Integer cameraID)|
+GetCameraWorldY|Float|(Integer cameraID)|
+GetCameraWorldZ|Float|(Integer cameraID)|
+FixCameraToObject||(Integer cameraID, Integer objID)|

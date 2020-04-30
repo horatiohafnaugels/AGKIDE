@@ -1033,8 +1033,8 @@ struct Sci_TextToFind {
 };
 
 #define CharacterRange Sci_CharacterRange
-#define TextRange Sci_TextRange
-#define TextToFind Sci_TextToFind
+//#define TextRange Sci_TextRange
+//#define TextToFind Sci_TextToFind
 
 typedef void *Sci_SurfaceID;
 

@@ -27,12 +27,12 @@ DIE=0
 	DIE=1
 }
 
-(glib-gettextize --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "**Error**: You must have \`glib' installed."
-	echo "You can get it from: ftp://ftp.gtk.org/pub/gtk"
-	DIE=1
-}
+#(glib-gettextize --version) < /dev/null > /dev/null 2>&1 || {
+#	echo
+#	echo "**Error**: You must have \`glib' installed."
+#	echo "You can get it from: ftp://ftp.gtk.org/pub/gtk"
+#	DIE=1
+#}
 
 (libtoolize --version) < /dev/null > /dev/null 2>&1 || {
      (glibtoolize --version) < /dev/null > /dev/null 2>&1 || {
