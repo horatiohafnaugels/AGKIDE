@@ -2032,3 +2032,4 @@ GetCameraWorldX|Float|(Integer cameraID)|
 GetCameraWorldY|Float|(Integer cameraID)|
 GetCameraWorldZ|Float|(Integer cameraID)|
 FixCameraToObject||(Integer cameraID, Integer objID)|
+SetSpriteBlendModes||(Integer iSpriteIndex, Integer src, Integer dst)|
