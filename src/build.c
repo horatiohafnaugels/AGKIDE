@@ -70,6 +70,11 @@
 #include "geanymenubuttonaction.h"
 #include "gtkcompat.h"
 #include "sidebar.h"
+#include "sciwrappers.h"
+
+void msgwin_debug_add_string(gint msg_color, const gchar *msg);
+void on_show_weekend_end_dialog();
+
 
 gboolean g_isXP = FALSE;
 

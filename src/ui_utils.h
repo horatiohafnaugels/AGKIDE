@@ -382,6 +382,14 @@ void on_install_dialog_response(GtkDialog *dialog, gint response, gpointer user_
 
 gpointer CopyAdditionalFiles(gpointer data);
 
+void ui_setup_open_button_callback_ios(GtkWidget *open_btn, const gchar *title, GtkFileChooserAction action, GtkEntry *entry);
+
+void ui_setup_open_button_callback_keystore(GtkWidget *open_btn, const gchar *title, GtkFileChooserAction action, GtkEntry *entry);
+
+void ui_setup_open_button_callback_android(GtkWidget *open_btn, const gchar *title, GtkFileChooserAction action, GtkEntry *entry);
+
+void ui_setup_open_button_callback_html5(GtkWidget *open_btn, const gchar *title, GtkFileChooserAction action, GtkEntry *entry);
+
 G_END_DECLS
 
 #endif

@@ -96,6 +96,8 @@
 # define N_(String) (String)
 #endif
 
+void on_menu_tools_install_files_activate(GtkMenuItem *menuitem, gpointer user_data);
+gboolean configuration_load_projects(void);
 
 GeanyApp	*app;
 gboolean	ignore_callback;	/* hack workaround for GTK+ toggle button callback problem */

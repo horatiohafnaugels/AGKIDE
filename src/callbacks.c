@@ -77,7 +77,15 @@
 # include "socket.h"
 #endif
 
-
+void msgwin_debug_add_string(gint msg_color, const gchar *msg);
+void project_export_html5();
+void project_export_apk_all();
+void project_export_apk();
+void project_generate_keystore();
+void on_show_weekend_end_dialog();
+void on_show_weekend_end_dialog();
+void project_export_ipa();
+void ui_setup_open_button_callback_install(GtkWidget *open_btn, const gchar *title, GtkFileChooserAction action, GtkEntry *entry);
 
 /* flag to indicate that an insert callback was triggered from the file menu,
  * so we need to store the current cursor position in editor_info.click_pos. */

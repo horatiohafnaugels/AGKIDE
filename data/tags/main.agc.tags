@@ -2033,3 +2033,13 @@ GetCameraWorldY|Float|(Integer cameraID)|
 GetCameraWorldZ|Float|(Integer cameraID)|
 FixCameraToObject||(Integer cameraID, Integer objID)|
 SetSpriteBlendModes||(Integer iSpriteIndex, Integer src, Integer dst)|
+SetAdMobChildRating||(Integer rating)|
+GetRewardAdValueAdMob|Integer|()|
+GetMemblockSHA1|String|(Integer memID)|
+GetMemblockSHA256|String|(Integer memID)|
+CreateImageFromPNGMemblock||(Integer imageID, Integer memID)|
+CreateImageFromPNGMemblock|Integer|(Integer memID)|
+CreateSoundFromOGGMemblock||(Integer soundID, Integer memID)|
+CreateSoundFromOGGMemblock|Integer|(Integer memID)|
+CreateMusicFromOGGMemblock||(Integer musicID, Integer memID)|
+CreateMusicFromOGGMemblock|Integer|(Integer memID)|

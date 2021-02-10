@@ -61,6 +61,7 @@
 #include "keyfile.h"
 #include "filetypes.h"
 #include "win32.h"
+#include "callbacks.h"
 
 #ifdef HAVE_VTE
 # include "vte.h"

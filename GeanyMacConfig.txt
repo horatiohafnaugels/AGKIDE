@@ -2,18 +2,24 @@ This may not be the best way to do it but after much trial and error it is what 
 
 GTK setup
 
-Download https://git.gnome.org/browse/gtk-osx/plain/gtk-osx-build-setup.sh to your home directory and run it: 
+Download https://gitlab.gnome.org/GNOME/gtk-osx/raw/master/gtk-osx-setup.sh to your home directory and run it: 
     
-$ sh gtk-osx-build-setup.sh
+$ sh gtk-osx-setup.sh
 
-It will install jhbuild in ~/Source and create ~/.local/bin/jhbuild
+It will install jhbuild in ~/Source and create ~/.new_local/bin/jhbuild
+
+Add the following lines to ~/.config/jhbuildrc-custom in place of the existing setup_sdk() function
+
+setup_sdk(target="10.9", architectures=["x86_64"])
+setup_release()
+
 now run the following commands
 
-$ ~/.local/bin/jhbuild bootstrap
-$ ~/.local/bin/jhbuild build meta-gtk-osx-bootstrap
-$ ~/.local/bin/jhbuild build meta-gtk-osx-core
-$ ~/.local/bin/jhbuild build meta-gtk-osx-themes
-$ ~/.local/bin/jhbuild build gtk-mac-integration
+$ ~/.new_local/bin/jhbuild bootstrap-gtk-osx
+$ ~/.new_local/bin/jhbuild build meta-gtk-osx-bootstrap
+$ ~/.new_local/bin/jhbuild build meta-gtk-osx-core
+$ ~/.new_local/bin/jhbuild build meta-gtk-osx-themes
+$ ~/.new_local/bin/jhbuild build gtk-mac-integration
 
 you now have a reasonably complete GTK installation in your home directory ready for you to build the IDE
 
@@ -24,16 +30,18 @@ Browse to the location of the IDE source code in the terminal and run the follow
 
 Note that if the packages have been updated since these instructions were written you may have to adjust the version numbers on these paths to match
 
-$ export PKG_CONFIG_PATH="../../../../../gtk/source/gtk+-2.24.28:../../../../../gtk/source/pango-1.36.8:../../../../../gtk/source/glib-2.44.1:../../../../../gtk/source/cairo-1.14.0:../../../../../gtk/source/pixman-0.32.6:../../../../../gtk/source/libpng-1.6.17:../../../../../gtk/source/gdk-pixbuf-2.30.8:../../../../../gtk/source/atk-2.16.0"
+$ export PKG_CONFIG_PATH="../../../../../gtk/source/gtk+-2.24.32:../../../../../gtk/source/pango-1.46.2:../../../../../gtk/source/glib-2.66.0:../../../../../gtk/source/cairo-1.16.0:../../../../../gtk/source/pixman-0.40.0:../../../../../gtk/source/libpng-1.6.37:../../../../../gtk/source/gdk-pixbuf-2.40.0:../../../../../gtk/source/atk-2.36.0"
 
 now run
 
-$ export CFLAGS="-O2 -I$HOME/gtk/inst/include -x objective-c -mmacosx-version-min=10.7"
-$ export LIBS="-lgtkmacintegration-gtk2 -L/Users/paulj/gtk/inst/lib"
+$ export CXXFLAGS="-O2 -I$HOME/gtk/inst/include -I$HOME/gtk/inst/include/harfbuzz -I$HOME/gtk/inst/include/atk-1.0 -mmacosx-version-min=10.9 -march=x86-64"
+$ export CFLAGS="-O2 -I$HOME/gtk/inst/include -I$HOME/gtk/inst/include/harfbuzz -I$HOME/gtk/inst/include/atk-1.0 -x objective-c -mmacosx-version-min=10.9 -march=x86-64"
+$ export LIBS="-lgtkmacintegration-gtk2 -framework ApplicationServices -framework CoreFoundation -framework Cocoa -lgtk-quartz-2.0 -latk-1.0 -lpixman-1 -lz -lgdk_pixbuf-2.0 -lm -lpng16"
+$ export LDFLAGS="-O2 -L$HOME/gtk/inst/lib -mmacosx-version-min=10.9"
 
 and finally run this with the prefix path set to where you want the final IDE executable to be, for your first attempt I recommend using this path, the bundler uses it later
 
-$ ./autogen.sh --prefix="$HOME/Projects/Geany-Compiled" --disable-vte
+$ ./autogen.sh --prefix="$HOME/Projects/Geany-Compiled" --disable-vte --disable-dependency-tracking
 
 
 IDE building
@@ -41,7 +49,7 @@ IDE building
 All the above should only be done once, after that you can just browse to the IDE source in a terminal and run 
 $ make
 $ make install
-to compile the IDE to a binary. Note that if you want to move the source files folder you will need to ./configure it again
+to compile the IDE to a binary. Note that if you want to move the source files folder you will need to ./autogen.sh it again
 
 
 IDE bundling
@@ -52,6 +60,6 @@ Extract GeanyBundle.zip included with the IDE source so that it sits beside the 
 
 $ ~/.local/bin/jhbuild shell
 $ export PATH=$PREFIX/bin:~/.local/bin:$PATH
-$ gtk-mac-bundler AGK2.bundle
+$ gtk-mac-bundler AppGameKit.bundle
 
-If you changed any of the paths above you may need to edit AGK2.bundle in a text editor to modify the paths, good luck!
+If you changed any of the paths above you may need to edit AppGameKit.bundle in a text editor to modify the paths, good luck!

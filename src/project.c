@@ -29,6 +29,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <glib/gstdio.h>
+
 #include "project.h"
 
 #include "dialogs.h"

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <glib-object.h>
 
+#include "main.h"
 #include "general.h"
 #include "entry.h"
 #include "parse.h"
