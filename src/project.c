@@ -1739,9 +1739,15 @@ android_dialog_continue:
 		// IAP Purchase Activity
 		if ( permission_billing && app_type == 0 )
 		{
-			strcat( newcontents, "\n\
-        <activity android:name=\"com.google.android.gms.ads.purchase.InAppPurchaseActivity\" \n\
-                  android:theme=\"@style/Theme.IAPTheme\" />" );
+			strcat(newcontents, "\n\
+			<meta-data\n\
+				android:name=\"com.google.android.play.billingclient.version\"\n\
+				android:value=\"3.0.3\" />\n\
+			<activity\n\
+				android:name=\"com.android.billingclient.api.ProxyBillingActivity\"\n\
+				android:configChanges=\"keyboard|keyboardHidden|screenLayout|screenSize|orientation\"\n\
+				android:exported=\"false\"\n\
+				android:theme=\"@android:style/Theme.Translucent.NoTitleBar\" />\n");
 		}
 
 		// Google API Activity - for Game Services
@@ -1759,6 +1765,7 @@ android_dialog_continue:
 			strcat( newcontents, "\n        <provider android:authorities=\"" );
 			strcat( newcontents, package_name );
 			strcat( newcontents, ".firebaseinitprovider\"\n\
+                  android:directBootAware=\"true\"\n\
                   android:name=\"com.google.firebase.provider.FirebaseInitProvider\"\n\
                   android:exported=\"false\"\n\
                   android:initOrder=\"100\" />\n" );
@@ -1784,14 +1791,36 @@ android_dialog_continue:
             android:permission=\"android.permission.BIND_JOB_SERVICE\" />\n\
 		<service\n\
             android:name=\"com.google.firebase.components.ComponentDiscoveryService\"\n\
+			android:directBootAware=\"true\"\n\
             android:exported=\"false\" >\n\
+			<meta-data\n\
+                android:name=\"com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingRegistrar\"\n\
+                android:value=\"com.google.firebase.components.ComponentRegistrar\" />\n\
             <meta-data\n\
                 android:name=\"com.google.firebase.components:com.google.firebase.analytics.connector.internal.AnalyticsConnectorRegistrar\"\n\
                 android:value=\"com.google.firebase.components.ComponentRegistrar\" />\n\
             <meta-data\n\
-                android:name=\"com.google.firebase.components:com.google.firebase.iid.Registrar\"\n\
+                android:name=\"com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar\"\n\
                 android:value=\"com.google.firebase.components.ComponentRegistrar\" />\n\
-        </service>" );
+            <meta-data\n\
+                android:name=\"com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar\"\n\
+                android:value=\"com.google.firebase.components.ComponentRegistrar\" />\n\
+        </service>\n\
+		<service\
+            android:name=\"com.google.android.datatransport.runtime.backends.TransportBackendDiscovery\"\n\
+            android:exported=\"false\" >\n\
+            <meta-data\n\
+                android:name=\"backend:com.google.android.datatransport.cct.CctBackendFactory\"\n\
+                android:value=\"cct\" />\n\
+        </service>\n\
+        <service\n\
+            android:name=\"com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService\"\n\
+            android:exported=\"false\"\n\
+            android:permission=\"android.permission.BIND_JOB_SERVICE\" >\n\
+        </service>\n\
+        <receiver\n\
+            android:name=\"com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver\"\n\
+            android:exported=\"false\" />" );
 		}
 
 		if ( includeFirebase || includePushNotify )
@@ -3043,9 +3072,17 @@ static gchar *last_proj_path_android = 0;
         char filename[ 1024 ];
         for( int i = 0; i < numFiles; i++ )
         {
-            if ( mz_zip_reader_is_file_a_directory( &zip_archive, i ) ) continue;
-            
-            mz_zip_reader_get_filename( &zip_archive, i, filename, 1024 );
+			mz_zip_reader_get_filename( &zip_archive, i, filename, 1024 );
+
+            if ( mz_zip_reader_is_file_a_directory( &zip_archive, i ) ) 
+			{
+                gchar* final_path = g_build_path( "/", app->configdir, filename, NULL );
+				NSString* pWriteDir = [ [ NSString alloc ] initWithUTF8String:final_path ];
+				[ g_pFileManager createDirectoryAtPath:pWriteDir withIntermediateDirectories:YES attributes:nil error:nil ];
+				[ pWriteDir release ];
+                g_free(final_path);
+				continue;
+			}
             
             gchar* final_path = g_build_path( "/", app->configdir, filename, NULL );
                         
@@ -5802,7 +5839,7 @@ void init_android_settings( GeanyProject* project )
 	project->apk_settings.output_path = 0;
 	project->apk_settings.ouya_icon_path = 0;
 	project->apk_settings.package_name = 0;
-	project->apk_settings.permission_flags = AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE;
+	project->apk_settings.permission_flags = AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE;
 	project->apk_settings.play_app_id = 0;
 	project->apk_settings.admob_app_id = 0;
 	project->apk_settings.snapchat_client_id = 0;
@@ -5949,7 +5986,7 @@ void load_android_settings( GKeyFile *config, GeanyProject* project )
 	project->apk_settings.output_path = g_key_file_get_string( config, "apk_settings", "output_path", 0 );
 	project->apk_settings.ouya_icon_path = g_key_file_get_string( config, "apk_settings", "ouya_icon_path", 0 );
 	project->apk_settings.package_name = g_key_file_get_string( config, "apk_settings", "package_name", 0 );
-	project->apk_settings.permission_flags = utils_get_setting_integer( config, "apk_settings", "permission_flags", AGK_ANDROID_PERMISSION_WRITE | AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE );
+	project->apk_settings.permission_flags = utils_get_setting_integer( config, "apk_settings", "permission_flags", AGK_ANDROID_PERMISSION_INTERNET | AGK_ANDROID_PERMISSION_WAKE );
 	project->apk_settings.play_app_id = g_key_file_get_string( config, "apk_settings", "play_app_id", 0 );
 	project->apk_settings.admob_app_id = g_key_file_get_string( config, "apk_settings", "admob_app_id", 0 );
 	project->apk_settings.snapchat_client_id = g_key_file_get_string( config, "apk_settings", "snapchat_client_id", 0 );

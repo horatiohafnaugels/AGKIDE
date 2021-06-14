@@ -2043,3 +2043,7 @@ CreateSoundFromOGGMemblock||(Integer soundID, Integer memID)|
 CreateSoundFromOGGMemblock|Integer|(Integer memID)|
 CreateMusicFromOGGMemblock||(Integer musicID, Integer memID)|
 CreateMusicFromOGGMemblock|Integer|(Integer memID)|
+SetImageSubImages||(Integer iImageIndex, String sSubImageFile)|
+GetInAppPurchaseAvailable2|Integer|(Integer iID)|
+InAppPurchaseResetPurchase||(String token)|
+GetInAppPurchaseToken|String|(Integer iID)|

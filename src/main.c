@@ -1608,7 +1608,7 @@ gint main(gint argc, gchar **argv)
 			// first time, show install dialog
 			on_menu_tools_install_files_activate( NULL, NULL );
 		}
-		else
+		else 
 		{
 			int update_projects = 0;
 			int update_tier2 = 0;

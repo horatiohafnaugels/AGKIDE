@@ -732,8 +732,7 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
-                                    <property name="tooltip_text" translatable="yes">Used for camera capture images, shared variables, and "raw:" file access</property>
-                                    <property name="active">True</property>
+                                    <property name="tooltip_text" translatable="yes">Only needed if writing files directly to the external storage using "raw:" file paths on Android 9 or below </property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                 </child>
@@ -9815,6 +9814,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9835,6 +9837,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
