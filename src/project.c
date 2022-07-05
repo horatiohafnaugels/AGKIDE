@@ -1160,6 +1160,11 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
 		gchar *output_type = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 		int app_type = gtk_combo_box_get_active(GTK_COMBO_BOX_TEXT(widget));
+
+		int isGoogle = (app_type == 0 || app_type == 1) ? 1 : 0;
+		int isAmazon = (app_type == 2) ? 1 : 0;
+		int isOuya = (app_type == 3) ? 1 : 0;
+		int isBundle = (app_type == 0) ? 1 : 0;
 				
 		gchar *percent = 0;
 		while ( (percent = strchr(output_file, '%')) != 0 )
@@ -1193,6 +1198,23 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 
 		if ( !output_file || !*output_file ) { SHOW_ERR(_("You must choose an output location to save your APK")); goto android_dialog_clean_up; }
 		if ( strchr(output_file, '.') == 0 ) { SHOW_ERR(_("The output location must be a file not a directory")); goto android_dialog_clean_up; }
+
+		const char* desiredExt = ".apk";
+		if ( isBundle ) desiredExt = ".aab";
+
+		char* ext = strrchr( output_file, '.' );
+		if ( ext && strlen(ext) < 6 ) strcpy( ext, desiredExt );
+		else strcat( output_file, desiredExt );
+
+		if ( g_file_test( output_file, G_FILE_TEST_EXISTS ) )
+		{
+			if ( !dialogs_show_question("Output file already exists, do you want to overwrite it?") )
+			{
+				goto android_dialog_clean_up;
+			}
+
+			g_unlink( output_file );
+		}
 
 		// check app name
 		if ( !app_name || !*app_name ) { SHOW_ERR(_("You must enter an app name")); goto android_dialog_clean_up; }
@@ -1286,7 +1308,7 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 			if ( !g_file_test( notif_icon, G_FILE_TEST_EXISTS ) ) { SHOW_ERR(_("Could not find notification icon location")); goto android_dialog_clean_up; }
 		}
 
-		if ( app_type == 2 )
+		if ( isOuya )
 		{
 			//if ( !ouya_icon || !*ouya_icon ) { SHOW_ERR(_("You must select an Ouya large icon")); goto android_dialog_clean_up; }
 			if ( ouya_icon && *ouya_icon )
@@ -1335,11 +1357,11 @@ static void on_android_dialog_response(GtkDialog *dialog, gint response, gpointe
 		{
 			if ( !alias_password || !*alias_password ) { SHOW_ERR(_("You must enter your alias password when using a custom alias")); goto android_dialog_clean_up; }
 		}
-
-		int includeFirebase = (firebase_config && *firebase_config && (app_type == 0 || app_type == 1)) ? 1 : 0;
-		int includePushNotify = (permission_push && app_type == 0) ? 1 : 0;
-		int includeGooglePlay = (google_play_app_id && *google_play_app_id && app_type == 0) ? 1 : 0;
-		int includeAdMob = (admob_app_id && *admob_app_id && app_type == 0) ? 1 : 0;
+		
+		int includeFirebase = (firebase_config && *firebase_config && (isGoogle || isAmazon)) ? 1 : 0;
+		int includePushNotify = (permission_push && isGoogle) ? 1 : 0;
+		int includeGooglePlay = (google_play_app_id && *google_play_app_id && isGoogle) ? 1 : 0;
+		int includeAdMob = (admob_app_id && *admob_app_id && isGoogle) ? 1 : 0;
 
 		if ( includePushNotify && !includeFirebase )
 		{
@@ -1382,12 +1404,13 @@ android_dialog_continue:
 
 		// CHECKS COMPLETE, START EXPORT
 
-		const char* androidJar = "android29.jar";
+		const char* androidJar = "android30.jar";
 
 #if defined(G_OS_WIN32)
-		gchar* path_to_aapt2 = g_build_path( "\\", app->datadir, "android", "aapt2.exe", NULL );
+		gchar* path_to_aapt2 = g_build_path( "\\", app->datadir, "android", "aapt2-bundle.exe", NULL );
 		gchar* path_to_android_jar = g_build_path( "\\", app->datadir, "android", androidJar, NULL );
-		gchar* path_to_jarsigner = g_build_path( "\\", app->datadir, "android", "jre", "bin", "jarsigner.exe", NULL );
+		gchar* path_to_bundletool = g_build_path( "\\", app->datadir, "android", "bundletool.jar", NULL );
+		gchar* path_to_apksigner = g_build_path( "\\", app->datadir, "android", "apksigner.jar", NULL );
 		gchar* path_to_zipalign = g_build_path( "\\", app->datadir, "android", "zipalign.exe", NULL );
 
 		// convert forward slashes to backward slashes for parameters that will be passed to aapt2
@@ -1399,44 +1422,54 @@ android_dialog_continue:
         
         gchar* android_folder = g_build_filename( app->datadir, "android", NULL );
         gchar* src_folder;
-        if ( app_type == 2 ) src_folder = g_build_path( "/", app->datadir, "android", "sourceOuya", NULL );
-        else if ( app_type == 1 ) src_folder = g_build_path( "/", app->datadir, "android", "sourceAmazon", NULL );
+        if ( isOuya ) src_folder = g_build_path( "/", app->datadir, "android", "sourceOuya", NULL );
+        else if ( isAmazon ) src_folder = g_build_path( "/", app->datadir, "android", "sourceAmazon", NULL );
         else src_folder = g_build_path( "/", app->datadir, "android", "sourceGoogle", NULL );
 #elif defined(__APPLE__)
-        gchar* path_to_aapt2 = g_build_path( "/", app->configdir, "AndroidExport", "aapt2", NULL );
+        gchar* path_to_aapt2 = g_build_path( "/", app->configdir, "AndroidExport", "aapt2-bundle", NULL );
         gchar* path_to_android_jar = g_build_path( "/", app->configdir, "AndroidExport", androidJar, NULL );
-        gchar* path_to_jarsigner = g_strdup( "/usr/bin/jarsigner" );
+        gchar* path_to_bundletool = g_build_path( "\\", app->configdir, "android", "bundletool.jar", NULL );
+		gchar* path_to_apksigner = g_build_path( "\\", app->configdir, "android", "apksigner.jar", NULL );
         gchar* path_to_zipalign = g_build_path( "/", app->configdir, "AndroidExport", "zipalign", NULL );
         
         gchar* android_folder = g_build_filename( app->configdir, "AndroidExport", NULL );
         gchar* src_folder;
-        if ( app_type == 2 ) src_folder = g_build_path( "/", app->configdir, "AndroidExport", "sourceOuya", NULL );
-        else if ( app_type == 1 ) src_folder = g_build_path( "/", app->configdir, "AndroidExport", "sourceAmazon", NULL );
+        if ( isOuya ) src_folder = g_build_path( "/", app->configdir, "AndroidExport", "sourceOuya", NULL );
+        else if ( isAmazon ) src_folder = g_build_path( "/", app->configdir, "AndroidExport", "sourceAmazon", NULL );
         else src_folder = g_build_path( "/", app->configdir, "AndroidExport", "sourceGoogle", NULL );
 #else
-		gchar* path_to_aapt2 = g_build_path( "/", app->datadir, "android", "aapt2", NULL );
+		//SHOW_ERR1 ( _ ( "Path: %s" ), app->datadir );
+		gchar* path_to_aapt2 = g_build_path( "/", app->datadir, "android", "aapt2-bundle", NULL );
 		gchar* path_to_android_jar = g_build_path( "/", app->datadir, "android", androidJar, NULL );
-        gchar* path_to_jarsigner = g_build_path( "/", app->datadir, "android", "jre", "bin", "jarsigner", NULL );
+        gchar* path_to_bundletool = g_build_path( "\\", app->datadir, "android", "bundletool.jar", NULL );
+		gchar* path_to_apksigner = g_build_path( "\\", app->datadir, "android", "apksigner.jar", NULL );
 		gchar* path_to_zipalign = g_build_path( "/", app->datadir, "android", "zipalign", NULL );
         
         gchar* android_folder = g_build_filename( app->datadir, "android", NULL );
         gchar* src_folder;
-        if ( app_type == 2 ) src_folder = g_build_path( "/", app->datadir, "android", "sourceOuya", NULL );
-        else if ( app_type == 1 ) src_folder = g_build_path( "/", app->datadir, "android", "sourceAmazon", NULL );
+        if ( isOuya ) src_folder = g_build_path( "/", app->datadir, "android", "sourceOuya", NULL );
+        else if ( isAmazon ) src_folder = g_build_path( "/", app->datadir, "android", "sourceAmazon", NULL );
         else src_folder = g_build_path( "/", app->datadir, "android", "sourceGoogle", NULL );
 #endif
 
 		// make temporary folder
 		gchar* tmp_folder = g_build_filename( app->project->base_path, "build_tmp", NULL );
-
+		
 		utils_str_replace_char( android_folder, '\\', '/' );
 		utils_str_replace_char( tmp_folder, '\\', '/' );
 		utils_str_replace_char( src_folder, '\\', '/' );
 
+		utils_remove_folder_recursive( tmp_folder );
+		
 		gchar *output_file_zip = g_strdup( output_file );
-		gchar *ext = strrchr( output_file_zip, '.' );
-		if ( ext ) *ext = 0;
+		ext = strrchr( output_file_zip, '.' );
+		if ( ext && strlen(ext) < 6 ) *ext = 0;
 		SETPTR( output_file_zip, g_strconcat( output_file_zip, ".zip", NULL ) );
+
+		if ( g_file_test( output_file_zip, G_FILE_TEST_EXISTS ) )
+		{
+			g_unlink( output_file_zip );
+		}
 
 		if ( !keystore_file || !*keystore_file )
 		{
@@ -1483,8 +1516,6 @@ android_dialog_continue:
 		gchar *image_filename = NULL;
 		GdkPixbuf *icon_scaled_image = NULL;
 		gchar **argv = NULL;
-		gchar **argv2 = NULL;
-		gchar **argv3 = NULL;
 		gint status = 0;
 		mz_zip_archive zip_archive;
 		memset(&zip_archive, 0, sizeof(zip_archive));
@@ -1494,6 +1525,67 @@ android_dialog_continue:
 		gint package_count = 0;
 		gint package_index = 0;
 
+		// check for java
+		argv = g_new0( gchar*, 3 );
+		argv[0] = g_strdup( "which" );
+		argv[1] = g_strdup( "java" );
+		argv[2] = NULL;
+
+		#ifdef G_OS_WIN32
+			argv [ 0 ] = g_strdup ( "where" );
+		#endif
+
+		if ( !utils_spawn_sync( app->project->base_path, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( _("Failed to check for Java: %s"), error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+
+#ifdef G_OS_WIN32
+		if ( !str_out || str_out[0] == 0 || str_out[1] != ':' ) 
+#else
+		if ( !str_out || str_out[0] != '/' ) 
+#endif
+		{
+			SHOW_ERR( _("Could not find Java, make sure you have the Java Development Kit (JDK) 8 or above installed") );
+			goto android_dialog_cleanup2;
+		}
+
+		if ( str_out ) g_free(str_out);
+		str_out = 0;
+
+		argv[1] = g_strdup( "jarsigner" );
+
+		if ( !utils_spawn_sync( app->project->base_path, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		{
+			SHOW_ERR1( _("Failed to check for Jarsigner: %s"), error->message );
+			g_error_free(error);
+			error = NULL;
+			goto android_dialog_cleanup2;
+		}
+
+#ifdef G_OS_WIN32
+		if ( !str_out || str_out[0] == 0 || str_out[1] != ':' ) 
+#else
+		if ( !str_out || str_out[0] != '/' ) 
+#endif
+		{
+			SHOW_ERR( _("Could not find Jarsigner, make sure you have the Java Development Kit (JDK) 8 or above installed") );
+			goto android_dialog_cleanup2;
+		}
+
+		if ( str_out ) g_free(str_out);
+		str_out = 0;
+
+		g_strfreev(argv);
+		argv = 0;
+
+		while (gtk_events_pending())
+			gtk_main_iteration();
+
+		// copy android export files to tmp folder
 		if ( !utils_copy_folder( src_folder, tmp_folder, TRUE, NULL ) )
 		{
 			SHOW_ERR1( _("Failed to copy source folder %s"), src_folder );
@@ -1526,14 +1618,12 @@ android_dialog_continue:
     <uses-sdk android:minSdkVersion=\"" );
 		
 		strcat( newcontents, szSDK );
-			
+		
+		// mike - 021221 - ensure we target SDK version 30
 		strcat( newcontents, "\" android:targetSdkVersion=\"" );
-		if ( app_type == 0 ) // Google
-			strcat( newcontents, "29" );
-		else if ( app_type == 1 ) // amazon
-			strcat( newcontents, "22" );
-		else // Ouya (legacy)
-			strcat( newcontents, "16" );
+		if ( isGoogle ) strcat( newcontents, "30" );
+		else if ( isAmazon ) strcat( newcontents, "22" );
+		else strcat( newcontents, "16" );
 		strcat( newcontents, "\" />\n\n" );
 
 		if ( permission_external_storage ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"></uses-permission>\n" );
@@ -1544,12 +1634,12 @@ android_dialog_continue:
 			strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"></uses-permission>\n" );
 		}
 		if ( permission_wake ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.WAKE_LOCK\"></uses-permission>\n" );
-		if ( permission_location_coarse && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"></uses-permission>\n" );
-		if ( permission_location_fine && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"></uses-permission>\n" );
-		if ( permission_billing && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.BILLING\"></uses-permission>\n" );
+		if ( permission_location_coarse && isGoogle ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"></uses-permission>\n" );
+		if ( permission_location_fine && isGoogle ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"></uses-permission>\n" );
+		if ( permission_billing && isGoogle ) strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.BILLING\"></uses-permission>\n" );
 		if ( permission_camera ) strcat( newcontents, "    <uses-permission android:name=\"android.permission.CAMERA\"></uses-permission>\n" );
-		if ( ((google_play_app_id && *google_play_app_id) || permission_push) && app_type == 0 ) strcat( newcontents, "    <uses-permission android:name=\"com.google.android.c2dm.permission.RECEIVE\" />\n" );
-		if ( permission_push && app_type == 0 ) 
+		if ( ((google_play_app_id && *google_play_app_id) || permission_push) && isGoogle ) strcat( newcontents, "    <uses-permission android:name=\"com.google.android.c2dm.permission.RECEIVE\" />\n" );
+		if ( permission_push && isGoogle ) 
 		{
 			strcat( newcontents, "    <permission android:name=\"" );
 			strcat( newcontents, package_name );
@@ -1558,7 +1648,7 @@ android_dialog_continue:
 			strcat( newcontents, package_name );
 			strcat( newcontents, ".permission.C2D_MESSAGE\" />\n" );
 		}
-		if ( permission_expansion && app_type == 0 ) 
+		if ( permission_expansion && isGoogle ) 
 		{
 			//strcat( newcontents, "    <uses-permission android:name=\"android.permission.GET_ACCOUNTS\"></uses-permission>\n" );
 			strcat( newcontents, "    <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\"></uses-permission>\n" );
@@ -1714,7 +1804,7 @@ android_dialog_continue:
 		// write the rest of the manifest file
 		strcat( newcontents, contents2 );
 
-		if ( permission_expansion && app_type == 0 ) 
+		if ( permission_expansion && isGoogle ) 
 		{
 			strcat( newcontents, "\n\
 		<service android:name=\"com.google.android.vending.expansion.downloader.impl.DownloaderService\"\n\
@@ -1724,7 +1814,7 @@ android_dialog_continue:
 		}
 
 		// Google sign in
-		if ( app_type == 0 )
+		if ( isGoogle )
 		{
 			strcat( newcontents, "\n\
 		<activity android:name=\"com.google.android.gms.auth.api.signin.internal.SignInHubActivity\"\n\
@@ -1737,7 +1827,7 @@ android_dialog_continue:
 		}
 
 		// IAP Purchase Activity
-		if ( permission_billing && app_type == 0 )
+		if ( permission_billing && isGoogle )
 		{
 			strcat(newcontents, "\n\
 			<meta-data\n\
@@ -1930,7 +2020,7 @@ android_dialog_continue:
 		// repair original file
 		*contents2 = '>';
 
-		if ( app_type == 0 && google_play_app_id && *google_play_app_id )
+		if ( isGoogle && google_play_app_id && *google_play_app_id )
 		{
 			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
 			contents2 = strstr( newcontents2, "<string name=\"games_app_id\">" );
@@ -1962,7 +2052,7 @@ android_dialog_continue:
 		}
 
 		// admob app id
-		if ( app_type == 0 && admob_app_id && *admob_app_id )
+		if ( isGoogle && admob_app_id && *admob_app_id )
 		{
 			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
 			contents2 = strstr( newcontents2, "<string name=\"admob_app_id\">" );
@@ -1994,7 +2084,7 @@ android_dialog_continue:
 		}
 
 		// snapchat client id
-		if ( app_type == 0 && snapchat_client_id && *snapchat_client_id )
+		if ( isGoogle && snapchat_client_id && *snapchat_client_id )
 		{
 			memcpy( newcontents2, newcontents, AGK_NEW_CONTENTS_SIZE );
 			contents2 = strstr( newcontents2, "<string name=\"snap_chat_id\">" );
@@ -2026,7 +2116,7 @@ android_dialog_continue:
 		}
 
 		// firebase
-		if ( firebase_config && *firebase_config && (app_type == 0 || app_type == 1) ) // Google and Amazon only
+		if ( firebase_config && *firebase_config && (isGoogle || isAmazon) ) // Google and Amazon only
 		{
 			// read json values
 			if ( !g_file_get_contents( firebase_config, &contentsOther, &resLength, &error ) )
@@ -2330,6 +2420,9 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 
+		g_strfreev(argv);
+		argv = 0;
+
 		// compile values.xml file
 	#ifdef G_OS_WIN32
 		strcpy( aaptcommand, "compile\n-o\nresMerged\nresOrig\\values\\values.xml\n\n" );
@@ -2358,7 +2451,7 @@ android_dialog_continue:
 			}
 
 			// scale it and save it
-			if ( app_type == 0 || app_type == 1 )
+			if ( isGoogle || isAmazon )
 			{
 				// 192x192
 				image_filename = g_build_path( "/", tmp_folder, "resOrig", "drawable-xxxhdpi", "icon.png", NULL );
@@ -2401,12 +2494,12 @@ android_dialog_continue:
 				write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 			}
 
-			const gchar* szDrawable_xhdpi = (app_type == 2) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
-			const gchar* szDrawable_hdpi = (app_type == 2) ? "drawable-hdpi-v4" : "drawable-hdpi";
-			const gchar* szDrawable_mdpi = (app_type == 2) ? "drawable-mdpi-v4" : "drawable-mdpi";
-			const gchar* szDrawable_ldpi = (app_type == 2) ? "drawable-ldpi-v4" : "drawable-ldpi";
+			const gchar* szDrawable_xhdpi = (isOuya) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
+			const gchar* szDrawable_hdpi = (isOuya) ? "drawable-hdpi-v4" : "drawable-hdpi";
+			const gchar* szDrawable_mdpi = (isOuya) ? "drawable-mdpi-v4" : "drawable-mdpi";
+			const gchar* szDrawable_ldpi = (isOuya) ? "drawable-ldpi-v4" : "drawable-ldpi";
 
-			const gchar* szMainIcon = (app_type == 2) ? "app_icon.png" : "icon.png";
+			const gchar* szMainIcon = (isOuya) ? "app_icon.png" : "icon.png";
 			
 			// 96x96
 			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_xhdpi, szMainIcon, NULL );
@@ -2502,7 +2595,7 @@ android_dialog_continue:
 		}
 
 		// load notification icon file
-		if ( notif_icon && *notif_icon && (app_type == 0 || app_type == 1) )
+		if ( notif_icon && *notif_icon && (isGoogle || isAmazon) )
 		{
 			if ( icon_image ) gdk_pixbuf_unref(icon_image);
 			icon_image = gdk_pixbuf_new_from_file( notif_icon, &error );
@@ -2555,10 +2648,10 @@ android_dialog_continue:
 		#endif
 			write(aapt2_in.fd, aaptcommand, strlen(aaptcommand) );
 
-			const gchar* szDrawable_xhdpi = (app_type == 2) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
-			const gchar* szDrawable_hdpi = (app_type == 2) ? "drawable-hdpi-v4" : "drawable-hdpi";
-			const gchar* szDrawable_mdpi = (app_type == 2) ? "drawable-mdpi-v4" : "drawable-mdpi";
-			const gchar* szDrawable_ldpi = (app_type == 2) ? "drawable-ldpi-v4" : "drawable-ldpi";
+			const gchar* szDrawable_xhdpi = (isOuya) ? "drawable-xhdpi-v4" : "drawable-xhdpi";
+			const gchar* szDrawable_hdpi = (isOuya) ? "drawable-hdpi-v4" : "drawable-hdpi";
+			const gchar* szDrawable_mdpi = (isOuya) ? "drawable-mdpi-v4" : "drawable-mdpi";
+			const gchar* szDrawable_ldpi = (isOuya) ? "drawable-ldpi-v4" : "drawable-ldpi";
 
 			// 48x48
 			image_filename = g_build_path( "/", tmp_folder, "resOrig", szDrawable_xhdpi, "icon_white.png", NULL );
@@ -2654,7 +2747,7 @@ android_dialog_continue:
 		}
 
 		// load ouya icon and check size
-		if ( app_type == 2 && ouya_icon && *ouya_icon )
+		if ( isOuya && ouya_icon && *ouya_icon )
 		{
 			if ( icon_image ) gdk_pixbuf_unref(icon_image);
 			icon_image = gdk_pixbuf_new_from_file( ouya_icon, &error );
@@ -2719,6 +2812,11 @@ android_dialog_continue:
 		strcat( aaptcommand, "/AndroidManifest.xml\n-o\n" );
 		strcat( aaptcommand, output_file );
 		strcat( aaptcommand, "\n--auto-add-overlay\n--no-version-vectors\n" );
+
+		if ( isBundle )
+		{
+			strcat( aaptcommand, "--proto-format\n" );
+		}
 
 		gchar* resMergedPath = g_build_filename( tmp_folder, "resMerged", NULL );
 		GDir *dir = g_dir_open(resMergedPath, 0, NULL);
@@ -2788,6 +2886,148 @@ android_dialog_continue:
 
 		g_rename( output_file, output_file_zip );
 
+		if ( isBundle )
+		{
+			// need to extract and recreate zip file to move AndroidManifest.xml file
+			mz_zip_archive zip_archive;
+			memset(&zip_archive, 0, sizeof(zip_archive));
+			if ( !mz_zip_reader_init_file( &zip_archive, output_file_zip, 0 ) )
+			{
+				mz_zip_reader_end( &zip_archive );
+				SHOW_ERR( "Failed to open output zip file" );
+				goto android_dialog_cleanup2;
+			}
+
+			gchar* bundle_folder = g_build_filename( app->project->base_path, "build_bundle", NULL );
+			utils_str_replace_char( bundle_folder, '\\', '/' );
+			utils_remove_folder_recursive( bundle_folder );
+
+			int numFiles = mz_zip_reader_get_num_files( &zip_archive );
+			char filename[ 1024 ];
+			int i;
+			for( i = 0; i < numFiles; i++ )
+			{
+				mz_zip_reader_get_filename( &zip_archive, i, filename, 1024 );
+				gchar* final_path = g_build_path( "/", bundle_folder, filename, NULL );
+				
+				if ( mz_zip_reader_is_file_a_directory( &zip_archive, i ) ) 
+				{
+					if ( !g_file_test( final_path, G_FILE_TEST_EXISTS ) ) 
+					{
+						if ( g_mkdir_with_parents( final_path, 0755 ) < 0 )
+						{
+							SHOW_ERR( "Failed to create folder in the projects directory" );
+							mz_zip_reader_end( &zip_archive );
+							g_free(bundle_folder);
+							g_free(final_path);
+							goto android_dialog_cleanup2;
+						}
+					}
+					g_free(final_path);
+					continue;
+				}
+            
+				char* withoutFile = (char*)malloc( strlen(final_path)+1 );
+				strcpy( withoutFile, final_path );
+				char *szSlash = strrchr( withoutFile, '/' );
+				if ( szSlash ) *szSlash = 0;
+            
+				// create directory
+				if ( !g_file_test( withoutFile, G_FILE_TEST_EXISTS ) ) 
+				{
+					if ( g_mkdir_with_parents( withoutFile, 0755 ) < 0 )
+					{
+						SHOW_ERR( "Failed to create folder in the projects directory" );
+						mz_zip_reader_end( &zip_archive );
+						g_free(bundle_folder);
+						g_free(final_path);
+						g_free(withoutFile);
+						goto android_dialog_cleanup2;
+					}
+				}
+            
+				free(withoutFile);
+            
+				mz_zip_reader_extract_to_file( &zip_archive, i, final_path, 0 );
+            
+				g_free(final_path);
+			}
+        
+			mz_zip_reader_end( &zip_archive );
+						
+			// move manifest
+			gchar* old_manifest_path = g_build_path( "/", bundle_folder, "AndroidManifest.xml", NULL );
+			gchar* new_manifest_path = g_build_path( "/", bundle_folder, "manifest", "AndroidManifest.xml", NULL );
+			
+			gchar *contents = 0;
+			gsize length = 0;
+
+			if ( !g_file_get_contents( old_manifest_path, &contents, &length, NULL ) )
+			{
+				SHOW_ERR1( "Failed to read manifest file at %s", old_manifest_path );
+				g_free(bundle_folder);
+				g_free(new_manifest_path);
+				g_free(old_manifest_path);
+				goto android_dialog_cleanup2;
+			}
+
+			gchar* new_manifest_folder = g_build_path( "/", bundle_folder, "manifest", NULL );
+			g_mkdir_with_parents( new_manifest_folder, 0755 );
+			g_free( new_manifest_folder );
+
+			if ( !g_file_set_contents( new_manifest_path, contents, length, NULL ) )
+			{
+				SHOW_ERR1( "Failed to write manifest file at %s", new_manifest_path );
+				g_free(contents);
+				g_free(bundle_folder);
+				g_free(new_manifest_path);
+				g_free(old_manifest_path);
+				goto android_dialog_cleanup2;
+			}
+    
+			g_free(contents);
+
+			g_unlink( old_manifest_path );
+
+			g_free(new_manifest_path);
+			g_free(old_manifest_path);
+
+			g_unlink( output_file_zip );
+
+			// zip everything back up
+			memset(&zip_archive, 0, sizeof(zip_archive));
+			if ( !mz_zip_writer_init_file( &zip_archive, output_file_zip, 0 ) )
+			{
+				SHOW_ERR( _("Failed to initialise zip file for writing") );
+				g_free(bundle_folder);
+				goto android_dialog_cleanup2;
+			}
+		
+			if ( !utils_add_folder_to_zip( &zip_archive, bundle_folder, "", TRUE, TRUE ) )
+			{
+				SHOW_ERR( _("Failed to add files to zip file") );
+				g_free(bundle_folder);
+				goto android_dialog_cleanup2;
+			}
+
+			if ( !mz_zip_writer_finalize_archive( &zip_archive ) )
+			{
+				SHOW_ERR( _("Failed to finalize zip file") );
+				g_free(bundle_folder);
+				goto android_dialog_cleanup2;
+			}
+			if ( !mz_zip_writer_end( &zip_archive ) )
+			{
+				SHOW_ERR( _("Failed to end zip file") );
+				g_free(bundle_folder);
+				goto android_dialog_cleanup2;
+			}
+
+			// remove temp folder
+			utils_remove_folder_recursive( bundle_folder );
+			g_free(bundle_folder);
+		}
+
 		// open APK as a zip file
 		if ( !mz_zip_reader_init_file( &zip_archive, output_file_zip, 0 ) )
 		{
@@ -2802,7 +3042,7 @@ android_dialog_continue:
 
 		// copy in extra files
 		zip_add_file = g_build_path( "/", src_folder, "classes.dex", NULL );
-		mz_zip_writer_add_file( &zip_archive, "classes.dex", zip_add_file, NULL, 0, 9 );
+		mz_zip_writer_add_file( &zip_archive, (isBundle) ? "dex/classes.dex" : "classes.dex", zip_add_file, NULL, 0, 9 );
 		
 		g_free( zip_add_file );
 		zip_add_file = g_build_path( "/", android_folder, "lib", "arm64-v8a", "libandroid_player.so", NULL );
@@ -2838,7 +3078,7 @@ android_dialog_continue:
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
-		if ( app_type != 2 )
+		if ( !isOuya )
 		{
 			// copy assets for Google and Amazon
 			g_free( zip_add_file );
@@ -2873,32 +3113,126 @@ android_dialog_continue:
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
-		// sign apk
-		argv2 = g_new0( gchar*, 14 );
-		argv2[0] = g_strdup( path_to_jarsigner );
-		argv2[1] = g_strdup("-sigalg");
-		argv2[2] = g_strdup("MD5withRSA");
-		argv2[3] = g_strdup("-digestalg");
-		argv2[4] = g_strdup("SHA1");
-		argv2[5] = g_strdup("-storepass");
-#ifdef G_OS_WIN32
-		argv2[6] = g_strconcat( "\"", keystore_password, "\"", NULL );
-#else
-		argv2[6] = g_strdup( keystore_password );
-#endif
-		argv2[7] = g_strdup("-keystore");
-		argv2[8] = g_strdup(keystore_file);
-		argv2[9] = g_strdup(output_file_zip);
-		argv2[10] = g_strdup(alias_name);
-		argv2[11] = g_strdup("-keypass");
-#ifdef G_OS_WIN32
-		argv2[12] = g_strconcat( "\"", alias_password, "\"", NULL );
-#else
-		argv2[12] = g_strdup( alias_password );
-#endif
-		argv2[13] = NULL;
+		if ( isBundle )
+		{
+			// run bundletool
+			argv = g_new0( gchar*, 11 );
+			argv[0] = g_strdup( "java" );
+			argv[1] = g_strdup( "-jar" );
+			argv[2] = g_strdup( path_to_bundletool );
+			argv[3] = g_strdup( "build-bundle" );
+			argv[4] = g_strdup( "--modules" );
+			argv[5] = g_strdup( output_file_zip );
 
-		if ( !utils_spawn_sync( tmp_folder, argv2, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+			gchar* mapping_file_path = g_build_path( "/", src_folder, "mapping", "mapping.txt", NULL );
+			if ( g_file_test( mapping_file_path, G_FILE_TEST_EXISTS ) )
+			{
+				argv[6] = g_strdup( "--metadata-file" );
+				argv[7] = g_strconcat( "com.android.tools.build.obfuscation/proguard.map:", mapping_file_path, NULL );
+
+				/*
+				#ifdef G_OS_WIN32
+					// mike - 031221 - use bundle config file - DOES NOT WORK FOR SOME REASON
+					gchar* bundleConfig = g_build_path ( "/", src_folder, "", "BundleConfig.json", NULL );
+
+					argv [ 8 ] = g_strdup ( "--config" );
+					argv [ 9 ] = g_strdup ( bundleConfig );
+					argv [ 10 ] = g_strdup ( "--output" );
+					argv [ 11 ] = g_strdup ( output_file );
+					argv [ 12 ] = NULL;
+				#else
+					argv[8] = g_strdup( "--output" );
+					argv[9] = g_strdup( output_file );
+					argv[10] = NULL;
+				#endif
+				*/
+
+				argv [ 8 ] = g_strdup ( "--output" );
+				argv [ 9 ] = g_strdup ( output_file );
+				argv [ 10 ] = NULL;
+			}
+			else
+			{
+				/*
+				#ifdef G_OS_WIN32
+				// mike - 031221 - use bundle config file - DOES NOT WORK FOR SOME REASON
+					gchar* bundleConfig = g_build_path ( "/", src_folder, "", "BundleConfig.json", NULL );
+
+					argv [ 8 ] = g_strdup ( "--config" );
+					argv [ 9 ] = g_strdup ( bundleConfig );
+					argv [ 10 ] = g_strdup ( "--output" );
+					argv [ 11 ] = g_strdup ( output_file );
+					argv [ 12 ] = NULL;
+				#else
+					argv [ 6 ] = g_strdup ( "--output" );
+					argv [ 7 ] = g_strdup ( output_file );
+					argv [ 8 ] = NULL;
+				#endif
+				*/
+
+				
+				argv [ 6 ] = g_strdup ( "--output" );
+				argv [ 7 ] = g_strdup ( output_file );
+				argv [ 8 ] = NULL;
+			}
+
+			g_free(mapping_file_path);
+			
+			if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+			{
+				SHOW_ERR1( _("Failed to run bundletool: %s"), error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+		
+			if ( status != 0 && str_out && *str_out )
+			{
+				SHOW_ERR1( _("Failed to run bundletool, (output: %s)"), str_out );
+				goto android_dialog_cleanup2;
+			}
+
+			if ( str_out ) g_free(str_out);
+			str_out = 0;
+
+			g_strfreev(argv);
+			argv = 0;
+
+			while (gtk_events_pending())
+				gtk_main_iteration();
+		}
+
+		// sign apk
+		int argIndex = 0;
+		argv = g_new0( gchar*, 14 );
+		argv[argIndex++] = g_strdup( "jarsigner" );
+		if ( !isBundle )
+		{
+			argv[argIndex++] = g_strdup("-sigalg");
+			argv[argIndex++] = g_strdup("MD5withRSA");
+			argv[argIndex++] = g_strdup("-digestalg");
+			argv[argIndex++] = g_strdup("SHA1");
+		}
+		argv[argIndex++] = g_strdup("-storepass");
+#ifdef G_OS_WIN32
+		argv[argIndex++] = g_strconcat( "\"", keystore_password, "\"", NULL );
+#else
+		argv[argIndex++] = g_strdup( keystore_password );
+#endif
+		argv[argIndex++] = g_strdup("-keystore");
+		argv[argIndex++] = g_strdup(keystore_file);
+		if ( isBundle ) argv[argIndex++] = g_strdup(output_file);
+		else argv[argIndex++] = g_strdup(output_file_zip);
+		argv[argIndex++] = g_strdup(alias_name);
+		argv[argIndex++] = g_strdup("-keypass");
+#ifdef G_OS_WIN32
+		argv[argIndex++] = g_strconcat( "\"", alias_password, "\"", NULL );
+#else
+		argv[argIndex++] = g_strdup( alias_password );
+#endif
+		argv[argIndex++] = NULL;
+
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
 			SHOW_ERR1( _("Failed to run signing tool: %s"), error->message );
 			g_error_free(error);
@@ -2906,7 +3240,7 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 		
-		if ( status != 0 && str_out && *str_out && strstr(str_out,"jar signed.") == 0 )
+		if ( status != 0 && str_out && *str_out && strstr(str_out,"jar signed") == 0 )
 		{
 			SHOW_ERR1( _("Failed to sign APK, is your keystore password and alias correct? (error: %s)"), str_out );
 			goto android_dialog_cleanup2;
@@ -2915,18 +3249,21 @@ android_dialog_continue:
 		if ( str_out ) g_free(str_out);
 		str_out = 0;
 
+		g_strfreev(argv);
+		argv = 0;
+
 		while (gtk_events_pending())
 			gtk_main_iteration();
 
 		// align apk
-		argv3 = g_new0( gchar*, 5 );
-		argv3[0] = g_strdup( path_to_zipalign );
-		argv3[1] = g_strdup("4");
-		argv3[2] = g_strdup(output_file_zip);
-		argv3[3] = g_strdup(output_file);
-		argv3[4] = NULL;
+		argv = g_new0( gchar*, 5 );
+		argv[0] = g_strdup( path_to_zipalign );
+		argv[1] = g_strdup("4");
+		argv[2] = g_strdup(output_file_zip);
+		argv[3] = g_strdup(output_file);
+		argv[4] = NULL;
 
-		if ( !utils_spawn_sync( tmp_folder, argv3, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+		if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
 		{
 			SHOW_ERR1( _("Failed to run zipalign tool: %s"), error->message );
 			g_error_free(error);
@@ -2940,8 +3277,66 @@ android_dialog_continue:
 			goto android_dialog_cleanup2;
 		}
 
+		if ( str_out ) g_free(str_out);
+		str_out = 0;
+
+		g_strfreev(argv);
+		argv = 0;
+
 		while (gtk_events_pending())
 			gtk_main_iteration();
+
+		if ( !isBundle )
+		{
+			// sign with V2 signature
+			argIndex = 0;
+			argv = g_new0( gchar*, 15 );
+			argv[argIndex++] = g_strdup( "java" );
+			argv[argIndex++] = g_strdup( "-jar" );
+			argv[argIndex++] = g_strdup( path_to_apksigner );
+			argv[argIndex++] = g_strdup( "sign" );
+			argv[argIndex++] = g_strdup( "--ks" );
+			argv[argIndex++] = g_strdup( keystore_file );
+			argv[argIndex++] = g_strdup( "--ks-pass" );
+	#ifdef G_OS_WIN32
+			argv[argIndex++] = g_strconcat( "pass:\"", keystore_password, "\"", NULL );
+	#else
+			argv[argIndex++] = g_strconcat( "pass:", keystore_password, NULL );
+	#endif
+			argv[argIndex++] = g_strdup( "--ks-key-alias" );
+			argv[argIndex++] = g_strdup( alias_name );
+			argv[argIndex++] = g_strdup( "--key-pass" );
+	#ifdef G_OS_WIN32
+			argv[argIndex++] = g_strconcat( "pass:\"", alias_password, "\"", NULL );
+	#else
+			argv[argIndex++] = g_strconcat( "pass:", alias_password, NULL );
+	#endif
+			argv[argIndex++] = g_strdup( output_file );
+			argv[argIndex++] = NULL;
+
+			if ( !utils_spawn_sync( tmp_folder, argv, NULL, 0, NULL, NULL, &str_out, NULL, &status, &error) )
+			{
+				SHOW_ERR1( _("Failed to run apksigner tool: %s"), error->message );
+				g_error_free(error);
+				error = NULL;
+				goto android_dialog_cleanup2;
+			}
+		
+			if ( status != 0 && str_out && *str_out )
+			{
+				SHOW_ERR1( _("Failed to sign APK with apksigner, is your keystore password and alias correct? (error: %s)"), str_out );
+				goto android_dialog_cleanup2;
+			}
+
+			if ( str_out ) g_free(str_out);
+			str_out = 0;
+
+			g_strfreev(argv);
+			argv = 0;
+
+			while (gtk_events_pending())
+				gtk_main_iteration();
+		}
 
 		if ( dialog ) gtk_widget_hide(GTK_WIDGET(dialog));
 
@@ -2964,7 +3359,8 @@ android_dialog_cleanup2:
 
 		if ( path_to_aapt2 ) g_free(path_to_aapt2);
 		if ( path_to_android_jar ) g_free(path_to_android_jar);
-		if ( path_to_jarsigner ) g_free(path_to_jarsigner);
+		if ( path_to_bundletool ) g_free(path_to_bundletool);
+		if ( path_to_apksigner ) g_free(path_to_apksigner);
 		if ( path_to_zipalign ) g_free(path_to_zipalign);
 
 		if ( zip_add_file ) g_free(zip_add_file);
@@ -2979,8 +3375,6 @@ android_dialog_cleanup2:
 		if ( image_filename ) g_free(image_filename);
 		if ( icon_scaled_image ) gdk_pixbuf_unref(icon_scaled_image);
 		if ( argv ) g_strfreev(argv);
-		if ( argv2 ) g_strfreev(argv2);
-		if ( argv3 ) g_strfreev(argv3);
 		if ( aaptcommand ) g_free(aaptcommand);
 		
 		if ( output_file_zip ) g_free(output_file_zip);
@@ -3564,7 +3958,7 @@ void on_android_all_dialog_response(GtkDialog *dialog, gint response, gpointer u
 		on_android_dialog_response( 0, 1, 1 ); // no dialog, export response, don't save settings
 
 		widget = ui_lookup_widget(ui_widgets.android_dialog, "android_output_type_combo");
-		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 1 ); // Amazon
+		gtk_combo_box_set_active( GTK_COMBO_BOX(widget), 2 ); // Amazon
 
 		filename = g_strconcat( app->project->name, "-Amazon-", version_number, ".apk", NULL );
 		apk_path = g_build_filename( output_file, filename, NULL );
@@ -3794,6 +4188,28 @@ keystore_dialog_continue:
 
 		;
 
+		FILE* fp = NULL;
+		gchar* buffer = NULL;
+		long lSize = 0;
+
+		gchar* keytoolFile = g_build_path ( "/", app->datadir, "keytool.txt", NULL );
+
+		fp = fopen ( keytoolFile, "rt" );
+
+		if ( fp )
+		{
+			fseek ( fp, 0, SEEK_END );
+			lSize = ftell ( fp );
+			rewind ( fp );
+
+			// allocate memory to contain the whole file:
+			buffer = ( gchar* ) malloc ( sizeof ( gchar ) * lSize );
+
+			fread ( buffer, 1, lSize, fp );
+
+			fclose ( fp );
+		}
+
 		// CHECKS COMPLETE, START KEY GENERATION
 
 #if defined(G_OS_WIN32)
@@ -3803,6 +4219,14 @@ keystore_dialog_continue:
 #else
         gchar* path_to_keytool = g_build_path( "/", app->datadir, "android", "jre", "bin", "keytool", NULL );
 #endif
+
+		if ( buffer )
+		{
+			path_to_keytool = g_build_path ( "/", buffer, NULL );
+
+			free ( buffer );
+			buffer = NULL;
+		}
 
 		// decalrations
 		gchar **argv = NULL;
@@ -3825,6 +4249,7 @@ keystore_dialog_continue:
 			g_free(output_file);
 			output_file = global_project_prefs.project_file_path;
 		}
+
 
 		if ( !g_file_test( path_to_keytool, G_FILE_TEST_EXISTS ) )
 		{
@@ -4859,6 +5284,438 @@ ios_dialog_continue:
 
 		if ( device_type == 1 ) utils_str_replace_all( &contents, "\t\t<integer>2</integer>\n", "" );
 		else if ( device_type == 2 ) utils_str_replace_all( &contents, "\t\t<integer>1</integer>\n", "" );
+
+		//
+		if ( uses_ads )
+		{
+			//char advert [ 1024 ] = "";
+
+			
+			gchar* advert = g_new0 ( gchar*, 30000 );
+
+			
+			strcpy ( advert, "<key>NSUserTrackingUsageDescription</key>\n" );
+			strcat ( advert, "<string>This identifier will be used to deliver personalized ads to you.</string>\n" );
+			strcat ( advert, "<key>SKAdNetworkItems</key>\n" );
+			strcat ( advert, "<array>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>2u9pt9hc89.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>44jx6755aq.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>4fzdc2evr5.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>4pfyvq9l8r.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>737z793b9f.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>7ug5zh24hu.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>8s468mfl3y.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>9rd848q2bz.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>9t245vhmpl.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>av6w8kgt66.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>c6k4g5qg8m.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>cj5566h2ga.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>F38H382JLK.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>glqzh8vgby.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>hs6bdukanm.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>mlmmfzh3r3.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>prcb7njmu6.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>t38b2kh725.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>tl55sbb4fm.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>w9q455wk68.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>wg4vff78zm.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>yclnxrl5pm.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>ydx93a7ass.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>s39g8k73mm.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>m8dbw4sv7c.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>4468km3ulz.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>8s468mfl3y.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>lr83yxwka7.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>9nlqeag3gk.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>mls7yz5dvl.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>p78axxw29g.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>v72qych5uu.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>6xzpu9s2p8.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>g28c52eehv.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>523jb4fst2.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>ggvn48r87g.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>3sh42y64q3.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>24t9a8vw3c.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>ejvt5qm6ak.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>cstr6suwn9.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>wzmmz9fp6w.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>5lm9lj6jb7.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>zmvfpc5aq8.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>7rz58n8ntl.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>feyaarzu9v.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>n9x2a789qt.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>5a6flpkh64.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>424m5254lk.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>5l3tpt7t6e.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>uw77j35x4d.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>gta9lk7p23.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>kbd757ywx3.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>cg4yq2srnc.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>ludvb6z3bs.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>22mmun2rn5.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>su67r6k2v3.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>4w7y6s5ca2.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>klf5c3l5u5.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>dzg6xy7pwj.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>y45688jllp.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>hdw39hrw9y.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>ppxm28t8ap.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>4dzt52r2t5.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>mtkv5xtk9e.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>5tjdwbrq8w.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>3rd42ekr43.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>klf5c3l5u5.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>x44k69ngh6.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>pwa73g5rt2.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>mp6xlyr22a.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>qqp299437r.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>xy9t38ct57.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>54nzkqm89y.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>9b89h5y424.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>32z4fx6l9h.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>79pbpufp6p.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>275upjj5gd.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>294l99pt4k.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>2fnua5tdw4.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>32z4fx6l9h.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>3qcr597p9d.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>44n7hlldy6.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>54nzkqm89y.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>578prtvx9j.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>6g9af3uyq4.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>6p4ks3rnbw.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>79pbpufp6p.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>97r2b46745.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>9b89h5y424.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>e5fvkxwrpn.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>f73kdq92p3.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>g2y4y55b64.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>k674qkevps.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>mp6xlyr22a.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>n6fk4nfna4.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>qqp299437r.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>rx5hdcabgc.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>s69wq72ugq.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>u679fj5vs4.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>xy9t38ct57.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>kbmxgpxpgc.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "<dict>\n" );
+			strcat ( advert, "<key>SKAdNetworkIdentifier</key>\n" );
+			strcat ( advert, "<string>rvh3l7un93.skadnetwork</string>\n" );
+			strcat ( advert, "</dict>\n" );
+			strcat ( advert, "</array>\n" );
+
+			utils_str_replace_all ( &contents, "<key>${ADVERT_ITEMS}</key><string></string>", advert );
+			
+
+			g_free ( advert );
+			
+		}
+		
+		//
 
 		if ( !g_file_set_contents( temp_filename1, contents, strlen(contents), NULL ) )
 		{

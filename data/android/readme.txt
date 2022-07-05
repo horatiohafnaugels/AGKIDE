@@ -1,11 +1,12 @@
-This folder should contain the following files
+This folder should contain the following files for all platforms
  -a lib folder with the AGK interpreter libs
  -a sourceGoogle folder with the raw AndroidManifest.xml, res, resfacebook, and resgoogle folders, and the compiled classes.dex
  -a sourceAmazon folder with the raw AndroidManifest.xml, res, resfacebook, and resgoogle folders, and the compiled classes.dex
  -a sourceOuya folder with the raw AndroidManifest.xml, res, and the compiled classes.dex
-The following are optional if you modify the paths in project.c:on_android_dialog_response() to point to a local Java installation and Android SDK installation
- -a copy of the JRE
- -aapt.exe
- -android23.jar
+ -assets folder containing consentform.html
+ -android29.jar
+And the platform specific version of the following files
+ -aapt2-bundle.exe
  -debug.keystore
+ -libwinpthread-1.dll (Windows only)
  -zipalign.exe

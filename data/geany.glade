@@ -158,7 +158,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="xalign">0</property>
-                        <property name="label" translatable="yes">This will build an APK from your media and bytecode that will run on any Android device running 4.0.3 or above. It can also be used to produce an APK suitable for the Google Play, Amazon, or Ouya store if you also provide a keystore file for signing. If you don't yet have a keystore file you can generate one from the Tools menu or in Android Studio.</property>
+                        <property name="label" translatable="yes">This will build an APK from your media and bytecode that will run on any Android device running 4.1 or above. It can also be used to produce an APK or AppBundle suitable for the Google Play, Amazon, or Ouya store if you also provide a keystore file for signing. If you don't yet have a keystore file you can generate one from the Tools menu or in Android Studio.</property>
                         <property name="wrap">True</property>
                       </object>
                     </child>
@@ -428,9 +428,10 @@
                                         <property name="tooltip_text" translatable="yes">Select Google for apps using Google Play Services or ARCore, select Amazon for apps using Amazon IAP, select Ouya for apps that use the Ouya SDK or for apps with a minimal footprint (no Facebook, no Ads, no Firebase, etc)</property>
                                         <property name="active">0</property>
                                         <items>
-                                          <item>Google</item>
+                                          <item>Google App Bundle</item>
+                                          <item>Google APK</item>
                                           <item>Amazon</item>
-                                          <item>Ouya</item>
+                                          <item translatable="yes">Ouya</item>
                                         </items>
                                         <signal name="changed" handler="on_android_output_type_combo_changed" swapped="no"/>
                                       </object>
@@ -1350,7 +1351,7 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">The following must be filled out if you want an APK suitable for submitting to the Google Play, Amazon, or Ouya store.</property>
+                                    <property name="label" translatable="yes">The following must be filled out if you want an APK suitable for submitting to the Google Play, Amazon, or Ouya store. If you are submitting an App Bundle to the Google Play store then this must be the Upload key.</property>
                                     <property name="wrap">True</property>
                                   </object>
                                   <packing>
@@ -1454,12 +1455,12 @@
                                             <property name="can_focus">True</property>
                                             <property name="tooltip_text" translatable="yes">The password used to create the keystore</property>
                                             <property name="visibility">False</property>
-                                            <property name="invisible_char">●</property>
-                                            <property name="invisible_char_set">True</property>
                                             <property name="primary_icon_activatable">False</property>
                                             <property name="secondary_icon_activatable">False</property>
                                             <property name="primary_icon_sensitive">True</property>
                                             <property name="secondary_icon_sensitive">True</property>
+                                            <property name="invisible_char">●</property>
+                                            <property name="invisible_char_set">True</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -1963,12 +1964,12 @@
                                     <property name="can_focus">True</property>
                                     <property name="tooltip_text" translatable="yes">The password used to create the keystore</property>
                                     <property name="visibility">False</property>
-                                    <property name="invisible_char">●</property>
-                                    <property name="invisible_char_set">True</property>
                                     <property name="primary_icon_activatable">False</property>
                                     <property name="secondary_icon_activatable">False</property>
                                     <property name="primary_icon_sensitive">True</property>
                                     <property name="secondary_icon_sensitive">True</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -9817,6 +9818,9 @@ To generate a keystore file you need to submit some information about you or you
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkButton" id="button_grep">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -9837,6 +9841,9 @@ To generate a keystore file you need to submit some information about you or you
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options"/>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

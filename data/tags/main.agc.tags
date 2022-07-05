@@ -2047,3 +2047,42 @@ SetImageSubImages||(Integer iImageIndex, String sSubImageFile)|
 GetInAppPurchaseAvailable2|Integer|(Integer iID)|
 InAppPurchaseResetPurchase||(String token)|
 GetInAppPurchaseToken|String|(Integer iID)|
+FixObjectToCamera||(Integer objID, Integer toCameraID)|
+GetCameraWorldAngleX|Float|(Integer cameraID)|
+GetCameraWorldAngleY|Float|(Integer cameraID)|
+GetCameraWorldAngleZ|Float|(Integer cameraID)|
+GetCameraWorldQuatW|Float|(Integer cameraID)|
+GetCameraWorldQuatX|Float|(Integer cameraID)|
+GetCameraWorldQuatY|Float|(Integer cameraID)|
+GetCameraWorldQuatZ|Float|(Integer cameraID)|
+GetErrorMode|Integer|()|
+SetSpritePhysicsGravityScale||(Integer iSpriteIndex, Float scale)|
+GetSpritePhysicsGravityScale|Float|(Integer iSpriteIndex)|
+SetSpritePhysicsInitiallyAwake||(Integer iSpriteIndex, Integer awake)|
+SetSpritePhysicsAllowSleep||(Integer iSpriteIndex, Integer sleep)|
+GetSpritePhysicsInertia|Float|(Integer iSpriteIndex)|
+GetSpritePhysicsIsBullet|Integer|(Integer iSpriteIndex)|
+GetSpritePhysicsIsAwake|Integer|(Integer iSpriteIndex)|
+GetTweenCustomTime|Float|(Integer tweenID)|
+GetTweenCustomEndTime|Float|(Integer tweenID)|
+ClearTweenSprite||(Integer tweenID)|
+ClearTweenCustom||(Integer tweenID)|
+ClearTweenText||(Integer tweenID)|
+ClearTweenChar||(Integer tweenID)|
+ClearTweenObject||(Integer tweenID)|
+ClearTweenCamera||(Integer tweenID)|
+GetTweenSpriteTime|Float|(Integer tweenID, Integer spriteID)|
+GetTweenSpriteEndTime|Float|(Integer tweenID, Integer spriteID)|
+GetTweenTextTime|Float|(Integer tweenID, Integer textID)|
+GetTweenTextEndTime|Float|(Integer tweenID, Integer textID)|
+GetTweenCharTime|Float|(Integer tweenID, Integer textID, Integer charID)|
+GetTweenCharEndTime|Float|(Integer tweenID, Integer textID, Integer charID)|
+GetTweenObjectTime|Float|(Integer tweenID, Integer objectID)|
+GetTweenObjectEndTime|Float|(Integer tweenID, Integer objectID)|
+SetupNoise||(Float frequency, Float amplitude, Float lacunarity, Float persistence)|
+GetNoiseX|Float|(Float x)|
+GetNoiseXY|Float|(Float x, Float y)|
+GetNoiseXYZ|Float|(Float x, Float y, Float z)|
+GetFractalX|Float|(Integer octaves, Float x)|
+GetFractalXY|Float|(Integer octaves, Float x, Float y)|
+GetFractalXZ|Float|(Integer octaves, Float x, Float y, Float z)|

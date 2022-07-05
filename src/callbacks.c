@@ -834,7 +834,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 {
 	gchar *text = gtk_combo_box_text_get_active_text( GTK_COMBO_BOX_TEXT(combo) );
 	if ( !text ) return;
-	if ( strcmp( text, "Google" ) == 0 )
+	if ( strstr( text, "Google" ) )
 	{
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine"), TRUE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), TRUE );
@@ -850,7 +850,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), TRUE );
 	}
-	else if ( strcmp( text, "Amazon" ) == 0 )
+	else if ( strstr( text, "Amazon" ) )
 	{
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );
@@ -866,7 +866,7 @@ G_MODULE_EXPORT void on_android_output_type_combo_changed( GtkComboBox *combo, g
 
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_arcore_combo"), FALSE );
 	}
-	else if ( strcmp( text, "Ouya" ) == 0 )
+	else if ( strstr( text, "Ouya" ) )
 	{
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_fine"), FALSE );
 		gtk_widget_set_sensitive( ui_lookup_widget(ui_widgets.android_dialog, "android_permission_location_coarse"), FALSE );

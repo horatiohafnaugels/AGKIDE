@@ -671,6 +671,7 @@ bool Editor::AbandonPaint() {
 }
 
 void Editor::RedrawRect(PRectangle rc) {
+
 	//Platform::DebugPrintf("Redraw %0d,%0d - %0d,%0d\n", rc.left, rc.top, rc.right, rc.bottom);
 
 	// Clip the redraw rectangle into the client area
