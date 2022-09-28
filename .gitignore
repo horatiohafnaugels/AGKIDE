@@ -287,3 +287,7 @@ tagmanager/ctags/options.o
 tagmanager/ctags/python.o
 tagmanager/ctags/rust.o
 tagmanager/ctags/conf.o
+bundleNewMike.sh
+bundleNewPaul.sh
+bundleTrialMike.sh
+bundleTrialPaul.sh
