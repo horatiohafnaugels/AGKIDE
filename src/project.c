@@ -2534,7 +2534,14 @@ android_dialog_continue:
 		}
 
 		// Adaptive icon
-		if ( app_icon_new && *app_icon_new && !isOuya )
+		if ( !app_icon_new || !*app_icon_new || isOuya )
+		{
+			
+			gchar* nicon_file = g_build_path( "/", tmp_folder, "resMerged", "mipmap-anydpi-v26_ic_launcher.xml.flat", NULL );
+			g_unlink( nicon_file );
+			g_free( nicon_file );
+		}
+		else
 		{
 			if ( icon_image ) gdk_pixbuf_unref(icon_image);
 			icon_image = gdk_pixbuf_new_from_file( app_icon_new, &error );

@@ -2118,3 +2118,4 @@ GetScreenBoundsSafeRight|Float|()|
 IsPinAppAvailable|Integer|()|
 PinApp||(Integer enable)|
 IsDarkTheme|Integer|()|
+GetInAppPurchaseIsRenewing|Integer|(Integer iID)|
