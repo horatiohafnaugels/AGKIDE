@@ -29,7 +29,7 @@ AutoComplete::AutoComplete() :
 	separator(' '),
 	typesep('?'),
 	ignoreCase(false),
-	chooseSingle(false),
+	chooseSingle(true),
 	lb(0),
 	posStart(0),
 	startLen(0),

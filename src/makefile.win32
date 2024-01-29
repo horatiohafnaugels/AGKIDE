@@ -11,7 +11,7 @@ DEFINES = -DHAVE_CONFIG_H \
 .SUFFIXES: .c .o .h .a
 WINDRES = windres.exe
 CC = gcc
-CXX = g++
+CXX = g++ -static
 RES = ../geany_private.res
 TARGET = ../AGK.exe
 PREFIX = C:/libs

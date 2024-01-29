@@ -1915,23 +1915,10 @@ gint ScintillaGTK::ScrollEvent(GtkWidget *widget, GdkEventScroll *event) {
 			cLineScroll = 4;
 		sciThis->wheelMouseIntensity = cLineScroll;
 #else
-		int timeDelta = 1000000;
-		GTimeVal curTime;
-		g_get_current_time(&curTime);
-		if (curTime.tv_sec == sciThis->lastWheelMouseTime.tv_sec)
-			timeDelta = curTime.tv_usec - sciThis->lastWheelMouseTime.tv_usec;
-		else if (curTime.tv_sec == sciThis->lastWheelMouseTime.tv_sec + 1)
-			timeDelta = 1000000 + (curTime.tv_usec - sciThis->lastWheelMouseTime.tv_usec);
-		if ((event->direction == sciThis->lastWheelMouseDirection) && (timeDelta < 250000)) {
-			if (sciThis->wheelMouseIntensity < 12)
-				sciThis->wheelMouseIntensity++;
-			cLineScroll = sciThis->wheelMouseIntensity;
-		} else {
-			cLineScroll = sciThis->linesPerScroll;
-			if (cLineScroll == 0)
-				cLineScroll = 4;
-			sciThis->wheelMouseIntensity = cLineScroll;
-		}
+    	cLineScroll = sciThis->linesPerScroll;
+		if (cLineScroll == 0)
+			cLineScroll = 4;
+		sciThis->wheelMouseIntensity = cLineScroll;
 #endif
 		if (event->direction == GDK_SCROLL_UP || event->direction == GDK_SCROLL_LEFT) {
 			cLineScroll *= -1;

@@ -33,6 +33,7 @@
 
 #include "project.h"
 
+#include "windows.h"
 #include "dialogs.h"
 #include "support.h"
 #include "utils.h"
