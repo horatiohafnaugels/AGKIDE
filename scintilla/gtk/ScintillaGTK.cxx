@@ -168,10 +168,10 @@ public:
 	ScintillaGTK(_ScintillaObject *sci_);
 	virtual ~ScintillaGTK();
 	static void ClassInit(OBJECT_CLASS* object_class, GtkWidgetClass *widget_class, GtkContainerClass *container_class);
-    
+
 	// added new paste callback for gtk_clipboard_request_text, via GlobalPasteReceived
     void PasteCallback(const gchar *text);
-    
+
 private:
 	virtual void Initialise();
 	virtual void Finalise();
@@ -1338,7 +1338,7 @@ std::string ScintillaGTK::CaseMapString(const std::string &s, int caseMapping) {
 
 	if (IsUnicodeMode()) {
 		std::string retMapped(s.length() * maxExpansionCaseConversion, 0);
-		size_t lenMapped = CaseConvertString(&retMapped[0], retMapped.length(), s.c_str(), s.length(), 
+		size_t lenMapped = CaseConvertString(&retMapped[0], retMapped.length(), s.c_str(), s.length(),
 			(caseMapping == cmUpper) ? CaseConversionUpper : CaseConversionLower);
 		retMapped.resize(lenMapped);
 		return retMapped;
@@ -1394,9 +1394,9 @@ void ScintillaGTK::PasteCallback(const gchar* text) {
 			SelectionPosition selStart = sel.IsRectangular() ?
             sel.Rectangular().Start() :
             sel.Range(sel.Main()).Start();
-            
+
             ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
-            
+
 			InsertPaste(selStart, text, strlen(text));
 			EnsureCaretVisible();
 		}
@@ -1417,13 +1417,13 @@ void ScintillaGTK::Paste() {
 	//atomSought = atomUTF8;
 	//gtk_selection_convert(GTK_WIDGET(PWidget(wMain)),
 	//                      atomClipboard, atomSought, GDK_CURRENT_TIME);
-    
+
 	// However gtk_clipboard_request_text is implemented
     GtkClipboard *clipBoard =
     gtk_widget_get_clipboard(GTK_WIDGET(PWidget(wMain)), atomClipboard);
 	if (clipBoard == NULL) // Occurs if widget isn't in a toplevel
 		return;
-    
+
     gtk_clipboard_request_text( clipBoard, GlobalPasteReceived, this );
 }
 
@@ -1903,23 +1903,13 @@ gint ScintillaGTK::ScrollEvent(GtkWidget *widget, GdkEventScroll *event) {
 		if (widget == NULL || event == NULL)
 			return FALSE;
 
-		// Compute amount and direction to scroll (even tho on win32 there is
-		// intensity of scrolling info in the native message, gtk doesn't
-		// support this so we simulate similarly adaptive scrolling)
-		// Note that this is disabled on OS X (Darwin) where the X11 server already has
-		// and adaptive scrolling algorithm that fights with this one
+		// Fixed scroll speed for everyone.
 		int cLineScroll;
-#if defined(__APPLE__) && !defined(GDK_WINDOWING_QUARTZ)
-		cLineScroll = sciThis->linesPerScroll;
-		if (cLineScroll == 0)
-			cLineScroll = 4;
-		sciThis->wheelMouseIntensity = cLineScroll;
-#else
     	cLineScroll = sciThis->linesPerScroll;
 		if (cLineScroll == 0)
 			cLineScroll = 4;
 		sciThis->wheelMouseIntensity = cLineScroll;
-#endif
+
 		if (event->direction == GDK_SCROLL_UP || event->direction == GDK_SCROLL_LEFT) {
 			cLineScroll *= -1;
 		}
@@ -1977,7 +1967,7 @@ gint ScintillaGTK::Motion(GtkWidget *widget, GdkEventMotion *event) {
 		GdkModifierType state;
 		if (event->is_hint) {
 #if GTK_CHECK_VERSION(3,0,0)
-			gdk_window_get_device_position(event->window, 
+			gdk_window_get_device_position(event->window,
 				event->device, &x, &y, &state);
 #else
 			gdk_window_get_pointer(event->window, &x, &y, &state);
